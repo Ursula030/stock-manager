@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#f5f6f8">
+<title>我的台股管家 v4</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:14px}.hero{padding:10px 3px 2px}h1{font-size:28px;margin:0 0 6px}.sub,.note{color:var(--muted);line-height:1.55}.sub{font-size:14px}.note{font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 2px 10px rgba(0,0,0,.025)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.metric,.kpi{background:var(--soft);border:1px solid var(--line);border-radius:13px;padding:11px}.metric small,.kpi small{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:20px;margin-top:4px}.kpi b{display:block;font-size:15px;margin-top:2px}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px}input,select{width:100%;border:1px solid var(--line);border-radius:11px;background:#fff;padding:11px 12px;font-size:16px}
+button{border:0;border-radius:11px;padding:11px 14px;font-size:15px;font-weight:650}.primary{background:#111827;color:#fff}.secondary{background:#eef2ff;color:#3144a6}.ghost{background:#f1f3f5;color:#34373d}.danger{background:#fff0ef;color:#a92d27}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.space{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.stock{border:1px solid var(--line);border-radius:15px;padding:14px;margin:10px 0;background:white}.stockhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.stocktitle{font-weight:800;font-size:18px}.stocksub{font-size:12px;color:var(--muted);margin-top:3px}.decision{font-weight:800;font-size:17px;margin-top:10px}
+.stockgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}.pill{display:inline-block;font-size:11px;padding:4px 8px;background:#f0f2f5;border-radius:999px;margin:2px 3px 2px 0}.details{display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.details ul{padding-left:20px;line-height:1.6}
+.status{font-size:13px;color:var(--muted);margin-top:8px}.empty{text-align:center;color:var(--muted);padding:20px 5px}#addForm{display:none}
+@media(max-width:820px){.stockgrid{grid-template-columns:repeat(3,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.wrap{padding:10px}.grid3{grid-template-columns:1fr}.stockgrid{grid-template-columns:repeat(2,1fr)}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero"><h1>我的台股管家 v4</h1><div class="sub">透過 Cloudflare Worker 中繼，自動抓行情並計算 MA5／MA20／MA60／RSI14／成交量。</div></div>
+
+<div class="card">
+  <strong>第一次使用：設定行情 API</strong>
+  <div class="note" style="margin:8px 0">把你建立好的 Cloudflare Worker 網址貼在下面，只要設定一次，之後會記住。</div>
+  <div class="row">
+    <input id="apiBase" placeholder="例如 https://stock-proxy.xxxxx.workers.dev" style="flex:1;min-width:240px">
+    <button class="secondary" onclick="saveApi()">儲存 API</button>
+    <button class="ghost" onclick="testApi()">測試連線</button>
+  </div>
+  <div id="apiStatus" class="status"></div>
+</div>
+
+<div class="card">
+  <div class="space"><strong>投資組合總覽</strong><div class="row"><button class="secondary" onclick="refreshAll()">更新全部</button><button class="primary" onclick="toggleAdd()">＋ 新增持股</button></div></div>
+  <div class="grid4" style="margin-top:12px">
+    <div class="metric"><small>持股檔數</small><strong id="sumCount">0</strong></div>
+    <div class="metric"><small>總成本</small><strong id="sumCost">—</strong></div>
+    <div class="metric"><small>目前市值</small><strong id="sumValue">—</strong></div>
+    <div class="metric"><small>總損益</small><strong id="sumPnl">—</strong></div>
+  </div>
+  <div id="globalStatus" class="status"></div>
+</div>
+
+<div class="card" id="addForm">
+<div class="space"><strong>新增／修改持股</strong><button class="ghost" onclick="toggleAdd()">關閉</button></div>
+<div class="grid3" style="margin-top:12px">
+<div><label>股票代號</label><input id="fTicker" inputmode="numeric" placeholder="3037"></div>
+<div><label>成本價</label><input id="fCost" type="number" step="0.01"></div>
+<div><label>持有股數</label><input id="fQty" type="number" step="1"></div>
+<div><label>操作策略</label><select id="fStrategy"><option value="short">短線</option><option value="swing" selected>波段</option><option value="long">中長期</option></select></div>
+<div><label>最大可接受虧損 %</label><input id="fMaxLoss" type="number" step="0.5" value="12"></div>
+<div><label>基本面看法</label><select id="fFund"><option value="yes" selected>仍看好</option><option value="neutral">不確定</option><option value="no">已不看好</option></select></div>
+</div>
+<div class="row" style="margin-top:12px"><button class="primary" onclick="saveHolding()">儲存持股</button><button class="ghost" onclick="resetForm()">清空</button></div>
+<input type="hidden" id="editId">
+</div>
+
+<div class="card"><div class="space"><strong>今日持股建議</strong><div class="note">點「查看原因」展開詳細判斷</div></div><div id="portfolio"></div></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), HOLD='stockbot_v4_holdings', SNAP='stockbot_v4_snapshot', API='stockbot_v4_api';
+function fmt(x){return x==null||Number.isNaN(x)?'—':Number(x).toLocaleString('zh-TW',{maximumFractionDigits:2})}
+function money(x){return x==null||Number.isNaN(x)?'—':'$'+Math.round(x).toLocaleString('zh-TW')}
+function pct(x){return(x>=0?'+':'')+x.toFixed(2)+'%'} function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null} function sma(a,n){return a.length<n?null:avg(a.slice(-n))}
+function rsi14(c){if(c.length<15)return null;let g=0,l=0;for(let i=c.length-14;i<c.length;i++){let d=c[i]-c[i-1];if(d>0)g+=d;else l-=d}let ag=g/14,al=l/14;if(al===0)return 100;return 100-100/(1+ag/al)}
+function holdings(){try{return JSON.parse(localStorage.getItem(HOLD)||'[]')}catch{return[]}} function store(v){localStorage.setItem(HOLD,JSON.stringify(v))}
+function api(){return(localStorage.getItem(API)||'').replace(/\/+$/,'')}
+function snapshots(){try{return JSON.parse(localStorage.getItem(SNAP)||'{}')}catch{return{}}}
+function saveSnapshot(id,data){let s=snapshots();s[id]=data;localStorage.setItem(SNAP,JSON.stringify(s))}
+function getSnapshot(id){return snapshots()[id]}
+function removeSnapshot(id){let s=snapshots();delete s[id];localStorage.setItem(SNAP,JSON.stringify(s))}
+$('apiBase').value=api();
+
+function saveApi(){let v=$('apiBase').value.trim().replace(/\/+$/,'');if(!/^https:\/\//.test(v)){alert('請貼 https:// 開頭的 Worker 網址');return}localStorage.setItem(API,v);$('apiStatus').textContent='已儲存。';}
+async function testApi(){saveApi();$('apiStatus').textContent='測試中…';try{let r=await fetch(api()+'/stock?symbol=2330.TW');if(!r.ok)throw new Error('HTTP '+r.status);let j=await r.json();if(!j?.chart?.result?.[0])throw new Error('回傳格式異常');$('apiStatus').textContent='✅ 連線成功，可自動抓行情。';}catch(e){$('apiStatus').textContent='❌ 連線失敗：'+e.message}}
+function toggleAdd(){$('addForm').style.display=$('addForm').style.display==='block'?'none':'block'}
+function resetForm(){['fTicker','fCost','fQty','editId'].forEach(x=>$(x).value='');$('fStrategy').value='swing';$('fMaxLoss').value='12';$('fFund').value='yes'}
+function saveHolding(){let ticker=$('fTicker').value.trim(),cost=+$('fCost').value,qty=+$('fQty').value;if(!/^\d{4,6}$/.test(ticker))return alert('請輸入正確台股代號');if(!(cost>0&&qty>0))return alert('請輸入成本與股數');let h=holdings(),id=$('editId').value||Date.now().toString(),item={id,ticker,cost,qty,strategy:$('fStrategy').value,maxLoss:+$('fMaxLoss').value||12,fund:$('fFund').value},i=h.findIndex(x=>x.id===id);i>=0?h[i]=item:h.push(item);store(h);resetForm();$('addForm').style.display='none';render();refreshOne(id)}
+function editHolding(id){let x=holdings().find(v=>v.id===id);if(!x)return;$('fTicker').value=x.ticker;$('fCost').value=x.cost;$('fQty').value=x.qty;$('fStrategy').value=x.strategy;$('fMaxLoss').value=x.maxLoss;$('fFund').value=x.fund;$('editId').value=x.id;$('addForm').style.display='block'}
+function removeHolding(id){if(confirm('確定刪除？')){store(holdings().filter(x=>x.id!==id));removeSnapshot(id);render();summary()}}
+function render(){let h=holdings();$('sumCount').textContent=h.length;$('portfolio').innerHTML=h.length?h.map(x=>`<div class="stock" id="s-${x.id}"><div class="stockhead"><div><div class="stocktitle">${x.ticker}</div><div class="stocksub">成本 ${fmt(x.cost)}｜${x.qty} 股</div></div><div class="row"><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="status">等待更新行情…</div></div>`).join(''):'<div class="empty">尚無持股</div>';summary()}
+async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare Worker 網址');for(const s of ['.TW','.TWO']){try{let r=await fetch(api()+'/stock?symbol='+ticker+s);if(!r.ok)continue;let j=await r.json(),d=j?.chart?.result?.[0],q=d?.indicators?.quote?.[0],ts=d?.timestamp||[],rows=[];for(let i=0;i<ts.length;i++){let c=q?.close?.[i],v=q?.volume?.[i];if(c!=null&&Number.isFinite(c))rows.push({t:ts[i],c:+c,v:v==null?null:+v})}if(rows.length>=60)return{symbol:ticker+s,d,rows}}catch(e){}}throw new Error('找不到代號或行情來源暫時無法使用')}
+function analyze(x,m){let rows=m.rows,d=m.d,meta=d.meta||{},cl=rows.map(r=>r.c),last=rows.at(-1),price=Number.isFinite(meta.regularMarketPrice)?meta.regularMarketPrice:last.c,ma5=sma(cl,5),ma20=sma(cl,20),ma60=sma(cl,60),rsi=rsi14(cl),vr=last.v/avg(rows.slice(-20).map(r=>r.v).filter(v=>v>0)),pnl=(price-x.cost)/x.cost*100,score=0,re=[],tags=[];
+if(pnl<=-x.maxLoss){score-=3;re.push(`損益 ${pct(pnl)}，已超過最大可接受虧損 ${x.maxLoss}%`);tags.push('觸及風控')}else if(pnl<=-7){score-=1;re.push(`目前虧損 ${pct(pnl)}，虧損偏大`)}else if(pnl>=25){score-=1;re.push(`目前獲利 ${pct(pnl)}，若趨勢轉弱可分批落袋`);tags.push('高獲利區')}else if(pnl>=8){score+=1;re.push(`目前獲利 ${pct(pnl)}，已有安全墊`)}
+price>ma5?(score++,re.push('站上 MA5：短線偏強')):(score--,re.push('跌破 MA5：短線偏弱'));price>ma20?(score+=2,re.push('站上 MA20：波段偏多'),tags.push('月線上')):(score-=2,re.push('跌破 MA20：波段偏弱'),tags.push('月線下'));price>ma60?(score+=2,re.push('站上 MA60：中期偏多')):(score-=2,re.push('跌破 MA60：中期偏弱'),tags.push('季線下'));
+if(ma5>ma20&&ma20>ma60){score+=2;tags.push('多頭排列');re.push('MA5 > MA20 > MA60：多頭排列')}if(ma5<ma20&&ma20<ma60){score-=2;tags.push('空頭排列');re.push('MA5 < MA20 < MA60：空頭排列')}
+if(rsi<30){score++;tags.push('超賣');re.push(`RSI14 ${rsi.toFixed(1)}：超賣，不宜因恐慌直接殺低`)}else if(rsi>75){score--;tags.push('過熱');re.push(`RSI14 ${rsi.toFixed(1)}：偏過熱，不宜追高`)}else re.push(`RSI14 ${rsi.toFixed(1)}：一般區間`);
+if(vr>=1.5&&price>ma20){score++;re.push(`量比 ${vr.toFixed(2)}×，且價格在月線上`)}else if(vr>=1.5&&price<ma20){score--;re.push(`量比 ${vr.toFixed(2)}×，但價格仍在月線下`)}
+if(x.fund==='yes'){score++;re.push('基本面仍看好，不因單一技術訊號一次清倉')}else if(x.fund==='no'){score-=3;re.push('基本面已不看好，持有理由下降');tags.push('基本面轉差')}
+if(x.strategy==='short'){if(price<ma5)score--;if(price<ma20)score--}if(x.strategy==='long'&&price>ma60&&x.fund==='yes')score++;
+let decision,cls;if(score>=6){decision='✅ 可考慮分批加碼';cls='good'}else if(score>=2){decision='🟢 繼續持有';cls='good'}else if(score>=-1){decision='🟡 先觀察，不急著動';cls='warn'}else if(score>=-5){decision='🟠 建議分批減碼';cls='warn'}else{decision='🔴 建議賣出／停損';cls='bad'}if(rsi<30&&price<ma20&&price<ma60&&score>1){decision='🟡 超跌但趨勢仍弱，先觀察';cls='warn'}if(x.fund==='no'&&price<ma20){decision='🔴 建議賣出／降低部位';cls='bad'}
+return{price,ma5,ma20,ma60,rsi,vr,pnl,score,re,tags,decision,cls,name:meta.longName||meta.shortName||m.symbol,value:price*x.qty,costValue:x.cost*x.qty,pnlMoney:(price-x.cost)*x.qty,time:new Date((meta.regularMarketTime||last.t)*1000)}}
+async function refreshOne(id){let x=holdings().find(v=>v.id===id),el=$('s-'+id);if(!x||!el)return;el.querySelector('.status').textContent='更新中…';try{let a=analyze(x,await market(x.ticker));saveSnapshot(x.id,a);el.dataset.value=a.value;el.dataset.cost=a.costValue;el.dataset.pnl=a.pnlMoney;el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${x.ticker} ${a.name}</div><div class="stocksub">行情 ${a.time.toLocaleString('zh-TW')}</div></div><div class="row"><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="decision ${a.cls}">${a.decision}</div><div>${a.tags.map(t=>`<span class="pill">${t}</span>`).join('')}</div><div class="stockgrid"><div class="kpi"><small>現價</small><b>${fmt(a.price)}</b></div><div class="kpi"><small>報酬</small><b class="${a.pnl>=0?'good':'bad'}">${pct(a.pnl)}</b></div><div class="kpi"><small>損益</small><b>${money(a.pnlMoney)}</b></div><div class="kpi"><small>MA20</small><b>${fmt(a.ma20)}</b></div><div class="kpi"><small>MA60</small><b>${fmt(a.ma60)}</b></div><div class="kpi"><small>RSI14</small><b>${a.rsi.toFixed(1)}</b></div></div><div class="row" style="margin-top:9px"><button class="ghost" onclick="toggleDetails('${x.id}')">查看原因</button><span class="note">分數 ${a.score}｜MA5 ${fmt(a.ma5)}｜量比 ${a.vr.toFixed(2)}×</span></div><div class="details" id="d-${x.id}"><ul>${a.re.map(r=>`<li>${r}</li>`).join('')}</ul><div class="note">這是規則式風險管理訊號，不保證獲利。</div></div>`;summary()}catch(e){el.querySelector('.status').textContent='更新失敗：'+e.message}}
+function toggleDetails(id){let d=$('d-'+id);if(d)d.style.display=d.style.display==='block'?'none':'block'}
+async function refreshAll(){let h=holdings();if(!h.length)return;$('globalStatus').textContent='正在更新…';for(const x of h)await refreshOne(x.id);$('globalStatus').textContent='更新完成'}
+function summary(){let els=[...document.querySelectorAll('.stock')],v=0,c=0,p=0,n=0;for(const el of els){let a=+el.dataset.value,b=+el.dataset.cost,d=+el.dataset.pnl;if(Number.isFinite(a)&&a>0){v+=a;c+=b;p+=d;n++}}$('sumCost').textContent=n?money(c):'—';$('sumValue').textContent=n?money(v):'—';$('sumPnl').textContent=n?((p>=0?'+':'')+money(p)):'—';$('sumPnl').className=p>=0?'good':'bad'}
+render();if(api())setTimeout(refreshAll,400);
+</script>
+</body>
+</html>
