@@ -4,7 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f5f6f8">
-<title>股倉雷達 v4.8.2（觀察行情快取修正版）</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="股倉雷達">
+<meta name="mobile-web-app-capable" content="yes">
+
+<title>股倉雷達 v5.0（PWA 決策防呆版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -29,11 +36,25 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
 .tabbar button{min-width:0;padding:7px 2px 6px;border-radius:10px;background:transparent;color:var(--muted);font-size:11px;line-height:1.15;white-space:nowrap}.tabbar .tab-icon{display:block;font-size:19px;margin-bottom:3px}.tabbar button.active{background:#eef1f5;color:#20242c}.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.quick-grid button{width:100%}.reminder-list{list-style:none;margin:10px 0 0;padding:0}.reminder-list li{padding:9px 0;border-bottom:1px solid var(--line);line-height:1.45}.reminder-list li:last-child{border-bottom:0}.home-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.settings-form{display:block!important}
 @media(max-width:620px){body{padding-bottom:calc(78px + env(safe-area-inset-bottom))}.home-metrics{grid-template-columns:repeat(2,1fr)}.quick-grid{grid-template-columns:1fr}.stockhead{flex-direction:column}.stockhead>.row{width:100%}.stockhead>.row button{flex:1}.card{padding:13px;border-radius:15px}input,select{max-width:100%}.tabbar button{font-size:10px}.tabbar .tab-icon{font-size:18px}}
 @media(max-width:350px){.tabbar{padding-left:2px;padding-right:2px}.tabbar button{font-size:9px;padding-left:0;padding-right:0}}
+
+.decision-check-btn{background:#fff7e8;color:#8a5200}
+.guard-overlay{display:none;position:fixed;z-index:3000;inset:0;background:rgba(15,23,42,.45);padding:16px;align-items:flex-end;justify-content:center}
+.guard-overlay.show{display:flex}
+.guard-sheet{width:min(680px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:22px 22px 14px 14px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.22)}
+.guard-title{font-size:20px;font-weight:850;margin-bottom:4px}
+.guard-question{margin-top:13px;padding:11px 12px;background:var(--soft);border:1px solid var(--line);border-radius:12px}
+.guard-question label{display:flex;gap:9px;align-items:flex-start;color:var(--text);font-size:14px;margin:0}
+.guard-question input[type="checkbox"]{width:auto;margin-top:2px}
+.guard-result{display:none;margin-top:14px;padding:14px;border-radius:13px;border:1px solid var(--line);font-weight:750;line-height:1.65}
+.guard-result.show{display:block}
+.install-box{margin-top:10px;padding:12px;border-radius:13px;background:var(--soft);border:1px solid var(--line);line-height:1.55}
+@media(max-width:620px){.guard-overlay{padding:0}.guard-sheet{border-radius:20px 20px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v4.8.2 · 觀察行情快取修正版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.0 · PWA 決策防呆版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -73,12 +94,92 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
   <h2 class="page-title">⚙️ 設定</h2>
   <div class="card"><strong>Cloudflare Worker API</strong><div class="note" style="margin:8px 0">原有網址會自動帶入，不需重新設定。</div><div class="row"><input id="apiBase" placeholder="例如 https://stock-proxy.xxxxx.workers.dev" style="flex:1;min-width:0"><button class="secondary" onclick="saveApi()">儲存 API</button><button class="ghost" onclick="testApi()">測試連線</button></div><div id="apiStatus" class="status"></div></div>
   <div class="card"><strong>💰 目前資金設定</strong><div class="grid3" style="margin-top:12px"><div class="metric"><small>總資金</small><strong id="capitalTotal">未設定</strong></div><div class="metric"><small>已投入</small><strong id="capitalInvested">—</strong></div><div class="metric"><small>剩餘現金</small><strong id="capitalCash">—</strong></div></div><div id="capitalLevel"></div></div>
-  <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
+  <div class="card"><strong>📲 PWA App</strong><div class="install-box"><div><b>iPhone 安裝：</b>Safari → 分享 →「加入主畫面」。安裝後從桌面開啟，會以 App 模式顯示，不會有一般 Safari 網址列。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="requestRadarNotification()">開啟 Radar 通知權限</button><button class="ghost" onclick="testRadarNotification()">測試提醒</button></div><div id="pwaStatus" class="status"></div></div><div class="note" style="margin-top:8px">v5.0 的 Radar 通知會在你開啟／更新 App 時觸發；真正關閉 App 後仍可背景推播，需要另外串接 Web Push 伺服器。</div></div>
+<div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
+<div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
 </div>
+
+<div class="guard-overlay" id="guardOverlay" onclick="guardBackdrop(event)">
+  <div class="guard-sheet" role="dialog" aria-modal="true" aria-labelledby="guardTitle">
+    <div class="space"><div><div class="guard-title" id="guardTitle">🧠 操作檢查</div><div class="note" id="guardTicker">—</div></div><button class="ghost" onclick="closeDecisionCheck()">關閉</button></div>
+    <div class="grid3" style="margin-top:12px">
+      <div><label>準備做什麼？</label><select id="guardAction"><option value="hold">繼續持有</option><option value="add">加碼</option><option value="reduce">減碼</option><option value="sell">賣出</option></select></div>
+      <div><label>目前價格</label><input id="guardPrice" disabled></div>
+      <div><label>系統目前建議</label><input id="guardSystem" disabled></div>
+    </div>
+    <div class="guard-question"><label><input type="checkbox" id="guardFear">我現在想減碼／賣出，主要是因為看到虧損很難受或害怕繼續跌。</label></div>
+    <div class="guard-question"><label><input type="checkbox" id="guardFomo">我現在想買進／加碼，主要是因為怕它繼續上漲、怕錯過。</label></div>
+    <div class="guard-question"><label><input type="checkbox" id="guardPlan">這個操作符合我原本設定的策略與部位規則。</label></div>
+    <div class="guard-question"><label><input type="checkbox" id="guardFundChanged">基本面或原本持有理由已經明顯改變。</label></div>
+    <div class="row" style="margin-top:14px"><button class="primary" onclick="runDecisionCheck()">檢查這筆操作</button><button class="secondary" onclick="sendGuardToReplay()">帶到 Replay</button></div>
+    <div class="guard-result" id="guardResult"></div>
+    <input type="hidden" id="guardHoldingId">
+  </div>
+</div>
+
 <nav class="tabbar" aria-label="主要分頁"><button data-page="home" onclick="showPage('home')"><span class="tab-icon">🏠</span>總覽</button><button data-page="portfolio" onclick="showPage('portfolio')"><span class="tab-icon">📈</span>持股</button><button data-page="watch" onclick="showPage('watch')"><span class="tab-icon">⭐</span>觀察</button><button data-page="replay" onclick="showPage('replay')"><span class="tab-icon">🔁</span>回放</button><button data-page="settings" onclick="showPage('settings')"><span class="tab-icon">⚙️</span>設定</button></nav>
 <script>
-const $=id=>document.getElementById(id), HOLD='stockbot_v4_holdings', SNAP='stockbot_v4_snapshot', API='stockbot_v4_api', WATCH='stockbot_v4_2_watchlist', WATCH_CACHE='stockbot_v482_watch_cache', REPLAY='stockbot_v44_replay', CAPITAL='stockbot_v45_capital', LAST_PAGE='stockbot_v46_last_page';
+const $=id=>document.getElementById(id), HOLD='stockbot_v4_holdings', SNAP='stockbot_v4_snapshot', API='stockbot_v4_api', WATCH='stockbot_v4_2_watchlist', WATCH_CACHE='stockbot_v482_watch_cache', REPLAY='stockbot_v44_replay', CAPITAL='stockbot_v45_capital', LAST_PAGE='stockbot_v46_last_page', GUARD_LOG='stockbot_v50_guard_log';
+
+
+function guardLogs(){try{return JSON.parse(localStorage.getItem(GUARD_LOG)||'[]')}catch(e){return[]}}
+function storeGuardLog(v){localStorage.setItem(GUARD_LOG,JSON.stringify(v.slice(-100)))}
+function openDecisionCheck(id){
+ let x=holdings().find(function(v){return v.id===id});if(!x)return;
+ let a=getSnapshot(id)||{},system=a.finalAdvice&&a.finalAdvice.text?a.finalAdvice.text:(a.decision||'尚未更新行情');
+ $('guardHoldingId').value=id;$('guardTicker').textContent=x.ticker+'｜策略：'+(x.strategy==='short'?'短線':x.strategy==='long'?'中長期':'波段');
+ $('guardPrice').value=Number.isFinite(Number(a.price))?fmt(Number(a.price)):'尚未更新';
+ $('guardSystem').value=system;
+ $('guardAction').value='hold';$('guardFear').checked=false;$('guardFomo').checked=false;$('guardPlan').checked=true;$('guardFundChanged').checked=false;
+ $('guardResult').className='guard-result';$('guardResult').innerHTML='';
+ $('guardOverlay').classList.add('show');
+}
+function closeDecisionCheck(){$('guardOverlay').classList.remove('show')}
+function guardBackdrop(e){if(e.target===$('guardOverlay'))closeDecisionCheck()}
+function runDecisionCheck(){
+ let id=$('guardHoldingId').value,x=holdings().find(function(v){return v.id===id}),a=getSnapshot(id)||{},action=$('guardAction').value,fear=$('guardFear').checked,fomo=$('guardFomo').checked,plan=$('guardPlan').checked,fundChanged=$('guardFundChanged').checked,score=100,reasons=[],level='good',title='🟢 操作狀態穩定';
+ if((action==='sell'||action==='reduce')&&fear){score-=35;reasons.push('疑似因虧損壓力而想賣出')}
+ if(action==='add'&&fomo){score-=35;reasons.push('疑似 FOMO 追價')}
+ if(!plan){score-=30;reasons.push('這筆操作不符合原本策略')}
+ if(fundChanged&&(action==='sell'||action==='reduce')){score+=10;reasons.push('基本面／持有理由改變，減碼理由較具體')}
+ if(action==='add'&&Number(a.rsi)>75){score-=20;reasons.push('RSI 偏熱，加碼追高風險較高')}
+ if(action==='add'&&a.finalAdvice&&a.finalAdvice.allowed===false){score-=25;reasons.push('目前倉位／現金規則不允許加碼')}
+ let system=(a.finalAdvice&&a.finalAdvice.text)||(a.decision||'');
+ if((action==='sell'||action==='reduce')&&fear&&!fundChanged&&!/賣出|停損|減碼/.test(system)){score=Math.min(score,45);reasons.push('系統尚未出現明確賣出訊號')}
+ score=Math.max(0,Math.min(100,score));
+ let advice='';
+ if(score<50){level='bad';title='🔴 疑似情緒性操作';advice='建議先不要立即下單。若不是停損規則或基本面惡化，可先保留 24 小時冷靜期再重看一次。'}
+ else if(score<75){level='warn';title='🟡 這筆操作需要再確認';advice='先確認買賣理由是否能用一句具體規則說明，再決定是否執行。'}
+ else{advice='目前沒有明顯的情緒性警訊，仍請依原策略與資金水位執行。'}
+ if(!reasons.length)reasons.push('未偵測到明顯恐慌、FOMO 或違反策略的訊號');
+ $('guardResult').className='guard-result show '+level;
+ $('guardResult').innerHTML='<div style="font-size:18px">'+title+'｜冷靜度 '+score+'/100</div><div style="margin-top:6px">'+advice+'</div><ul style="margin:8px 0 0;padding-left:20px">'+reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')+'</ul>';
+ let logs=guardLogs();logs.push({id:Date.now().toString(),holdingId:id,ticker:x?x.ticker:'',action:action,score:score,fear:fear,fomo:fomo,plan:plan,fundChanged:fundChanged,system:system,createdAt:Date.now()});storeGuardLog(logs);
+}
+function sendGuardToReplay(){
+ let id=$('guardHoldingId').value,x=holdings().find(function(v){return v.id===id}),a=getSnapshot(id)||{};if(!x)return;
+ closeDecisionCheck();showPage('replay');$('replayForm').style.display='block';$('rTicker').value=x.ticker;$('rPrice').value=Number.isFinite(Number(a.price))?Number(a.price):'';$('rDecision').value=(a.finalAdvice&&a.finalAdvice.text)||(a.decision||'');
+ let map={hold:'持有',sell:'賣出',reduce:'賣出',add:'加碼'},val=map[$('guardAction').value]||'持有',radio=document.querySelector('input[name="rAction"][value="'+val+'"]');if(radio)radio.checked=true;
+ let notes=[];if($('guardFear').checked)notes.push('恐慌／虧損壓力');if($('guardFomo').checked)notes.push('FOMO');if(!$('guardPlan').checked)notes.push('不符合原策略');if($('guardFundChanged').checked)notes.push('基本面／持有理由改變');$('rNote').value=notes.length?'操作檢查：'+notes.join('、'):'操作檢查後建立紀錄';
+}
+async function requestRadarNotification(){
+ let el=$('pwaStatus');if(!('Notification' in window)){el.textContent='此瀏覽器不支援通知 API。';return}
+ try{let p=await Notification.requestPermission();el.textContent=p==='granted'?'✅ 已允許通知。':'通知權限：'+p}catch(e){el.textContent='通知權限設定失敗：'+e.message}
+}
+async function showRadarNotification(title,body){
+ if(!('Notification' in window)||Notification.permission!=='granted')return false;
+ try{
+  if(navigator.serviceWorker&&navigator.serviceWorker.ready){let reg=await navigator.serviceWorker.ready;await reg.showNotification(title,{body:body,icon:'./app-icon-192.png',badge:'./app-icon-192.png',tag:'stock-radar'});return true}
+  new Notification(title,{body:body});return true
+ }catch(e){return false}
+}
+async function testRadarNotification(){let ok=await showRadarNotification('股倉雷達','Radar Alert 測試成功。');$('pwaStatus').textContent=ok?'✅ 已送出測試提醒。':'請先允許通知權限。'}
+function radarAlertFromDashboard(){
+ let items=[...document.querySelectorAll('#homeReminders li')].map(function(x){return x.textContent.trim()}).filter(Boolean);
+ let urgent=items.find(function(x){return /^🔴|^⚠/.test(x)});
+ if(urgent)showRadarNotification('股倉雷達提醒',urgent)
+}
 
 function renderDashboard(){
  let c=getCapitalState(),h=holdings(),w=watchlist(),rp=replays(),sn=snapshots(),pnl=0,pnlKnown=false;
@@ -89,7 +190,7 @@ function renderDashboard(){
  if(c.configured&&c.actualCash<c.targetCash)items.push({p:3,t:'🔴 現金水位低於最低目標'});
  document.querySelectorAll('#watchlist .stock').forEach(function(el){let f=el.querySelector('.final-advice');if(f&&/可考慮分批布局/.test(f.textContent)){let title=el.querySelector('.stocktitle');items.push({p:5,t:'🟢 '+esc(title?title.textContent:'觀察股票')+' 已出現可考慮布局訊號'})}});
  rp.forEach(function(r){let waits=[];if(r.result3==null)waits.push('3');if(r.result7==null)waits.push('7');if(r.result30==null)waits.push('30');if(waits.length)items.push({p:6,t:'🧠 '+esc(r.ticker)+' 回放紀錄等待 '+waits.join('／')+' 日結果'})});
- items.sort(function(a,b){return a.p-b.p});$('homeReminders').innerHTML=items.length?items.slice(0,5).map(function(x){return'<li>'+x.t+'</li>'}).join(''):'<li class="note">目前沒有重要提醒</li>';
+ items.sort(function(a,b){return a.p-b.p});$('homeReminders').innerHTML=items.length?items.slice(0,5).map(function(x){return'<li>'+x.t+'</li>'}).join(''):'<li class="note">目前沒有重要提醒</li>';setTimeout(radarAlertFromDashboard,300);
 }
 function renderCapitalSettings(){renderCapital();let c=capitalSettings();$('capitalInput').value=c.total||'';$('targetCashInput').value=c.targetCash||'';$('apiBase').value=api()}
 function showPage(name){let valid=['home','portfolio','watch','replay','settings'];if(valid.indexOf(name)<0)name='home';document.querySelectorAll('.page').forEach(function(p){p.classList.toggle('active',p.id==='page-'+name)});document.querySelectorAll('.tabbar button').forEach(function(b){b.classList.toggle('active',b.dataset.page===name);b.setAttribute('aria-current',b.dataset.page===name?'page':'false')});localStorage.setItem(LAST_PAGE,name);if(name==='home')renderDashboard();else if(name==='replay')renderReplay();else if(name==='settings')renderCapitalSettings();window.scrollTo(0,0)}
@@ -129,7 +230,7 @@ function resetForm(){['fTicker','fCost','fQty','fMaxBudget','editId'].forEach(x=
 function saveHolding(){let ticker=normalizeTicker($('fTicker').value),cost=+$('fCost').value,qty=+$('fQty').value,maxBudgetText=$('fMaxBudget').value.trim(),maxBudget=maxBudgetText===''?0:+maxBudgetText;$('fTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');if(!(cost>0&&qty>0))return alert('請輸入成本與股數');if(!(maxBudget>=0))return alert('個股投入上限請留空或輸入大於 0 的數字');let h=holdings(),id=$('editId').value||Date.now().toString(),item={id,ticker,cost,qty,maxBudget:maxBudget,strategy:$('fStrategy').value,maxLoss:+$('fMaxLoss').value||12,fund:$('fFund').value},i=h.findIndex(x=>x.id===id);i>=0?h[i]=item:h.push(item);store(h);resetForm();$('addForm').style.display='none';render();refreshOne(id)}
 function editHolding(id){let x=holdings().find(v=>v.id===id);if(!x)return;$('fTicker').value=x.ticker;$('fCost').value=x.cost;$('fQty').value=x.qty;$('fMaxBudget').value=+x.maxBudget>0?x.maxBudget:'';$('fStrategy').value=x.strategy;$('fMaxLoss').value=x.maxLoss;$('fFund').value=x.fund;$('editId').value=x.id;$('addForm').style.display='block'}
 function removeHolding(id){if(confirm('確定刪除？')){store(holdings().filter(x=>x.id!==id));removeSnapshot(id);render();summary()}}
-function render(){let h=holdings();$('sumCount').textContent=h.length;$('portfolio').innerHTML=h.length?h.map(x=>`<div class="stock" id="s-${x.id}"><div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">成本 ${fmt(x.cost)}｜${fmt(x.qty)} 股</div></div><div class="row"><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div>${holdingLevelHtml(x)}<div class="status">等待更新行情…</div></div>`).join(''):'<div class="empty">尚無持股</div>';summary()}
+function render(){let h=holdings();$('sumCount').textContent=h.length;$('portfolio').innerHTML=h.length?h.map(x=>`<div class="stock" id="s-${x.id}"><div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">成本 ${fmt(x.cost)}｜${fmt(x.qty)} 股</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div>${holdingLevelHtml(x)}<div class="status">等待更新行情…</div></div>`).join(''):'<div class="empty">尚無持股</div>';summary()}
 async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare Worker 網址');ticker=normalizeTicker(ticker);if(!validTicker(ticker))throw new Error('股票代號須為 4–7 碼英文或數字');try{let r=await fetch(api()+'/stock?symbol='+encodeURIComponent(ticker)),j=null;try{j=await r.json()}catch(e){}if(!r.ok||!j||j.ok!==true)throw new Error(j&&j.error?j.error:'行情服務暫時無法使用（HTTP '+r.status+'）');let history=Array.isArray(j.history)?j.history:[],rows=history.map(function(x){let t=Date.parse(x.date+'T00:00:00+08:00')/1000,c=Number(x.close),v=x.volume==null?null:Number(x.volume);return{t:t,c:c,v:Number.isFinite(v)?v:null}}).filter(function(x){return Number.isFinite(x.t)&&Number.isFinite(x.c)}).sort(function(a,b){return a.t-b.t});if(rows.length<60)throw new Error('目前取得的有效交易日不足 60 日');let last=rows[rows.length-1],price=Number(j.price),timestamp=Number(j.timestamp),meta={longName:j.name||ticker,shortName:j.name||ticker,regularMarketPrice:Number.isFinite(price)?price:last.c,regularMarketTime:Number.isFinite(timestamp)?timestamp:last.t,exchangeName:j.market||'',dataSource:j.source||''};return{symbol:ticker,d:{meta:meta},rows:rows,source:j.source||'',market:j.market||''}}catch(e){if(/^目前無法取得/.test(e.message)||/^尚未設定/.test(e.message)||/^股票代號/.test(e.message))throw e;throw new Error('目前無法取得 '+ticker+' 行情，已嘗試 Yahoo、TWSE 與 TPEx。'+(e.message?'（'+e.message+'）':''))}}
 function analyze(x,m){let rows=m.rows,d=m.d,meta=d.meta||{},cl=rows.map(r=>r.c),last=rows[rows.length-1],price=Number.isFinite(meta.regularMarketPrice)?meta.regularMarketPrice:last.c,ma5=sma(cl,5),ma20=sma(cl,20),ma60=sma(cl,60),rsi=rsi14(cl),vr=last.v/avg(rows.slice(-20).map(r=>r.v).filter(v=>v>0)),pnl=(price-x.cost)/x.cost*100,score=0,re=[],tags=[];
 if(pnl<=-x.maxLoss){score-=3;re.push(`損益 ${pct(pnl)}，已超過最大可接受虧損 ${x.maxLoss}%`);tags.push('觸及風控')}else if(pnl<=-7){score-=1;re.push(`目前虧損 ${pct(pnl)}，虧損偏大`)}else if(pnl>=25){score-=1;re.push(`目前獲利 ${pct(pnl)}，若趨勢轉弱可分批落袋`);tags.push('高獲利區')}else if(pnl>=8){score+=1;re.push(`目前獲利 ${pct(pnl)}，已有安全墊`)}
@@ -149,7 +250,7 @@ function isBuyAdvice(advice){return advice&&advice.actions&&advice.actions.some(
 function buildPositionAdvice(stockAnalysis,holding,capitalState){let technical=stockAnalysis.advice||buildAdvice(stockAnalysis),level=holdingLevel(holding);if(!isBuyAdvice(technical))return{text:technical.summary,cls:stockAnalysis.cls||'warn',allowed:false};if(level.percent!=null&&level.percent>=80)return{text:'🟡 技術面偏多，但個股水位已達 '+fmt(level.percent)+'%，暫停加碼。',cls:'warn',allowed:false};if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)return{text:'🟡 股票本身具有加碼條件，但整體現金水位不足，暫不新增部位。',cls:'warn',allowed:false};return{text:'🟢 倉位允許，可考慮分批加碼。',cls:'good',allowed:true}}
 function holdingLevelHtml(holding){let l=holdingLevel(holding);if(l.percent==null)return'<div class="level-box"><strong>庫存水位</strong><div class="capital-alert warn">未設定個股上限</div><div class="level-lines"><span>目前投入：'+money(l.invested)+'</span><span>投入上限：—</span><span>剩餘可投入：—</span></div></div>';return'<div class="level-box"><strong>庫存水位</strong><div class="level-bar">'+bar(l.percent)+' '+fmt(l.percent)+'%</div><div class="level-lines"><span>目前投入：'+money(l.invested)+'</span><span>投入上限：'+money(l.maxBudget)+'</span><span>剩餘可投入：'+money(l.remaining)+'</span></div><div class="capital-alert '+l.cls+'">'+l.status+'</div></div>'}
 function listHtml(items){return items.map(function(item){return'<li>'+item+'</li>'}).join('')}
-async function refreshOne(id){let x=holdings().find(v=>v.id===id),el=$('s-'+id);if(!x||!el)return;el.querySelector('.status').textContent='更新中…';try{let a=analyze(x,await market(x.ticker)),advice=buildAdvice(a);a.advice=advice;a.finalAdvice=buildPositionAdvice(a,x,getCapitalState());saveSnapshot(x.id,a);el.dataset.value=a.value;el.dataset.cost=a.costValue;el.dataset.pnl=a.pnlMoney;el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${x.ticker} ${a.name}</div><div class="stocksub">行情 ${a.time.toLocaleString('zh-TW')}</div></div><div class="row"><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="decision ${a.cls}">${a.decision}</div><div>${a.tags.map(t=>`<span class="pill">${t}</span>`).join('')}</div><div class="stockgrid"><div class="kpi"><small>現價</small><b>${fmt(a.price)}</b></div><div class="kpi"><small>報酬</small><b class="${a.pnl>=0?'good':'bad'}">${pct(a.pnl)}</b></div><div class="kpi"><small>損益</small><b>${money(a.pnlMoney)}</b></div><div class="kpi"><small>趨勢</small><b>${a.price>=a.ma20?'偏強':'偏弱'}</b></div><div class="kpi"><small>市場動能</small><b>${a.rsi<30?'接近超賣':a.rsi>75?'偏熱':'一般'}</b></div><div class="kpi"><small>成交量</small><b>${a.vr>=1.5?'增加':'一般'}</b></div></div>${holdingLevelHtml(x)}<div class="final-advice ${a.finalAdvice.cls}">最終建議：${a.finalAdvice.text}</div><div class="row" style="margin-top:9px"><button class="ghost" onclick="toggleDetails('${x.id}')">查看原因</button><span class="note">市場訊號與倉位許可已分開判斷</span></div><div class="details" id="d-${x.id}"><strong>市場現況</strong><div class="advice-summary">${advice.summary}</div><div class="advice-grid"><div class="advice-box"><strong class="good">正向因素</strong><ul>${listHtml(advice.strengths)}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul>${listHtml(advice.risks)}</ul></div><div class="advice-box"><strong>建議行動</strong><ul>${listHtml(advice.actions)}</ul></div></div><div class="note" style="margin-top:10px">市場訊號不等於倉位許可；這是規則式風險管理訊號，不保證獲利。</div></div>`;summary()}catch(e){el.querySelector('.status').textContent='更新失敗：'+e.message}}
+async function refreshOne(id){let x=holdings().find(v=>v.id===id),el=$('s-'+id);if(!x||!el)return;el.querySelector('.status').textContent='更新中…';try{let a=analyze(x,await market(x.ticker)),advice=buildAdvice(a);a.advice=advice;a.finalAdvice=buildPositionAdvice(a,x,getCapitalState());saveSnapshot(x.id,a);el.dataset.value=a.value;el.dataset.cost=a.costValue;el.dataset.pnl=a.pnlMoney;el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${x.ticker} ${a.name}</div><div class="stocksub">行情 ${a.time.toLocaleString('zh-TW')}</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="decision ${a.cls}">${a.decision}</div><div>${a.tags.map(t=>`<span class="pill">${t}</span>`).join('')}</div><div class="stockgrid"><div class="kpi"><small>現價</small><b>${fmt(a.price)}</b></div><div class="kpi"><small>報酬</small><b class="${a.pnl>=0?'good':'bad'}">${pct(a.pnl)}</b></div><div class="kpi"><small>損益</small><b>${money(a.pnlMoney)}</b></div><div class="kpi"><small>趨勢</small><b>${a.price>=a.ma20?'偏強':'偏弱'}</b></div><div class="kpi"><small>市場動能</small><b>${a.rsi<30?'接近超賣':a.rsi>75?'偏熱':'一般'}</b></div><div class="kpi"><small>成交量</small><b>${a.vr>=1.5?'增加':'一般'}</b></div></div>${holdingLevelHtml(x)}<div class="final-advice ${a.finalAdvice.cls}">最終建議：${a.finalAdvice.text}</div><div class="row" style="margin-top:9px"><button class="ghost" onclick="toggleDetails('${x.id}')">查看原因</button><span class="note">市場訊號與倉位許可已分開判斷</span></div><div class="details" id="d-${x.id}"><strong>市場現況</strong><div class="advice-summary">${advice.summary}</div><div class="advice-grid"><div class="advice-box"><strong class="good">正向因素</strong><ul>${listHtml(advice.strengths)}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul>${listHtml(advice.risks)}</ul></div><div class="advice-box"><strong>建議行動</strong><ul>${listHtml(advice.actions)}</ul></div></div><div class="note" style="margin-top:10px">市場訊號不等於倉位許可；這是規則式風險管理訊號，不保證獲利。</div></div>`;summary()}catch(e){el.querySelector('.status').textContent='更新失敗：'+e.message}}
 function toggleDetails(id){let d=$('d-'+id);if(d)d.style.display=d.style.display==='block'?'none':'block'}
 async function refreshAll(){let h=holdings();if(!h.length)return;$('globalStatus').textContent='正在更新…';for(const x of h)await refreshOne(x.id);$('globalStatus').textContent='更新完成'}
 function summary(){let els=[...document.querySelectorAll('#portfolio .stock')],v=0,c=0,p=0,n=0;for(const el of els){let a=+el.dataset.value,b=+el.dataset.cost,d=+el.dataset.pnl;if(Number.isFinite(a)&&a>0){v+=a;c+=b;p+=d;n++}}$('sumCost').textContent=n?money(c):money(investedCost());$('sumValue').textContent=n?money(v):'—';$('sumPnl').textContent=n?((p>=0?'+':'')+money(p)):'—';$('sumPnl').className=p>=0?'good':'bad';renderCapital();renderDashboard()}
@@ -248,6 +349,9 @@ function replayDate(v){let d=new Date(v);return isNaN(d.getTime())?'—':d.toLoc
 function replayResult(label,value,price){let change=value!=null&&price>0?(value-price)/price*100:null;return`<div class="kpi"><small>${label}</small><b>${value==null?'尚未填寫':fmt(value)+(change==null?'':'（'+pct(change)+'）')}</b></div>`}
 function renderReplay(){let all=replays();$('replayList').innerHTML=all.length?all.map(function(r){let a=r.advice||{},strengths=a.strengths||[],risks=a.risks||[],name=(snapshotForTicker(r.ticker)||{}).name||'',conclusion=buildReplayConclusion(r);return`<div class="stock"><div class="stockhead"><div><div class="stocktitle">${esc(r.ticker)} ${esc(name)}</div><div class="stocksub">日期：${replayDate(r.createdAt)}｜當時價格 ${fmt(r.price)}</div></div><div class="row"><button class="ghost" onclick="editReplay('${r.id}')">更新結果</button><button class="danger" onclick="removeReplay('${r.id}')">刪除紀錄</button></div></div><div class="replay-block"><strong>當時的市場狀態</strong><div class="advice-summary">${esc(a.summary||'—')}</div></div><div class="replay-block"><strong>系統建議</strong><div class="decision ${/賣出|減碼|停損/.test(r.decision)?'bad':'warn'}">${esc(r.decision||a.summary||'—')}</div></div><div class="advice-grid replay-block"><div class="advice-box"><strong class="good">正向因素</strong><ul class="replay-list">${strengths.length?listHtml(strengths):'<li>— 無 Snapshot 資料</li>'}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul class="replay-list">${risks.length?listHtml(risks):'<li>— 無 Snapshot 資料</li>'}</ul></div><div class="advice-box"><strong>使用者操作</strong><div>☑ ${esc(r.action||'—')}</div><div class="reason note" style="margin-top:7px">原因：${esc(r.note)||'—'}</div></div></div><div class="replay-result">${replayResult('3 天後',r.result3,r.price)}${replayResult('7 天後',r.result7,r.price)}${replayResult('30 天後',r.result30,r.price)}</div><div class="replay-conclusion ${conclusion.indexOf('持有')>=0?'good':'bad'}">最終結論：${conclusion}</div></div>`}).join(''):'<div class="empty">尚無決策紀錄</div>'}
 let initialCapital=capitalSettings();$('capitalInput').value=initialCapital.total||'';$('targetCashInput').value=initialCapital.targetCash||'';bindTickerInputs();render();renderWatch();renderReplay();renderCapital();showPage(localStorage.getItem(LAST_PAGE)||'home');if(api())setTimeout(function(){refreshAll();refreshWatchAll()},400);
+
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./service-worker.js').catch(function(e){console.warn('Service worker 註冊失敗',e)})})}
+
 </script>
 </body>
 </html>
