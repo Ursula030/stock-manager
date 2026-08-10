@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.2（趨勢評分整合版）</title>
+<title>股倉雷達 v5.3（S+C+M+E 決策環境版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -57,11 +57,25 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
 .score-reasons{list-style:none;margin:8px 0 0;padding:0;font-size:13px;line-height:1.65}
 .score-reasons li+li{margin-top:2px}
 
+
+.decision-env{margin-top:12px;padding:13px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}
+.decision-env-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:850}
+.decision-total{font-size:19px}
+.score4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+.score4 .kpi{padding:9px}
+.score4 .kpi b{font-size:16px}
+.score-coverage{margin-top:8px;font-size:12px;color:var(--muted)}
+.score-gate{margin-top:9px;padding:9px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px;line-height:1.5}
+.score-breakdown{display:none;margin-top:10px}
+.score-breakdown.show{display:block}
+.score-breakdown ul{margin:6px 0 0;padding-left:18px;line-height:1.55;font-size:13px}
+@media(max-width:620px){.score4{grid-template-columns:repeat(2,1fr)}}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.2 · 趨勢評分整合版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.3 · S+C+M+E 決策環境版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -102,6 +116,7 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
   <div class="card"><strong>Cloudflare Worker API</strong><div class="note" style="margin:8px 0">原有網址會自動帶入，不需重新設定。</div><div class="row"><input id="apiBase" placeholder="例如 https://stock-proxy.xxxxx.workers.dev" style="flex:1;min-width:0"><button class="secondary" onclick="saveApi()">儲存 API</button><button class="ghost" onclick="testApi()">測試連線</button></div><div id="apiStatus" class="status"></div></div>
   <div class="card"><strong>💰 目前資金設定</strong><div class="grid3" style="margin-top:12px"><div class="metric"><small>總資金</small><strong id="capitalTotal">未設定</strong></div><div class="metric"><small>已投入</small><strong id="capitalInvested">—</strong></div><div class="metric"><small>剩餘現金</small><strong id="capitalCash">—</strong></div></div><div id="capitalLevel"></div></div>
   <div class="card"><strong>📲 PWA App</strong><div class="install-box"><div><b>iPhone 安裝：</b>Safari → 分享 →「加入主畫面」。安裝後從桌面開啟，會以 App 模式顯示，不會有一般 Safari 網址列。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="requestRadarNotification()">開啟 Radar 通知權限</button><button class="ghost" onclick="testRadarNotification()">測試提醒</button></div><div id="pwaStatus" class="status"></div></div><div class="note" style="margin-top:8px">v5.0 的 Radar 通知會在你開啟／更新 App 時觸發；真正關閉 App 後仍可背景推播，需要另外串接 Web Push 伺服器。</div></div>
+<div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -127,7 +142,7 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
 
 <nav class="tabbar" aria-label="主要分頁"><button data-page="home" onclick="showPage('home')"><span class="tab-icon">🏠</span>總覽</button><button data-page="portfolio" onclick="showPage('portfolio')"><span class="tab-icon">📈</span>持股</button><button data-page="watch" onclick="showPage('watch')"><span class="tab-icon">⭐</span>觀察</button><button data-page="replay" onclick="showPage('replay')"><span class="tab-icon">🔁</span>回放</button><button data-page="settings" onclick="showPage('settings')"><span class="tab-icon">⚙️</span>設定</button></nav>
 <script>
-const $=id=>document.getElementById(id), HOLD='stockbot_v4_holdings', SNAP='stockbot_v4_snapshot', API='stockbot_v4_api', WATCH='stockbot_v4_2_watchlist', WATCH_CACHE='stockbot_v482_watch_cache', REPLAY='stockbot_v44_replay', CAPITAL='stockbot_v45_capital', LAST_PAGE='stockbot_v46_last_page', GUARD_LOG='stockbot_v50_guard_log';
+const $=id=>document.getElementById(id), HOLD='stockbot_v4_holdings', SNAP='stockbot_v4_snapshot', API='stockbot_v4_api', WATCH='stockbot_v4_2_watchlist', WATCH_CACHE='stockbot_v482_watch_cache', REPLAY='stockbot_v44_replay', CAPITAL='stockbot_v45_capital', LAST_PAGE='stockbot_v46_last_page', GUARD_LOG='stockbot_v50_guard_log', MARKET_CTX='stockbot_v53_market_ctx';
 
 
 function guardLogs(){try{return JSON.parse(localStorage.getItem(GUARD_LOG)||'[]')}catch(e){return[]}}
@@ -162,7 +177,7 @@ function runDecisionCheck(){
  if(!reasons.length)reasons.push('未偵測到明顯恐慌、FOMO 或違反策略的訊號');
  $('guardResult').className='guard-result show '+level;
  $('guardResult').innerHTML='<div style="font-size:18px">'+title+'｜冷靜度 '+score+'/100</div><div style="margin-top:6px">'+advice+'</div><ul style="margin:8px 0 0;padding-left:20px">'+reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')+'</ul>';
- let logs=guardLogs();logs.push({id:Date.now().toString(),holdingId:id,ticker:x?x.ticker:'',action:action,score:score,fear:fear,fomo:fomo,plan:plan,fundChanged:fundChanged,system:system,createdAt:Date.now()});storeGuardLog(logs);
+ let logs=guardLogs();logs.push({id:Date.now().toString(),holdingId:id,ticker:x?x.ticker:'',action:action,score:score,fear:fear,fomo:fomo,plan:plan,fundChanged:fundChanged,system:system,createdAt:Date.now()});storeGuardLog(logs);render();renderWatch();
 }
 function sendGuardToReplay(){
  let id=$('guardHoldingId').value,x=holdings().find(function(v){return v.id===id}),a=getSnapshot(id)||{};if(!x)return;
@@ -187,6 +202,122 @@ function radarAlertFromDashboard(){
  let urgent=items.find(function(x){return /^🔴|^⚠/.test(x)});
  if(urgent)showRadarNotification('股倉雷達提醒',urgent)
 }
+
+
+function clip(v,min,max){min=min==null?-1:min;max=max==null?1:max;return Math.max(min,Math.min(max,v))}
+function round1(v){return Math.round(v*10)/10}
+function scoreTone(v){if(v>=2)return'good';if(v<=-2)return'bad';return'warn'}
+function totalLabel(v){
+ if(v>=12)return{text:'🟢 強正向',cls:'good'};
+ if(v>=6)return{text:'🟢 偏正向',cls:'good'};
+ if(v>-6)return{text:'🟡 中性',cls:'warn'};
+ if(v>-12)return{text:'🟠 偏負向',cls:'warn'};
+ return{text:'🔴 高風險',cls:'bad'};
+}
+function stockComponent(a){
+ let t=trendInfoFromAnalysis(a),score=round1(5*Number(t.score||0)/9);
+ return{score:score,coverage:t.reasons&&t.reasons.length?1:0,status:t.reasons&&t.reasons.length?'complete':'missing',reasons:(t.reasons||[]).slice(),legacy:{raw:Number(t.score||0),max:9,text:t.text||''}};
+}
+function declaredPortfolioRiskPct(){
+ let c=capitalSettings(),total=Number(c.total)||0;if(!(total>0))return null;
+ let risk=holdings().reduce(function(sum,x){let cost=(+x.cost||0)*(+x.qty||0),ml=(+x.maxLoss||0)/100;return sum+cost*ml},0);
+ return risk/total;
+}
+function cashComponent(subject,plannedBudget){
+ let c=getCapitalState(),parts=[],weighted=0,totalW=8,availableW=0;
+ if(c.configured){
+  let gapPP=c.actualCash-c.targetCash,x=clip(gapPP/20);weighted+=3*x;availableW+=3;parts.push((x>=0?'✔ ':'✘ ')+'現金安全墊 '+fmt(gapPP)+' 個百分點（權重 3）');
+ }else parts.push('— 尚未設定投資總資金／最低現金水位');
+ let maxBudget=subject?+subject.maxBudget||0:0,invested=subject?(+subject.cost||0)*(+subject.qty||0):0;
+ if(maxBudget>0){
+  let level=invested/maxBudget,x=clip((0.80-level)/0.40);weighted+=2*x;availableW+=2;parts.push((x>=0?'✔ ':'✘ ')+'個股水位 '+fmt(level*100)+'%（權重 2）');
+ }else parts.push('— 尚未設定個股投入上限');
+ let pb=Number(plannedBudget)||0;
+ if(c.configured&&pb>0){
+  let spare=Math.max(0,c.cash-c.total*c.targetCash/100),x=clip(spare/pb);weighted+=2*x;availableW+=2;parts.push((x>=0?'✔ ':'✘ ')+'本次預算 '+money(pb)+' 可負擔度（權重 2）');
+ }else parts.push(pb>0?'— 無法計算本次預算可負擔度':'— 未提供本次預算');
+ let rp=declaredPortfolioRiskPct();
+ if(rp!=null){
+  let x=clip((0.08-rp)/0.08);weighted+=1*x;availableW+=1;parts.push((x>=0?'✔ ':'✘ ')+'宣告風險預算 '+fmt(rp*100)+'%（權重 1）');
+ }else parts.push('— 無法計算宣告風險預算');
+ let score=round1(5*weighted/totalW),coverage=availableW/totalW;
+ return{score:score,coverage:coverage,status:coverage>=.99?'complete':coverage>0?'partial':'missing',reasons:parts};
+}
+function latestGuardForTicker(ticker){
+ let logs=guardLogs().filter(function(x){return x&&x.ticker===ticker}).sort(function(a,b){return(+b.createdAt||0)-(+a.createdAt||0)});
+ return logs[0]||null;
+}
+function emotionComponent(ticker){
+ let g=latestGuardForTicker(ticker);
+ if(!g)return{score:null,coverage:0,status:'not_evaluated',reasons:['— 尚未執行操作檢查']};
+ let weighted=0,totalW=8,parts=[],action=g.action||'hold';
+ let plan=g.plan===true?1:-1;weighted+=3*plan;parts.push((plan>0?'✔ ':'✘ ')+'符合原策略（權重 3）');
+ let fear=((action==='sell'||action==='reduce')&&g.fear===true)?-1:0;weighted+=2*fear;parts.push(fear<0?'✘ 恐慌賣出訊號（權重 2）':'— 未偵測到恐慌賣出（權重 2）');
+ let fomo=(action==='add'&&g.fomo===true)?-1:0;weighted+=2*fomo;parts.push(fomo<0?'✘ FOMO 加碼訊號（權重 2）':'— 未偵測到 FOMO 加碼（權重 2）');
+ let objective=((action==='sell'||action==='reduce')&&g.fundChanged===true)?1:((g.fear||g.fomo)&&!g.fundChanged?-1:0);weighted+=objective;parts.push(objective>0?'✔ 有客觀理由（權重 1）':objective<0?'✘ 情緒訊號高但缺乏客觀理由（權重 1）':'— 客觀理由中性（權重 1）');
+ return{score:round1(5*weighted/totalW),coverage:1,status:'complete',reasons:parts,guard:g};
+}
+function marketContext(){try{return JSON.parse(localStorage.getItem(MARKET_CTX)||'null')}catch(e){return null}}
+function saveMarketContext(v){localStorage.setItem(MARKET_CTX,JSON.stringify(v))}
+async function computeMarketProxy(){
+ let syms=['0050','2330'],rows=[];
+ for(const s of syms){
+  let m=await market(s),cl=m.rows.map(function(r){return r.c}),last=m.rows[m.rows.length-1],p=Number.isFinite(m.d.meta.regularMarketPrice)?m.d.meta.regularMarketPrice:last.c,ma20=sma(cl,20),ma60=sma(cl,60),raw=0,reasons=[];
+  if(p>=ma20){raw+=2;reasons.push('✔ '+s+' 站上 MA20（+2）')}else{raw-=2;reasons.push('✘ '+s+' 跌破 MA20（-2）')}
+  if(p>=ma60){raw+=2;reasons.push('✔ '+s+' 站上 MA60（+2）')}else{raw-=2;reasons.push('✘ '+s+' 跌破 MA60（-2）')}
+  if(ma20>=ma60){raw+=1;reasons.push('✔ '+s+' MA20 ≥ MA60（+1）')}else{raw-=1;reasons.push('✘ '+s+' MA20 < MA60（-1）')}
+  rows.push({symbol:s,raw:raw,max:5,reasons:reasons});
+ }
+ let rawAvg=avg(rows.map(function(x){return x.raw})),score=round1(5*rawAvg/5);
+ return{score:score,coverage:1,status:'complete',updatedAt:Date.now(),reasons:rows.flatMap(function(x){return x.reasons}),proxy:'0050+2330'};
+}
+async function refreshMarketContext(force){
+ let status=$('marketScoreStatus');if(status)status.textContent='正在更新市場分數…';
+ try{
+  let old=marketContext();
+  if(!force&&old&&Date.now()-(+old.updatedAt||0)<10*60*1000){if(status)status.textContent='市場分數 M：'+fmt(old.score)+' / 5（快取）';return old}
+  let ctx=await computeMarketProxy();saveMarketContext(ctx);if(status)status.textContent='市場分數 M：'+fmt(ctx.score)+' / 5（0050＋2330）';render();renderWatch();return ctx;
+ }catch(e){
+  let old=marketContext();if(status)status.textContent=old?'市場更新失敗，沿用上次 M：'+fmt(old.score)+' / 5':'市場分數更新失敗：'+e.message;return old
+ }
+}
+function marketComponent(){
+ let m=marketContext();if(!m)return{score:null,coverage:0,status:'missing',reasons:['— 尚未取得市場分數 M']};
+ return{score:Number(m.score),coverage:Number(m.coverage)||1,status:m.status||'complete',reasons:Array.isArray(m.reasons)?m.reasons:[],updatedAt:m.updatedAt,proxy:m.proxy};
+}
+function scoreGates(subject,c,e){
+ let reasons=[],canAdd=true,requiresConfirmation=false,cs=getCapitalState(),level=subject?holdingLevel(subject):null;
+ if(cs.configured&&cs.actualCash<cs.targetCash){canAdd=false;reasons.push('現金水位低於最低目標')}
+ if(level&&level.percent!=null&&level.percent>=100){canAdd=false;reasons.push('個股水位已達或超過 100% 上限')}
+ else if(level&&level.percent!=null&&level.percent>=80){requiresConfirmation=true;reasons.push('個股水位已達 80% 以上')}
+ if(e&&e.status==='complete'&&e.score<=-3){requiresConfirmation=true;reasons.push('E 情緒／紀律分數偏低，建議再次確認')}
+ if(!reasons.length)reasons.push('未觸發硬性限制');
+ return{canAdd:canAdd,requiresConfirmation:requiresConfirmation,reasons:reasons};
+}
+function decisionEnvironment(ticker,a,subject,plannedBudget){
+ let S=stockComponent(a),C=cashComponent(subject,plannedBudget),M=marketComponent(),E=emotionComponent(ticker),
+ total=(S.score||0)+(C.score||0)+(M.score||0)+(E.score==null?0:E.score),
+ coverage=(S.coverage+C.coverage+M.coverage+E.coverage)/4,label=totalLabel(total),gates=scoreGates(subject,C,E),
+ provisional=coverage<0.80||E.status==='not_evaluated'||M.status==='missing';
+ return{S:S,C:C,M:M,E:E,total:round1(total),coverage:coverage,label:label,gates:gates,provisional:provisional};
+}
+function decisionEnvHtml(env,id){
+ let eText=env.E.score==null?'—':fmt(env.E.score),mText=env.M.score==null?'—':fmt(env.M.score),
+ gateCls=env.gates.canAdd?(env.gates.requiresConfirmation?'warn':'good'):'bad',
+ statusText=env.provisional?'🟡 暫定':'✅ 完整';
+ return `<div class="decision-env">
+  <div class="decision-env-head"><div><div class="decision-total ${env.label.cls}">決策環境：${env.label.text} ${env.total>=0?'+':''}${fmt(env.total)} / 20</div><div class="score-coverage">${statusText} · 完整度 ${Math.round(env.coverage*100)}%</div></div><button class="ghost" onclick="toggleScoreBreakdown('${id}')">查看分數</button></div>
+  <div class="score4"><div class="kpi"><small>S 個股</small><b class="${scoreTone(env.S.score)}">${env.S.score>=0?'+':''}${fmt(env.S.score)}</b></div><div class="kpi"><small>C 資金</small><b class="${scoreTone(env.C.score)}">${env.C.score>=0?'+':''}${fmt(env.C.score)}</b></div><div class="kpi"><small>M 市場</small><b class="${env.M.score==null?'warn':scoreTone(env.M.score)}">${mText}</b></div><div class="kpi"><small>E 情緒</small><b class="${env.E.score==null?'warn':scoreTone(env.E.score)}">${eText}</b></div></div>
+  <div class="score-gate ${gateCls}">${env.gates.canAdd?(env.gates.requiresConfirmation?'⚠ 可加碼但需再次確認':'✅ 資金閘門允許新增部位'):'⛔ 資金閘門：暫停新增部位'}<br>${env.gates.reasons.map(esc).join('；')}</div>
+  <div class="score-breakdown" id="score-${id}">
+   <strong>S 個股</strong><ul>${env.S.reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul>
+   <strong>C 資金</strong><ul>${env.C.reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul>
+   <strong>M 市場</strong><ul>${env.M.reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul>
+   <strong>E 情緒</strong><ul>${env.E.reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul>
+  </div>
+ </div>`;
+}
+function toggleScoreBreakdown(id){let el=$('score-'+id);if(el)el.classList.toggle('show')}
 
 function renderDashboard(){
  let c=getCapitalState(),h=holdings(),w=watchlist(),rp=replays(),sn=snapshots(),pnl=0,pnlKnown=false;
@@ -238,7 +369,7 @@ function resetForm(){['fTicker','fCost','fQty','fMaxBudget','editId'].forEach(x=
 function saveHolding(){let ticker=normalizeTicker($('fTicker').value),cost=+$('fCost').value,qty=+$('fQty').value,maxBudgetText=$('fMaxBudget').value.trim(),maxBudget=maxBudgetText===''?0:+maxBudgetText;$('fTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');if(!(cost>0&&qty>0))return alert('請輸入成本與股數');if(!(maxBudget>=0))return alert('個股投入上限請留空或輸入大於 0 的數字');let h=holdings(),id=$('editId').value||Date.now().toString(),old=h.find(function(x){return x.id===id}),item={id:id,ticker:ticker,cost:cost,qty:qty,maxBudget:maxBudget,strategy:$('fStrategy').value,maxLoss:+$('fMaxLoss').value||12,fund:$('fFund').value},i=h.findIndex(function(x){return x.id===id});if(i>=0)h[i]=item;else h.push(item);if(old&&old.ticker!==ticker)removeSnapshot(id);store(h);resetForm();$('addForm').style.display='none';render();void refreshOne(id)}
 function editHolding(id){let x=holdings().find(v=>v.id===id);if(!x)return;$('fTicker').value=x.ticker;$('fCost').value=x.cost;$('fQty').value=x.qty;$('fMaxBudget').value=+x.maxBudget>0?x.maxBudget:'';$('fStrategy').value=x.strategy;$('fMaxLoss').value=x.maxLoss;$('fFund').value=x.fund;$('editId').value=x.id;$('addForm').style.display='block'}
 function removeHolding(id){if(confirm('確定刪除？')){store(holdings().filter(x=>x.id!==id));removeSnapshot(id);render();summary()}}
-function renderHoldingCard(x,a,state,error){let el=$('s-'+x.id);if(!el)return;let st=holdingStatusText(state||'idle',error||'');if(!a){el.removeAttribute('data-value');el.removeAttribute('data-cost');el.removeAttribute('data-pnl');el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">成本 ${fmt(x.cost)}｜${fmt(x.qty)} 股</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div>${holdingLevelHtml(x)}<div class="status ${st.cls}">${esc(st.text)}</div>`;return}let price=Number(a.price),pnl=Number.isFinite(price)?(price-Number(x.cost))/Number(x.cost)*100:Number(a.pnl),value=Number.isFinite(price)?price*Number(x.qty):Number(a.value),costValue=Number(x.cost)*Number(x.qty),pnlMoney=Number.isFinite(price)?(price-Number(x.cost))*Number(x.qty):Number(a.pnlMoney),time=a.time?new Date(a.time):null,advice=a.advice||buildAdvice(a),finalAdvice=buildPositionAdvice(Object.assign({},a,{advice:advice}),x,getCapitalState()),tags=Array.isArray(a.tags)?a.tags:[];el.dataset.value=Number.isFinite(value)?value:'';el.dataset.cost=Number.isFinite(costValue)?costValue:'';el.dataset.pnl=Number.isFinite(pnlMoney)?pnlMoney:'';el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)} ${esc(a.name||'')}</div><div class="stocksub">行情 ${time&&!Number.isNaN(time.getTime())?time.toLocaleString('zh-TW'):'—'}</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="decision ${a.cls||'warn'}">${esc(a.decision||'等待重新判斷')}</div><div>${tags.map(function(t){return'<span class="pill">'+esc(t)+'</span>'}).join('')}</div><div class="trend-score ${trendInfoFromAnalysis(a).cls}"><div class="trend-score-head"><span>技術趨勢：${esc(trendInfoFromAnalysis(a).text)}</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div></div><div class="stockgrid"><div class="kpi"><small>現價</small><b>${fmt(price)}</b></div><div class="kpi"><small>報酬</small><b class="${pnl>=0?'good':'bad'}">${Number.isFinite(pnl)?pct(pnl):'—'}</b></div><div class="kpi"><small>損益</small><b>${money(pnlMoney)}</b></div><div class="kpi"><small>趨勢</small><b>${Number.isFinite(price)&&Number.isFinite(Number(a.ma20))?(price>=Number(a.ma20)?'偏強':'偏弱'):'—'}</b></div><div class="kpi"><small>市場動能</small><b>${Number(a.rsi)<30?'接近超賣':Number(a.rsi)>75?'偏熱':'一般'}</b></div><div class="kpi"><small>成交量</small><b>${Number(a.vr)>=1.5?'增加':'一般'}</b></div></div>${holdingLevelHtml(x)}<div class="final-advice ${finalAdvice.cls||'warn'}">最終建議：${esc(finalAdvice.text||'等待更新')}</div><div class="row" style="margin-top:9px"><button class="ghost" onclick="toggleDetails('${x.id}')">查看原因</button><span class="note">市場訊號與倉位許可已分開判斷</span></div><div class="details" id="d-${x.id}"><strong>市場現況</strong><div class="advice-summary">${esc(advice.summary||'—')}</div><div class="trend-score"><div class="trend-score-head"><span>趨勢評分明細</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div><ul class="score-reasons">${trendInfoFromAnalysis(a).reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div><div class="advice-grid"><div class="advice-box"><strong class="good">正向因素</strong><ul>${listHtml(advice.strengths||[])}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul>${listHtml(advice.risks||[])}</ul></div><div class="advice-box"><strong>建議行動</strong><ul>${listHtml(advice.actions||[])}</ul></div></div></div><div class="status ${st.cls}">${esc(st.text)}</div>`}
+function renderHoldingCard(x,a,state,error){let el=$('s-'+x.id);if(!el)return;let st=holdingStatusText(state||'idle',error||'');if(!a){el.removeAttribute('data-value');el.removeAttribute('data-cost');el.removeAttribute('data-pnl');el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">成本 ${fmt(x.cost)}｜${fmt(x.qty)} 股</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div>${holdingLevelHtml(x)}<div class="status ${st.cls}">${esc(st.text)}</div>`;return}let price=Number(a.price),pnl=Number.isFinite(price)?(price-Number(x.cost))/Number(x.cost)*100:Number(a.pnl),value=Number.isFinite(price)?price*Number(x.qty):Number(a.value),costValue=Number(x.cost)*Number(x.qty),pnlMoney=Number.isFinite(price)?(price-Number(x.cost))*Number(x.qty):Number(a.pnlMoney),time=a.time?new Date(a.time):null,advice=a.advice||buildAdvice(a),finalAdvice=buildPositionAdvice(Object.assign({},a,{advice:advice}),x,getCapitalState()),tags=Array.isArray(a.tags)?a.tags:[];el.dataset.value=Number.isFinite(value)?value:'';el.dataset.cost=Number.isFinite(costValue)?costValue:'';el.dataset.pnl=Number.isFinite(pnlMoney)?pnlMoney:'';el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)} ${esc(a.name||'')}</div><div class="stocksub">行情 ${time&&!Number.isNaN(time.getTime())?time.toLocaleString('zh-TW'):'—'}</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="decision ${a.cls||'warn'}">${esc(a.decision||'等待重新判斷')}</div><div>${tags.map(function(t){return'<span class="pill">'+esc(t)+'</span>'}).join('')}</div><div class="trend-score ${trendInfoFromAnalysis(a).cls}"><div class="trend-score-head"><span>技術趨勢：${esc(trendInfoFromAnalysis(a).text)}</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div></div><div class="stockgrid"><div class="kpi"><small>現價</small><b>${fmt(price)}</b></div><div class="kpi"><small>報酬</small><b class="${pnl>=0?'good':'bad'}">${Number.isFinite(pnl)?pct(pnl):'—'}</b></div><div class="kpi"><small>損益</small><b>${money(pnlMoney)}</b></div><div class="kpi"><small>趨勢</small><b>${Number.isFinite(price)&&Number.isFinite(Number(a.ma20))?(price>=Number(a.ma20)?'偏強':'偏弱'):'—'}</b></div><div class="kpi"><small>市場動能</small><b>${Number(a.rsi)<30?'接近超賣':Number(a.rsi)>75?'偏熱':'一般'}</b></div><div class="kpi"><small>成交量</small><b>${Number(a.vr)>=1.5?'增加':'一般'}</b></div></div>${holdingLevelHtml(x)}${decisionEnvHtml(decisionEnvironment(x.ticker,a,x,0),'h-'+x.id)}<div class="final-advice ${finalAdvice.cls||'warn'}">最終建議：${esc(finalAdvice.text||'等待更新')}</div><div class="row" style="margin-top:9px"><button class="ghost" onclick="toggleDetails('${x.id}')">查看原因</button><span class="note">市場訊號與倉位許可已分開判斷</span></div><div class="details" id="d-${x.id}"><strong>市場現況</strong><div class="advice-summary">${esc(advice.summary||'—')}</div><div class="trend-score"><div class="trend-score-head"><span>趨勢評分明細</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div><ul class="score-reasons">${trendInfoFromAnalysis(a).reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div><div class="advice-grid"><div class="advice-box"><strong class="good">正向因素</strong><ul>${listHtml(advice.strengths||[])}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul>${listHtml(advice.risks||[])}</ul></div><div class="advice-box"><strong>建議行動</strong><ul>${listHtml(advice.actions||[])}</ul></div></div></div><div class="status ${st.cls}">${esc(st.text)}</div>`}
 function render(){let h=holdings(),cache=snapshots();$('sumCount').textContent=h.length;$('portfolio').innerHTML=h.length?h.map(function(x){return'<div class="stock" id="s-'+x.id+'"></div>'}).join(''):'<div class="empty">尚無持股</div>';h.forEach(function(x){let a=cache[x.id],usable=a&&(!a.ticker||a.ticker===x.ticker);renderHoldingCard(x,usable?a:null,usable?'loading':'idle')});summary()}
 async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare Worker 網址');ticker=normalizeTicker(ticker);if(!validTicker(ticker))throw new Error('股票代號須為 4–7 碼英文或數字');try{let r=await fetch(api()+'/stock?symbol='+encodeURIComponent(ticker)),j=null;try{j=await r.json()}catch(e){}if(!r.ok||!j||j.ok!==true)throw new Error(j&&j.error?j.error:'行情服務暫時無法使用（HTTP '+r.status+'）');let history=Array.isArray(j.history)?j.history:[],rows=history.map(function(x){let t=Date.parse(x.date+'T00:00:00+08:00')/1000,c=Number(x.close),v=x.volume==null?null:Number(x.volume);return{t:t,c:c,v:Number.isFinite(v)?v:null}}).filter(function(x){return Number.isFinite(x.t)&&Number.isFinite(x.c)}).sort(function(a,b){return a.t-b.t});if(rows.length<60)throw new Error('目前取得的有效交易日不足 60 日');let last=rows[rows.length-1],price=Number(j.price),timestamp=Number(j.timestamp),meta={longName:j.name||ticker,shortName:j.name||ticker,regularMarketPrice:Number.isFinite(price)?price:last.c,regularMarketTime:Number.isFinite(timestamp)?timestamp:last.t,exchangeName:j.market||'',dataSource:j.source||''};return{symbol:ticker,d:{meta:meta},rows:rows,source:j.source||'',market:j.market||''}}catch(e){if(/^目前無法取得/.test(e.message)||/^尚未設定/.test(e.message)||/^股票代號/.test(e.message))throw e;throw new Error('目前無法取得 '+ticker+' 行情，已嘗試 Yahoo、TWSE 與 TPEx。'+(e.message?'（'+e.message+'）':''))}}
 
@@ -449,6 +580,7 @@ function replayResult(label,value,price){let change=value!=null&&price>0?(value-
 function renderReplay(){let all=replays();$('replayList').innerHTML=all.length?all.map(function(r){let a=r.advice||{},strengths=a.strengths||[],risks=a.risks||[],name=(snapshotForTicker(r.ticker)||{}).name||'',conclusion=buildReplayConclusion(r);return`<div class="stock"><div class="stockhead"><div><div class="stocktitle">${esc(r.ticker)} ${esc(name)}</div><div class="stocksub">日期：${replayDate(r.createdAt)}｜當時價格 ${fmt(r.price)}</div></div><div class="row"><button class="ghost" onclick="editReplay('${r.id}')">更新結果</button><button class="danger" onclick="removeReplay('${r.id}')">刪除紀錄</button></div></div><div class="replay-block"><strong>當時的市場狀態</strong><div class="advice-summary">${esc(a.summary||'—')}</div></div>${Number.isFinite(Number(r.trendScore))?'<div class="trend-score '+trendLabel(Number(r.trendScore)).cls+'"><div class="trend-score-head"><span>當時趨勢：'+esc(r.trendText||trendLabel(Number(r.trendScore)).text)+'</span><span class="trend-score-num">'+Number(r.trendScore)+' / 9</span></div>'+(Array.isArray(r.trendReasons)&&r.trendReasons.length?'<ul class="score-reasons">'+r.trendReasons.map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+'</div>':''}<div class="replay-block"><strong>系統建議</strong><div class="decision ${/賣出|減碼|停損/.test(r.decision)?'bad':'warn'}">${esc(r.decision||a.summary||'—')}</div></div><div class="advice-grid replay-block"><div class="advice-box"><strong class="good">正向因素</strong><ul class="replay-list">${strengths.length?listHtml(strengths):'<li>— 無 Snapshot 資料</li>'}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul class="replay-list">${risks.length?listHtml(risks):'<li>— 無 Snapshot 資料</li>'}</ul></div><div class="advice-box"><strong>使用者操作</strong><div>☑ ${esc(r.action||'—')}</div><div class="reason note" style="margin-top:7px">原因：${esc(r.note)||'—'}</div></div></div><div class="replay-result">${replayResult('3 天後',r.result3,r.price)}${replayResult('7 天後',r.result7,r.price)}${replayResult('30 天後',r.result30,r.price)}</div><div class="replay-conclusion ${conclusion.indexOf('持有')>=0?'good':'bad'}">最終結論：${conclusion}</div></div>`}).join(''):'<div class="empty">尚無決策紀錄</div>'}
 let initialCapital=capitalSettings();$('capitalInput').value=initialCapital.total||'';$('targetCashInput').value=initialCapital.targetCash||'';bindTickerInputs();render();renderWatch();renderReplay();renderCapital();showPage(localStorage.getItem(LAST_PAGE)||'home');if(api())setTimeout(function(){refreshAll();refreshWatchAll()},400);
 
+setTimeout(function(){refreshMarketContext(false)},600);
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./service-worker.js').catch(function(e){console.warn('Service worker 註冊失敗',e)})})}
 
 </script>
