@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.8（大盤風險雷達版）</title>
+<title>股倉雷達 v5.8.1（觀察建議完整版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -92,7 +92,7 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.8 · 大盤風險雷達版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.8.1 · 觀察建議完整版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -675,7 +675,38 @@ function watchSuggestion(m){
  }
 }
 
-function buildWatchPositionAdvice(a,capitalState){let mr=marketRisk(),cr=a&&a.chaseRisk,rs=a&&a.relativeStrength;if(a.cls!=='good')return{text:a.text,cls:a.cls};if(mr&&mr.level==='high')return{text:'🔴 個股條件雖可觀察，但大盤風險雷達為高風險，暫停新增部位。',cls:'bad',reason:'market-risk'};if(mr&&mr.level==='medium')return{text:'🟡 個股條件偏強，但大盤處於震盪警戒，降低追價力度並等待更佳位置。',cls:'warn',reason:'market-risk'};if(cr&&cr.blockAdd)return{text:(cr.level==='very_high'?'🔴':'🟠')+' 趨勢偏強，但目前'+cr.title.replace(/^[^ ]+ /,'')+'，建議等待拉回，不追價。',cls:cr.level==='very_high'?'bad':'warn',reason:'chase-risk'};if(rs&&rs.blockAdd)return{text:'🟠 個股技術面偏強，但近期相對 0050 明顯落後，建議先等待重新轉強，不急著布局。',cls:'warn',reason:'relative-strength'};if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)return{text:'🟡 已出現參考買點，但目前現金水位不足，建議先不要新增部位。',cls:'warn'};return{text:(rs&&(rs.level==='strong'||rs.level==='positive')?'🟢 技術趨勢、相對強弱、進場位置與現金水位均允許，可考慮分批布局。':'🟢 市場訊號、進場位置與現金水位允許，可考慮分批布局。'),cls:'good'}}
+function buildWatchPositionAdvice(a,capitalState){
+ let mr=marketRisk(),cr=a&&a.chaseRisk,rs=a&&a.relativeStrength,score=Number(a&&a.score),
+     shortLead=rs&&Number.isFinite(Number(rs.lead5))?Number(rs.lead5):null,
+     longLead=rs&&Number.isFinite(Number(rs.lead20))?Number(rs.lead20):null,
+     shortImproving=shortLead!=null&&shortLead>0,
+     longWeak=longLead!=null&&longLead<=-3;
+
+ if(mr&&mr.level==='high'){
+  return{text:'🔴 大盤目前高風險，暫停新增部位。'+(a&&a.cls!=='good'?' 個股本身也尚未轉強，先等待趨勢評分回升、重新站回 MA20，再評估進場。':' 個股雖偏強，也先等大盤風險降級後再評估。'),cls:'bad',reason:'market-risk'};
+ }
+ if(Number.isFinite(score)&&score<-1){
+  let txt='🔴 空頭趨勢尚未止穩，暫不進場。等待重新站回 MA20、趨勢評分至少回到盤整區，再重新評估。';
+  if(shortImproving)txt='🔴 中期仍偏空，暫不搶進；但近 5 日相對市場已有改善。先觀察能否站回 MA20、趨勢評分持續回升，再評估布局。';
+  return{text:txt,cls:'bad',reason:'bearish-trend'};
+ }
+ if(Number.isFinite(score)&&score<2){
+  let txt='🟠 趨勢偏空，目前不急著進場。等待站回 MA20／MA60、趨勢評分回升到盤整以上，且相對 0050 不再持續落後後再評估。';
+  if(shortImproving&&longWeak)txt='🟠 中期仍偏空，但近 5 日出現相對轉強跡象。暫不搶進，觀察是否站回 MA20、趨勢評分由偏空回升，且短線強勢能延續。';
+  else if(shortImproving)txt='🟠 趨勢仍偏空，但短線相對市場開始改善。先觀察站回 MA20 與趨勢評分回升，不因幾天反彈就提前進場。';
+  return{text:txt,cls:'warn',reason:'bearish-watch'};
+ }
+ if(Number.isFinite(score)&&score<5){
+  let txt='🟡 目前屬盤整，方向尚未確認。先等待趨勢評分升到偏多、站穩 MA20，並確認相對 0050 沒有明顯轉弱後再考慮進場。';
+  if(rs&&rs.blockAdd)txt='🟡 技術面仍在盤整，而且近期相對 0050 偏弱；先等待個股重新轉強並停止落後市場，再評估布局。';
+  return{text:txt,cls:'warn',reason:'sideways'};
+ }
+ if(mr&&mr.level==='medium')return{text:'🟡 個股條件偏強，但大盤處於震盪警戒，降低追價力度並等待更佳位置。',cls:'warn',reason:'market-risk'};
+ if(cr&&cr.blockAdd)return{text:(cr.level==='very_high'?'🔴':'🟠')+' 趨勢偏強，但目前'+cr.title.replace(/^[^ ]+ /,'')+'，建議等待拉回，不追價。',cls:cr.level==='very_high'?'bad':'warn',reason:'chase-risk'};
+ if(rs&&rs.blockAdd)return{text:'🟠 個股技術面偏強，但近期相對 0050 明顯落後，建議先等待重新轉強，不急著布局。',cls:'warn',reason:'relative-strength'};
+ if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)return{text:'🟡 已出現參考買點，但目前現金水位不足，建議先不要新增部位。',cls:'warn'};
+ return{text:(rs&&(rs.level==='strong'||rs.level==='positive')?'🟢 技術趨勢、相對強弱、進場位置與現金水位均允許，可考慮分批布局。':'🟢 市場訊號、進場位置與現金水位允許，可考慮分批布局。'),cls:'good'};
+}
 function applySuggestedPrice(value){$('wTarget').value=Number(value).toFixed(2).replace(/\.00$/,'');$('wTarget').focus()}
 async function getSuggestedPrices(){let ticker=normalizeTicker($('wTicker').value),box=$('suggestPriceBox'),btn=$('suggestPriceBtn');$('wTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');box.style.display='block';box.innerHTML='<div class="status">正在取得行情與計算指標…</div>';btn.disabled=true;try{let m=await market(ticker),a=watchSuggestion(m),bench=await relativeStrengthBenchmark(false);a.relativeStrength=relativeStrengthAnalysis(a.price,m.rows.map(function(r){return r.c}),bench,ticker);let finalAdvice=buildWatchPositionAdvice(a,getCapitalState());box.innerHTML=`<div><strong>目前價格：${fmt(a.price)}</strong></div>
 <div class="suggest-grid">
