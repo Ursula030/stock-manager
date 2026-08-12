@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.8.1（觀察建議完整版）</title>
+<title>股倉雷達 v5.8.2（持股建議完整版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -92,7 +92,7 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.8.1 · 觀察建議完整版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.8.2 · 持股建議完整版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -140,6 +140,7 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-botto
 <div class="card"><strong>🏁 v5.6 相對強弱／市場領先</strong><div class="note" style="margin-top:8px">以 0050 作為市場基準，比較個股近 5 日與近 20 日報酬。它回答的是「這檔股票有沒有跑贏市場」，不是 RSI。相對弱勢會降低買進／加碼意願；相對強勢只作為正向確認，不會蓋過追高、現金水位或停利規則，也不會單獨觸發賣出。</div></div>
 <div class="card"><strong>🧱 v5.7 正常回檔／支撐破壞</strong><div class="note" style="margin-top:8px">持股專用。綜合 MA20／MA60、近 20 日高點回撤、量能與趨勢評分，區分「正常整理」「支撐轉弱」「趨勢／支撐破壞」。單日跌破 MA5 不會直接判定走壞；只有多個結構訊號同時成立才會升級減碼或重新評估。</div></div>
 <div class="card"><strong>🌐 v5.8 大盤風險雷達</strong><div class="note" style="margin-top:8px">以 0050＋2330 作為目前可穩定取得的台股市場代理，檢查 MA5／MA20／MA60、均線方向、近 5 日動能、20 日高點回撤與量價。它是風險預警，不預測某一天一定上漲或下跌。黃燈會降低追價／加碼意願；紅燈會暫停新增部位，但不會單獨強迫賣出既有持股。</div></div>
+<div class="card"><strong>📋 v5.8.2 持股建議完整版</strong><div class="note" style="margin-top:8px">持股最終建議不再只顯示「盤整／偏空」。會綜合技術評分、目前損益、原操作策略、獲利保護、支撐結構、大盤風險、追高風險、相對強弱與資金水位，直接回答「現在做什麼＋為什麼＋接下來等什麼訊號」。中長期策略不會因短線盤整或單一偏空分數自動賣出。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -647,7 +648,84 @@ function profitProtection(stockAnalysis,holding,previous){
  return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,stage:stage,title:title,cls:cls,action:action,active:active,reasons:reasons};
 }
 function profitProtectionHtml(p){if(!p)return'';let actionText=p.action==='sell'?'建議停利':p.action==='reduce'?'考慮減碼':p.action==='hold'?'續抱':'原策略判斷';return `<div class="profit-protect"><div class="profit-protect-head"><span class="${p.cls}">${esc(p.title)}</span><span>${esc(actionText)}</span></div><div class="profit-grid"><div class="kpi"><small>目前獲利</small><b>${Number.isFinite(Number(p.currentPnl))?pct(Number(p.currentPnl)):'—'}</b></div><div class="kpi"><small>持有最高價</small><b>${fmt(p.peakPrice)}</b></div><div class="kpi"><small>最高曾獲利</small><b>${Number.isFinite(Number(p.peakPnl))?pct(Number(p.peakPnl)):'—'}</b></div><div class="kpi"><small>距高點回落</small><b>${fmt(p.drawdown)}%</b></div></div><div class="profit-note">停利不是固定報酬率到價即賣；只有在已有獲利後，高點回落與趨勢轉弱同時出現才升級訊號。</div><ul class="profit-reasons">${(p.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
-function buildPositionAdvice(stockAnalysis,holding,capitalState){let mr=marketRisk(),technical=stockAnalysis.advice||buildAdvice(stockAnalysis),level=holdingLevel(holding),pp=stockAnalysis.profitProtection,cr=stockAnalysis.chaseRisk,rs=stockAnalysis.relativeStrength,pb=stockAnalysis.pullbackStructure;if(pp&&pp.action==='sell')return{text:'🔴 停利訊號：已有可保護獲利，且高點回落與趨勢轉弱同時成立，建議分批停利／賣出。',cls:'bad',allowed:false,reason:'profit-protection'};if(pp&&pp.action==='reduce')return{text:'🟠 獲利保護：已有可保護獲利且趨勢開始轉弱，可考慮分批減碼，不是單純因為手癢賣出。',cls:'warn',allowed:false,reason:'profit-protection'};if(pb&&pb.level==='broken')return{text:'🔴 趨勢／支撐破壞：已不是單純正常回檔，重要均線與回撤／量能訊號同步惡化，建議重新評估並考慮分批降低部位。',cls:'bad',allowed:false,reason:'support-break'};if(pb&&pb.level==='warning'&&!isBuyAdvice(technical))return{text:'🟠 支撐轉弱：目前先不要加碼，觀察是否能重新站回 MA20；若弱勢延續再考慮減碼。',cls:'warn',allowed:false,reason:'support-warning'};if(pb&&pb.level==='healthy'&&!isBuyAdvice(technical))return{text:'🟢 目前較像正常回檔／整理，主要支撐結構仍在；先續抱觀察，不因短線下跌提前賣出。',cls:'good',allowed:false,reason:'healthy-pullback'};if(!isBuyAdvice(technical))return{text:technical.summary,cls:stockAnalysis.cls||'warn',allowed:false};if(mr&&mr.level==='high')return{text:'🔴 大盤風險雷達進入高風險：暫停新增／加碼；既有持股仍依個股支撐、停利與原策略續抱或減碼。',cls:'bad',allowed:false,reason:'market-risk'};if(pb&&pb.level==='warning')return{text:'🟠 技術面仍有條件，但支撐結構開始轉弱，暫停加碼並等待重新站穩 MA20。',cls:'warn',allowed:false,reason:'support-warning'};if(cr&&cr.blockAdd)return{text:(cr.level==='very_high'?'🔴':'🟠')+' 趨勢雖有加碼條件，但目前'+cr.title.replace(/^[^ ]+ /,'')+'，暫不建議投入新資金；既有持股仍依原趨勢／停利規則續抱。',cls:cr.level==='very_high'?'bad':'warn',allowed:false,reason:'chase-risk'};if(rs&&rs.blockAdd)return{text:'🟠 技術面雖有加碼條件，但個股近期明顯落後 0050，暫不新增資金；既有部位仍依原趨勢／停利規則判斷。',cls:'warn',allowed:false,reason:'relative-strength'};if(level.percent!=null&&level.percent>=80)return{text:'🟡 技術面偏多，但個股水位已達 '+fmt(level.percent)+'%，暫停加碼。',cls:'warn',allowed:false};if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)return{text:'🟡 股票本身具有加碼條件，但整體現金水位不足，暫不新增部位。',cls:'warn',allowed:false};return{text:(rs&&(rs.level==='strong'||rs.level==='positive')?'🟢 趨勢、相對強弱、倉位與進場位置均允許，可考慮分批加碼。':'🟢 倉位與進場位置允許，可考慮分批加碼。'),cls:'good',allowed:true}}
+function buildPositionAdvice(stockAnalysis,holding,capitalState){
+ let mr=marketRisk(),technical=stockAnalysis.advice||buildAdvice(stockAnalysis),level=holdingLevel(holding),
+     pp=stockAnalysis.profitProtection,cr=stockAnalysis.chaseRisk,rs=stockAnalysis.relativeStrength,
+     pb=stockAnalysis.pullbackStructure,t=trendInfoFromAnalysis(stockAnalysis),
+     score=Number(t.score),pnl=Number(stockAnalysis.pnl),strategy=holding.strategy||'swing',
+     price=Number(stockAnalysis.price),ma20=Number(stockAnalysis.ma20),ma60=Number(stockAnalysis.ma60),
+     above20=Number.isFinite(price)&&Number.isFinite(ma20)&&price>=ma20,
+     above60=Number.isFinite(price)&&Number.isFinite(ma60)&&price>=ma60,
+     strategyText=strategy==='long'?'中長期':strategy==='short'?'短線':'波段';
+
+ // 1. 已成立的賣出／減碼條件優先，不被一般趨勢文字蓋掉。
+ if(pp&&pp.action==='sell')
+  return{text:'🔴 建議分批停利／賣出。已有可保護獲利，且高點回落與趨勢轉弱同時成立；這不是因單日下跌賣出，而是獲利保護條件已觸發。',cls:'bad',allowed:false,reason:'profit-protection'};
+ if(pp&&pp.action==='reduce')
+  return{text:'🟠 建議分批減碼保護獲利。已有可保護成果，且高點回落伴隨趨勢轉弱；先降低部分部位，剩餘持股再觀察支撐是否守住。',cls:'warn',allowed:false,reason:'profit-protection'};
+ if(pb&&pb.level==='broken')
+  return{text:'🔴 建議重新評估並考慮分批降低部位。重要均線與回撤／量能訊號同步惡化，已不是一般盤整；先控制風險，等待重新站回 MA20／MA60 且趨勢評分改善後再考慮恢復部位。',cls:'bad',allowed:false,reason:'support-break'};
+ if(pb&&pb.level==='warning'&&!isBuyAdvice(technical))
+  return{text:'🟠 續抱需提高警覺，暫停加碼。支撐結構開始轉弱，先看能否重新站回 MA20；若進一步跌破 MA60、趨勢評分惡化或放量走弱，再評估減碼。',cls:'warn',allowed:false,reason:'support-warning'};
+ if(pb&&pb.level==='healthy'&&!isBuyAdvice(technical))
+  return{text:'🟢 先續抱，不因短線回檔賣出。主要支撐結構仍在，目前較像正常整理；暫不追價加碼，等待趨勢重新轉強或出現更好的加碼位置。',cls:'good',allowed:false,reason:'healthy-pullback'};
+
+ // 2. 持股建議完整版：盤整／偏空／空頭都要回答「現在做什麼＋接下來等什麼」。
+ if(Number.isFinite(score)&&score>=2&&score<5){
+  let text='🟡 續抱觀察，暫不急著加碼或賣出。技術評分 '+score+'/9，目前屬盤整，代表多空訊號尚未形成明確方向。';
+  if(Number.isFinite(pnl)){
+   if(pnl>=10&&strategy==='long')
+    text+=' 目前已有 '+pct(pnl)+' 獲利，且屬中長期策略，短線盤整本身不是停利理由；等待趨勢重新轉強，若之後高點回落並伴隨中期趨勢惡化再重新評估。';
+   else if(pnl>=5)
+    text+=' 目前已有 '+pct(pnl)+' 獲利，先保留既有部位；等待趨勢回到偏多，若獲利保護出現「回落＋轉弱」訊號再考慮減碼。';
+   else if(pnl>=0)
+    text+=' 目前為小幅獲利／接近成本區，尚未出現明確賣出理由；等待趨勢升到偏多再考慮加碼，若轉為偏空並破壞支撐再評估減碼。';
+   else
+    text+=' 目前仍有 '+pct(pnl)+' 損益，盤整期間不建議為攤平而加碼；先等站穩 MA20、趨勢評分回升，若支撐進一步破壞則依風控處理。';
+  }
+  return{text:text,cls:'warn',allowed:false,reason:'sideways-holding'};
+ }
+
+ if(Number.isFinite(score)&&score>=-1&&score<2){
+  let text='🟠 先續抱觀察，但暫停加碼。技術評分 '+score+'/9，短期偏空，代表弱勢訊號較多但尚未等同必須賣出。';
+  if(above60) text+=' MA60 仍有支撐，先觀察能否重新站回 MA20、趨勢評分回升到盤整以上。';
+  else text+=' 目前中期支撐也偏弱，若持續無法站回 MA20／MA60或支撐結構惡化，再評估降低部位。';
+  if(Number.isFinite(pnl)&&pnl>0) text+=' 目前仍有 '+pct(pnl)+' 獲利，不因「偏空」兩字就提前出場，仍以獲利保護與支撐破壞條件為準。';
+  return{text:text,cls:'warn',allowed:false,reason:'bearish-holding'};
+ }
+
+ if(Number.isFinite(score)&&score<-1){
+  let text='🔴 暫停加碼，優先管理持股風險。技術評分 '+score+'/9，空頭訊號較明顯；先檢查 MA20／MA60、支撐結構與原本最大可接受虧損。';
+  if(strategy==='long'&&holding.fund==='yes')
+   text+=' 由於是中長期策略且基本面仍看好，不因單一技術分數直接全數賣出；若支撐進一步破壞或原持有理由改變，再考慮分批降低部位。';
+  else
+   text+=' 若弱勢延續、支撐破壞或觸及原風控，考慮分批降低部位；等待重新站回關鍵均線並止穩後再評估。';
+  return{text:text,cls:'bad',allowed:false,reason:'bear-trend-holding'};
+ }
+
+ // 3. 其他非買進型技術建議保留原判斷，但補上操作語意。
+ if(!isBuyAdvice(technical))
+  return{text:(technical.summary||'🟡 續抱觀察。')+' 目前先依原策略續抱／控管風險，暫不因單一短線訊號追價或恐慌賣出。',cls:stockAnalysis.cls||'warn',allowed:false,reason:'technical-hold'};
+
+ // 4. 有加碼條件時，再依大盤、支撐、追高、相對強弱與資金水位決定能否新增資金。
+ if(mr&&mr.level==='high')
+  return{text:'🔴 既有持股依原策略續抱，但暫停加碼。個股雖有加碼條件，大盤風險雷達目前為高風險；等待大盤風險降級後再評估新增資金。',cls:'bad',allowed:false,reason:'market-risk'};
+ if(pb&&pb.level==='warning')
+  return{text:'🟠 先續抱、暫停加碼。個股技術面仍有條件，但支撐結構開始轉弱；等待重新站穩 MA20 後再評估加碼。',cls:'warn',allowed:false,reason:'support-warning'};
+ if(cr&&cr.blockAdd)
+  return{text:(cr.level==='very_high'?'🔴':'🟠')+' 續抱為主，暫不加碼。趨勢雖偏強，但目前'+cr.title.replace(/^[^ ]+ /,'')+'；等待拉回或追高風險下降後再考慮新增資金。',cls:cr.level==='very_high'?'bad':'warn',allowed:false,reason:'chase-risk'};
+ if(rs&&rs.blockAdd)
+  return{text:'🟠 續抱但暫不加碼。技術面雖有加碼條件，但近期明顯落後 0050；等待相對強弱重新改善後再投入新資金。',cls:'warn',allowed:false,reason:'relative-strength'};
+ if(level.percent!=null&&level.percent>=80)
+  return{text:'🟡 續抱，暫停加碼。技術面偏多，但個股水位已達 '+fmt(level.percent)+'%；先讓部位維持在原設定範圍內。',cls:'warn',allowed:false,reason:'position-level'};
+ if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)
+  return{text:'🟡 續抱，暫不新增部位。股票本身具有加碼條件，但整體現金水位低於目標；先恢復現金安全墊。',cls:'warn',allowed:false,reason:'cash-level'};
+
+ return{text:(rs&&(rs.level==='strong'||rs.level==='positive')
+   ?'🟢 續抱，可考慮分批加碼。趨勢、相對強弱、倉位與進場位置均允許；仍採分批方式，不一次投入全部資金。'
+   :'🟢 續抱，可考慮分批加碼。倉位與進場位置允許，後續若趨勢轉弱或支撐破壞再重新評估。'),
+   cls:'good',allowed:true,reason:'add-allowed'};
+}
 function holdingLevelHtml(holding){let l=holdingLevel(holding);if(l.percent==null)return'<div class="level-box"><strong>庫存水位</strong><div class="capital-alert warn">未設定個股上限</div><div class="level-lines"><span>目前投入：'+money(l.invested)+'</span><span>投入上限：—</span><span>剩餘可投入：—</span></div></div>';return'<div class="level-box"><strong>庫存水位</strong><div class="level-bar">'+bar(l.percent)+' '+fmt(l.percent)+'%</div><div class="level-lines"><span>目前投入：'+money(l.invested)+'</span><span>投入上限：'+money(l.maxBudget)+'</span><span>剩餘可投入：'+money(l.remaining)+'</span></div><div class="capital-alert '+l.cls+'">'+l.status+'</div></div>'}
 function listHtml(items){return items.map(function(item){return'<li>'+item+'</li>'}).join('')}
 async function refreshOne(id){let original=holdings().find(function(x){return x.id===id});if(!original)return{ok:false,id:id,error:'找不到持股'};let cached=snapshots()[id],usable=cached&&(!cached.ticker||cached.ticker===original.ticker);renderHoldingCard(original,usable?cached:null,usable?'loading':'idle');try{let m=await market(original.ticker),current=holdings().find(function(x){return x.id===id});if(!current||current.ticker!==original.ticker)return{ok:false,id:id,stale:true};let a=analyze(current,m),bench=await relativeStrengthBenchmark(false);a.relativeStrength=relativeStrengthAnalysis(a.price,m.rows.map(function(r){return r.c}),bench,current.ticker);let advice=buildAdvice(a),previous=snapshots()[current.id];a.advice=advice;a.profitProtection=profitProtection(a,current,previous);a.profitProtection.currentPnl=a.pnl;a.peakPrice=a.profitProtection.peakPrice;a.finalAdvice=buildPositionAdvice(a,current,getCapitalState());a.ticker=current.ticker;a.updatedAt=Date.now();saveSnapshot(current.id,a);renderHoldingCard(current,a,'fresh');summary();return{ok:true,id:id}}catch(e){let current=holdings().find(function(x){return x.id===id}),fallback=snapshots()[id],okFallback=current&&fallback&&(!fallback.ticker||fallback.ticker===current.ticker);if(current)renderHoldingCard(current,okFallback?fallback:null,'error',e.message);summary();return{ok:false,id:id,error:e.message}}}
