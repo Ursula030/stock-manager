@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.11.2（MIS 即時行情修正版）</title>
+<title>股倉雷達 v5.11.3（行情來源診斷版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -125,7 +125,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.11.2 · MIS 即時行情修正版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.11.3 · 行情來源診斷版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -178,8 +178,9 @@ body.analysis-open{overflow:hidden}
 
 <div class="card"><strong>🛑 v5.10 止損防殺低</strong><div class="note" style="margin-top:8px">「趨勢偏空」不再直接等於「賣出」。持股若已急跌或 RSI 超賣，系統會先進入防殺低觀察；只有支撐破壞再搭配放量、非超賣／非急跌，或基本面轉差等較完整證據，才升級為減碼／止損。原本最大可接受虧損改為風險警報，不再單靠虧損百分比強迫賣出。</div></div>
 <div class="card"><strong>⚡ v5.11 即時行情雙資料源</strong><div class="note" style="margin-top:8px">盤中現價優先使用 TWSE MIS；Yahoo／TWSE／TPEx 日線繼續負責 MA、RSI 與歷史技術分析。每次更新都停用瀏覽器／Worker 快取，並顯示「成交時間、行情來源、延遲分鐘數」。若即時來源失敗，會明確標示為備援行情，不把舊價冒充即時價。</div></div>
-<div class="card"><strong>🔧 v5.11.2 行情連線修正</strong><div class="note" style="margin-top:8px">移除前端自訂 Cache-Control 請求標頭，避免瀏覽器 CORS 預檢干擾；Worker 回傳改先讀取原始內容再解析 JSON，若異常會直接顯示真正回傳內容，不再只顯示 HTTP 200。即時 MIS 失敗時仍保留歷史行情備援。</div></div>
-<div class="card"><strong>⚡ v5.11.2 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
+<div class="card"><strong>🔧 v5.11.3 行情連線修正</strong><div class="note" style="margin-top:8px">移除前端自訂 Cache-Control 請求標頭，避免瀏覽器 CORS 預檢干擾；Worker 回傳改先讀取原始內容再解析 JSON，若異常會直接顯示真正回傳內容，不再只顯示 HTTP 200。即時 MIS 失敗時仍保留歷史行情備援。</div></div>
+<div class="card"><strong>⚡ v5.11.3 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
+<div class="card"><strong>🔎 v5.11.3 行情來源診斷</strong><div class="note" style="margin-top:8px">暫時在完整持股分析中顯示最終來源、MIS 現價／更新時間／最後成交時間、歷史來源與 fallback 狀態，用來比對即時與延遲標的。此版不改變既有買賣判斷。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -519,9 +520,27 @@ function renderHoldingCard(x,a,state,error){
 }
 
 function render(){let h=holdings(),cache=snapshots();$('sumCount').textContent=h.length;$('portfolio').innerHTML=h.length?h.map(function(x){return'<div class="stock" id="s-'+x.id+'"></div>'}).join(''):'<div class="empty">尚無持股</div>';h.forEach(function(x){let a=cache[x.id],usable=a&&(!a.ticker||a.ticker===x.ticker);renderHoldingCard(x,usable?a:null,usable?'loading':'idle')});summary()}
-async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare Worker 網址');ticker=normalizeTicker(ticker);if(!validTicker(ticker))throw new Error('股票代號須為 4–7 碼英文或數字');try{let url=api()+'/stock?symbol='+encodeURIComponent(ticker)+'&_='+Date.now(),r=await fetch(url,{cache:'no-store'}),raw=await r.text(),j=null;try{j=JSON.parse(raw)}catch(e){}if(!r.ok)throw new Error(j&&j.error?j.error:'Worker HTTP '+r.status+(raw?'：'+raw.slice(0,120):''));if(!j)throw new Error('Worker 回傳的不是 JSON（HTTP '+r.status+'）：'+raw.slice(0,120));if(j.ok!==true)throw new Error(j.error||'Worker 回傳 ok=false（HTTP '+r.status+'）');let history=Array.isArray(j.history)?j.history:[],rows=history.map(function(x){let t=Date.parse(x.date+'T00:00:00+08:00')/1000,c=Number(x.close),v=x.volume==null?null:Number(x.volume);return{t:t,c:c,v:Number.isFinite(v)?v:null}}).filter(function(x){return Number.isFinite(x.t)&&Number.isFinite(x.c)}).sort(function(a,b){return a.t-b.t});if(rows.length<60)throw new Error('目前取得的有效交易日不足 60 日');let last=rows[rows.length-1],price=Number(j.price),timestamp=Number(j.timestamp),meta={longName:j.name||ticker,shortName:j.name||ticker,regularMarketPrice:Number.isFinite(price)?price:last.c,regularMarketTime:Number.isFinite(timestamp)?timestamp:last.t,exchangeName:j.market||'',dataSource:j.source||'',liveSource:j.liveSource||j.source||'',historySource:j.historySource||j.source||'',quoteStatus:j.quoteStatus||'fallback',serverTime:Number(j.serverTime)||Math.floor(Date.now()/1000),lastTradeTime:Number(j.tradeTimestamp)||0};return{symbol:ticker,d:{meta:meta},rows:rows,source:j.source||'',market:j.market||''}}catch(e){if(/^目前無法取得/.test(e.message)||/^尚未設定/.test(e.message)||/^股票代號/.test(e.message))throw e;throw new Error('目前無法取得 '+ticker+' 行情，已嘗試即時 MIS 與 Yahoo、TWSE、TPEx 歷史來源。'+(e.message?'（'+e.message+'）':''))}}
+async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare Worker 網址');ticker=normalizeTicker(ticker);if(!validTicker(ticker))throw new Error('股票代號須為 4–7 碼英文或數字');try{let url=api()+'/stock?symbol='+encodeURIComponent(ticker)+'&_='+Date.now(),r=await fetch(url,{cache:'no-store'}),raw=await r.text(),j=null;try{j=JSON.parse(raw)}catch(e){}if(!r.ok)throw new Error(j&&j.error?j.error:'Worker HTTP '+r.status+(raw?'：'+raw.slice(0,120):''));if(!j)throw new Error('Worker 回傳的不是 JSON（HTTP '+r.status+'）：'+raw.slice(0,120));if(j.ok!==true)throw new Error(j.error||'Worker 回傳 ok=false（HTTP '+r.status+'）');let history=Array.isArray(j.history)?j.history:[],rows=history.map(function(x){let t=Date.parse(x.date+'T00:00:00+08:00')/1000,c=Number(x.close),v=x.volume==null?null:Number(x.volume);return{t:t,c:c,v:Number.isFinite(v)?v:null}}).filter(function(x){return Number.isFinite(x.t)&&Number.isFinite(x.c)}).sort(function(a,b){return a.t-b.t});if(rows.length<60)throw new Error('目前取得的有效交易日不足 60 日');let last=rows[rows.length-1],price=Number(j.price),timestamp=Number(j.timestamp),meta={longName:j.name||ticker,shortName:j.name||ticker,regularMarketPrice:Number.isFinite(price)?price:last.c,regularMarketTime:Number.isFinite(timestamp)?timestamp:last.t,exchangeName:j.market||'',dataSource:j.source||'',liveSource:j.liveSource||j.source||'',historySource:j.historySource||j.source||'',quoteStatus:j.quoteStatus||'fallback',serverTime:Number(j.serverTime)||Math.floor(Date.now()/1000),lastTradeTime:Number(j.tradeTimestamp)||0,diagnostics:j.diagnostics||null};return{symbol:ticker,d:{meta:meta},rows:rows,source:j.source||'',market:j.market||''}}catch(e){if(/^目前無法取得/.test(e.message)||/^尚未設定/.test(e.message)||/^股票代號/.test(e.message))throw e;throw new Error('目前無法取得 '+ticker+' 行情，已嘗試即時 MIS 與 Yahoo、TWSE、TPEx 歷史來源。'+(e.message?'（'+e.message+'）':''))}}
 
 function quoteInfoFromMeta(meta){let ts=Number(meta&&meta.regularMarketTime),tradeTs=Number(meta&&meta.lastTradeTime),now=Date.now()/1000,age=Number.isFinite(ts)?Math.max(0,Math.round((now-ts)/60)):null,tradeAge=Number.isFinite(tradeTs)&&tradeTs>0?Math.max(0,Math.round((now-tradeTs)/60)):null,status=meta&&meta.quoteStatus==='live'?'live':'fallback',source=(meta&&meta.liveSource)||(meta&&meta.dataSource)||'未知來源',text;if(status==='live'){text=age!=null&&age<=3?'🟢 即時行情':age!=null?'🟡 資料更新延遲 '+age+' 分鐘':'🟢 即時行情'}else{text='🟠 備援行情（非即時）'}return{age:age,tradeAge:tradeAge,status:status,source:source,text:text}}
+
+function quoteDiagnosticsHtml(meta){
+ let d=meta&&meta.diagnostics;if(!d)return '<div class="note">診斷資料：—</div>';
+ function tm(v){let n=Number(v);if(!Number.isFinite(n)||n<=0)return '—';return new Date(n*1000).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false})}
+ return '<div class="quote-diagnostics" style="margin-top:10px;padding:11px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff;font-size:12px;line-height:1.65">'+
+ '<b>🔎 行情來源診斷</b><br>'+
+ '最終來源：'+esc(d.finalSource||'—')+'<br>'+
+ '最終現價：'+(Number.isFinite(Number(d.finalPrice))?fmt(Number(d.finalPrice)):'—')+'<br>'+
+ '最終行情時間：'+tm(d.finalTimestamp)+'<br>'+
+ 'MIS：'+(d.misOk?'成功':'失敗')+'<br>'+
+ 'MIS 現價：'+(Number.isFinite(Number(d.misPrice))?fmt(Number(d.misPrice)):'—')+'<br>'+
+ 'MIS 資料更新：'+tm(d.misUpdateTimestamp)+'<br>'+
+ 'MIS 最後成交：'+tm(d.misTradeTimestamp)+'<br>'+
+ '歷史來源：'+esc(d.historySource||'—')+'<br>'+
+ 'Fallback：'+(d.fallback?'是':'否')+
+ (d.misError?'<br>MIS 錯誤：'+esc(d.misError):'')+
+ '</div>';
+}
 
 function trendLabel(score){
  if(score>=8)return {text:'🟢 強勢多頭',cls:'good'};
