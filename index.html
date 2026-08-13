@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.11.5（行情診斷資料修正版）</title>
+<title>股倉雷達 v5.11.6（MIS 穩定更新版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -125,7 +125,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.11.5 · 行情診斷資料修正版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.11.6 · MIS 穩定更新版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -181,6 +181,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🔧 v5.11.4 行情連線修正</strong><div class="note" style="margin-top:8px">移除前端自訂 Cache-Control 請求標頭，避免瀏覽器 CORS 預檢干擾；Worker 回傳改先讀取原始內容再解析 JSON，若異常會直接顯示真正回傳內容，不再只顯示 HTTP 200。即時 MIS 失敗時仍保留歷史行情備援。</div></div>
 <div class="card"><strong>⚡ v5.11.4 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
 <div class="card"><strong>🔎 v5.11.4 行情來源診斷</strong><div class="note" style="margin-top:8px">暫時在完整持股分析中顯示最終來源、MIS 現價／更新時間／最後成交時間、歷史來源與 fallback 狀態，用來比對即時與延遲標的。此版不改變既有買賣判斷。</div></div>
+<div class="card"><strong>⚙️ v5.11.6 MIS 穩定更新</strong><div class="note" style="margin-top:8px">「更新全部」改為逐檔更新，不再同時對 MIS 發出大量請求；每檔間隔約 0.35 秒。Worker 也會依上市／上櫃市場優先查正確頻道並短暫重試，降低只有第一檔即時、其他退回 Yahoo 約 20 分鐘延遲行情的情況。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -910,7 +911,25 @@ function holdingLevelHtml(holding){let l=holdingLevel(holding);if(l.percent==nul
 function listHtml(items){return items.map(function(item){return'<li>'+item+'</li>'}).join('')}
 async function refreshOne(id){let original=holdings().find(function(x){return x.id===id});if(!original)return{ok:false,id:id,error:'找不到持股'};let cached=snapshots()[id],usable=cached&&(!cached.ticker||cached.ticker===original.ticker);renderHoldingCard(original,usable?cached:null,usable?'loading':'idle');try{let m=await market(original.ticker),current=holdings().find(function(x){return x.id===id});if(!current||current.ticker!==original.ticker)return{ok:false,id:id,stale:true};let a=analyze(current,m),bench=await relativeStrengthBenchmark(false);a.relativeStrength=relativeStrengthAnalysis(a.price,m.rows.map(function(r){return r.c}),bench,current.ticker);let advice=buildAdvice(a),previous=snapshots()[current.id];a.advice=advice;a.profitProtection=profitProtection(a,current,previous);a.profitProtection.currentPnl=a.pnl;a.peakPrice=a.profitProtection.peakPrice;a.stopLossGuard=stopLossGuardAnalysis(a,current);a.finalAdvice=buildPositionAdvice(a,current,getCapitalState());a.ticker=current.ticker;a.updatedAt=Date.now();saveSnapshot(current.id,a);renderHoldingCard(current,a,'fresh');summary();return{ok:true,id:id}}catch(e){let current=holdings().find(function(x){return x.id===id}),fallback=snapshots()[id],okFallback=current&&fallback&&(!fallback.ticker||fallback.ticker===current.ticker);if(current)renderHoldingCard(current,okFallback?fallback:null,'error',e.message);summary();return{ok:false,id:id,error:e.message}}}
 function toggleDetails(id){let d=$('d-'+id);if(d)d.style.display=d.style.display==='block'?'none':'block'}
-async function refreshAll(){await refreshMarketContext(true);let h=holdings();if(!h.length){$('globalStatus').textContent='目前沒有持股';return}$('globalStatus').textContent='正在更新 '+h.length+' 檔持股…';let results=await Promise.all(h.map(function(x){return refreshOne(x.id).catch(function(e){return{ok:false,id:x.id,error:e.message}})}));let ok=results.filter(function(r){return r&&r.ok}).length,fail=results.filter(function(r){return r&&!r.ok&&!r.stale}).length;$('globalStatus').textContent=fail?('更新完成：'+ok+' 檔成功，'+fail+' 檔失敗（失敗項目保留上次行情）'):('持股更新完成，共 '+ok+' 檔');summary()}
+function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
+async function refreshAll(){
+ await refreshMarketContext(true);
+ let h=holdings();
+ if(!h.length){$('globalStatus').textContent='目前沒有持股';return}
+ let results=[];
+ // v5.11.6：不要同時對 MIS 發出所有持股請求。
+ // 逐檔更新可避免 TWSE MIS 在短時間大量請求時，部分標的退回 Yahoo 延遲行情。
+ for(let i=0;i<h.length;i++){
+  $('globalStatus').textContent='正在更新 '+(i+1)+' / '+h.length+'：'+h[i].ticker+'…';
+  try{results.push(await refreshOne(h[i].id))}
+  catch(e){results.push({ok:false,id:h[i].id,error:e.message})}
+  if(i<h.length-1)await sleep(350);
+ }
+ let ok=results.filter(function(r){return r&&r.ok}).length,
+     fail=results.filter(function(r){return r&&!r.ok&&!r.stale}).length;
+ $('globalStatus').textContent=fail?('更新完成：'+ok+' 檔成功，'+fail+' 檔失敗（失敗項目保留上次行情）'):('持股更新完成，共 '+ok+' 檔');
+ summary()
+}
 function summary(){let els=[...document.querySelectorAll('#portfolio .stock')],v=0,c=0,p=0,n=0;for(const el of els){let a=+el.dataset.value,b=+el.dataset.cost,d=+el.dataset.pnl;if(Number.isFinite(a)&&a>0){v+=a;c+=b;p+=d;n++}}$('sumCost').textContent=n?money(c):money(investedCost());$('sumValue').textContent=n?money(v):'—';$('sumPnl').textContent=n?((p>=0?'+':'')+money(p)):'—';$('sumPnl').className=p>=0?'good':'bad';renderCapital();renderDashboard()}
 function toggleWatch(){$('watchForm').style.display=$('watchForm').style.display==='block'?'none':'block'}
 function resetWatchForm(){['wTicker','wTarget','wBudget','wReason','watchEditId'].forEach(function(id){$(id).value=''});$('suggestPriceBox').style.display='none';$('suggestPriceBox').innerHTML=''}
