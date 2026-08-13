@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.13（MIS 批次價格解析修正版）</title>
+<title>股倉雷達 v5.14（雙層風控／浮盈回吐保護版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -125,7 +125,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.13 · MIS 批次價格解析修正版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.14 · 雙層風控／浮盈回吐保護版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -176,12 +176,12 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>📋 v5.8.2 持股建議完整版</strong><div class="note" style="margin-top:8px">持股最終建議不再只顯示「盤整／偏空」。會綜合技術評分、目前損益、原操作策略、獲利保護、支撐結構、大盤風險、追高風險、相對強弱與資金水位，直接回答「現在做什麼＋為什麼＋接下來等什麼訊號」。中長期策略不會因短線盤整或單一偏空分數自動賣出。</div></div>
 <div class="card"><strong>📱 v5.9 清單＋分析彈幕</strong><div class="note" style="margin-top:8px">持股與觀察頁改為精簡總覽卡，只保留股票代號／名稱、現價、損益或目標價差、技術狀態與最終動作。點擊任一標的後，從畫面底部滑出完整分析面板；原本的追高風險、相對強弱、支撐結構、獲利保護、決策環境、最終建議與操作按鈕全部保留。更新全部仍會一次更新所有標的。</div></div>
 
-<div class="card"><strong>🛑 v5.10 止損防殺低</strong><div class="note" style="margin-top:8px">「趨勢偏空」不再直接等於「賣出」。持股若已急跌或 RSI 超賣，系統會先進入防殺低觀察；只有支撐破壞再搭配放量、非超賣／非急跌，或基本面轉差等較完整證據，才升級為減碼／止損。原本最大可接受虧損改為風險警報，不再單靠虧損百分比強迫賣出。</div></div>
+<div class="card"><strong>🛑 v5.10 止損防殺低</strong><div class="note" style="margin-top:8px">「趨勢偏空」不再直接等於「賣出」。持股若已急跌或 RSI 超賣，系統會先進入防殺低觀察；只有支撐破壞再搭配放量、非超賣／非急跌，或基本面轉差等較完整證據，才升級為減碼／止損。原本最大可接受虧損改為風險警報，不再單靠虧損百分比強迫賣出。</div></div><div class="card"><strong>🛡️ v5.14 雙層風控／浮盈回吐保護</strong><div class="note" style="margin-top:8px">停利改以「最高曾獲利」而非目前獲利啟動，避免曾經有可保護浮盈、回到成本附近後保護狀態反而消失；止損則新增趨勢破壞與反彈失敗確認，同時保留急跌／超賣防殺低。既有最高價與最高曾獲利紀錄沿用，不重置。</div></div>
 <div class="card"><strong>⚡ v5.11 即時行情雙資料源</strong><div class="note" style="margin-top:8px">盤中現價優先使用 TWSE MIS；Yahoo／TWSE／TPEx 日線繼續負責 MA、RSI 與歷史技術分析。每次更新都停用瀏覽器／Worker 快取，並顯示「成交時間、行情來源、延遲分鐘數」。若即時來源失敗，會明確標示為備援行情，不把舊價冒充即時價。</div></div>
 <div class="card"><strong>🔧 v5.11.4 行情連線修正</strong><div class="note" style="margin-top:8px">移除前端自訂 Cache-Control 請求標頭，避免瀏覽器 CORS 預檢干擾；Worker 回傳改先讀取原始內容再解析 JSON，若異常會直接顯示真正回傳內容，不再只顯示 HTTP 200。即時 MIS 失敗時仍保留歷史行情備援。</div></div>
 <div class="card"><strong>⚡ v5.11.4 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
 <div class="card"><strong>🔎 v5.11.4 行情來源診斷</strong><div class="note" style="margin-top:8px">暫時在完整持股分析中顯示最終來源、MIS 現價／更新時間／最後成交時間、歷史來源與 fallback 狀態，用來比對即時與延遲標的。此版不改變既有買賣判斷。</div></div>
-<div class="card"><strong>⚙️ v5.13 MIS 穩定更新</strong><div class="note" style="margin-top:8px">「更新全部」改為逐檔更新，不再同時對 MIS 發出大量請求；每檔間隔約 0.35 秒。Worker 也會依上市／上櫃市場優先查正確頻道並短暫重試，降低只有第一檔即時、其他退回 Yahoo 約 20 分鐘延遲行情的情況。</div></div>
+<div class="card"><strong>⚙️ v5.14 MIS 穩定更新</strong><div class="note" style="margin-top:8px">「更新全部」改為逐檔更新，不再同時對 MIS 發出大量請求；每檔間隔約 0.35 秒。Worker 也會依上市／上櫃市場優先查正確頻道並短暫重試，降低只有第一檔即時、其他退回 Yahoo 約 20 分鐘延遲行情的情況。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -707,14 +707,17 @@ function stopLossGuardAnalysis(a,holding){
  if(lossAlert)reasons.push('已觸及原風控 '+holding.maxLoss+'%，列為風險警報，但不單獨觸發賣出');
  if(oversold)reasons.push('RSI '+fmt(rsi)+' 已進入超賣區，避免在情緒最弱處追殺');
  if(sharpDrop)reasons.push('近 5 日已急跌 '+fmt(ret5)+'%，提高反彈／殺低風險');
+ let belowBoth=price<ma20&&price<ma60,trendConfirmed=belowBoth&&Number(a.trendScore)<=1,reboundFailure=price<ma20&&Number(a.ma5)<ma20;
+ if(trendConfirmed){evidence+=1;reasons.push('MA20／MA60 同時失守且趨勢評分偏弱（+1 趨勢確認）')}
+ if(reboundFailure){evidence+=1;reasons.push('MA5 仍在 MA20 下方且價格未站回月線（+1 反彈失敗確認）')}
  let blocked=(oversold||sharpDrop)&&!fundBad,qualified=evidence>=3&&!blocked;
  let level='observe',title='🟡 尚未取得止損資格',cls='warn',action='hold';
  if(qualified){level='qualified';title='🔴 止損／減碼資格成立';cls='bad';action='reduce'}
  else if(blocked){level='anti-chase';title='🛑 防殺低：暫不追殺';cls='warn';action='wait'}
  else if(lossAlert||supportBroken){level='confirm';title='🟠 風險升高，等待確認';cls='warn';action='confirm'}
- return{level:level,title:title,cls:cls,action:action,qualified:qualified,blocked:blocked,evidence:evidence,lossAlert:lossAlert,oversold:oversold,sharpDrop:sharpDrop,ret5:ret5,volumeBreak:volumeBreak,supportBroken:supportBroken,fundBad:fundBad,reasons:reasons};
+ return{level:level,title:title,cls:cls,action:action,qualified:qualified,blocked:blocked,evidence:evidence,lossAlert:lossAlert,oversold:oversold,sharpDrop:sharpDrop,ret5:ret5,volumeBreak:volumeBreak,supportBroken:supportBroken,fundBad:fundBad,trendConfirmed:trendConfirmed,reboundFailure:reboundFailure,reasons:reasons};
 }
-function stopLossGuardHtml(g){if(!g)return'';let note=g.qualified?'賣出證據已達門檻，可考慮分批降低風險；仍不建議一次全砍。':g.blocked?'目前雖弱，但已出現超賣／急跌，直接砍倉容易殺在短線低點；等待反彈失敗或再次破底確認。':'目前證據不足以把「偏空」升級成「止損」；先停加碼並觀察。';return `<div class="stoploss-guard"><div class="stoploss-head"><span class="${g.cls}">${esc(g.title)}</span><span>證據 ${g.evidence} / 3</span></div><div class="stoploss-grid"><div class="kpi"><small>RSI 超賣</small><b>${g.oversold?'是':'否'}</b></div><div class="kpi"><small>5 日急跌</small><b>${Number.isFinite(Number(g.ret5))?fmt(g.ret5)+'%':'—'}</b></div><div class="kpi"><small>支撐破壞</small><b>${g.supportBroken?'是':'否'}</b></div><div class="kpi"><small>放量破位</small><b>${g.volumeBreak?'是':'否'}</b></div></div><div class="stoploss-note">${esc(note)}</div><ul class="stoploss-reasons">${(g.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
+function stopLossGuardHtml(g){if(!g)return'';let note=g.qualified?'賣出證據已達門檻，可考慮分批降低風險；仍不建議一次全砍。':g.blocked?'目前雖弱，但已出現超賣／急跌，直接砍倉容易殺在短線低點；等待反彈失敗或再次破底確認。':'目前證據不足以把「偏空」升級成「止損」；需等待趨勢破壞／反彈失敗確認，急跌或超賣時仍啟動防殺低。';return `<div class="stoploss-guard"><div class="stoploss-head"><span class="${g.cls}">${esc(g.title)}</span><span>證據 ${g.evidence} / 3＋</span></div><div class="stoploss-grid"><div class="kpi"><small>RSI 超賣</small><b>${g.oversold?'是':'否'}</b></div><div class="kpi"><small>5 日急跌</small><b>${Number.isFinite(Number(g.ret5))?fmt(g.ret5)+'%':'—'}</b></div><div class="kpi"><small>支撐破壞</small><b>${g.supportBroken?'是':'否'}</b></div><div class="kpi"><small>放量破位</small><b>${g.volumeBreak?'是':'否'}</b></div></div><div class="stoploss-note">${esc(note)}</div><ul class="stoploss-reasons">${(g.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
 
 function analyze(x,m){
  let rows=m.rows,d=m.d,meta=d.meta||{},cl=rows.map(function(r){return r.c}),last=rows[rows.length-1],
@@ -800,33 +803,59 @@ function buildAdvice(a){
 function holdingLevel(holding){let invested=(+holding.cost||0)*(+holding.qty||0),maxBudget=+holding.maxBudget||0,percent=maxBudget>0?invested/maxBudget*100:null,status='未設定個股上限',cls='warn';if(percent!=null){if(percent<=40){status='🟢 水位低';cls='good'}else if(percent<80){status='🟡 水位正常';cls='warn'}else if(percent<=100){status='🟠 水位偏高';cls='warn'}else{status='🔴 超過設定上限';cls='bad'}}return{invested:invested,maxBudget:maxBudget,percent:percent,remaining:maxBudget>0?Math.max(0,maxBudget-invested):null,status:status,cls:cls}}
 function isBuyAdvice(advice){return advice&&advice.actions&&advice.actions.some(function(x){return/加碼|布局|買進/.test(x)&&!/暫停|不急|避免/.test(x)})}
 function profitProtection(stockAnalysis,holding,previous){
- let price=Number(stockAnalysis.price),cost=Number(holding.cost),pnl=Number(stockAnalysis.pnl),prevPeak=Number(previous&&previous.peakPrice),peak=Number.isFinite(prevPeak)&&prevPeak>0?Math.max(prevPeak,price):price,peakPnl=cost>0?(peak-cost)/cost*100:null,drawdown=peak>0?(peak-price)/peak*100:0,t=trendInfoFromAnalysis(stockAnalysis),reasons=[],stage='none',title='⚪ 尚未啟動',cls='warn',action='none',active=false;
+ let price=Number(stockAnalysis.price),cost=Number(holding.cost),pnl=Number(stockAnalysis.pnl),
+     prevPeak=Number(previous&&previous.peakPrice),
+     peak=Number.isFinite(prevPeak)&&prevPeak>0?Math.max(prevPeak,price):price,
+     peakPnl=cost>0?(peak-cost)/cost*100:null,
+     drawdown=peak>0?(peak-price)/peak*100:0,
+     giveback=Number.isFinite(peakPnl)&&Number.isFinite(pnl)?Math.max(0,peakPnl-pnl):0,
+     givebackRatio=Number.isFinite(peakPnl)&&peakPnl>0?giveback/peakPnl*100:0,
+     t=trendInfoFromAnalysis(stockAnalysis),reasons=[],
+     stage='none',title='⚪ 尚未啟動',cls='warn',action='none',active=false;
+
  if(holding.strategy==='long'){
   stage='long';title='🔵 中長期：僅追蹤獲利';cls='good';
-  if(pnl>=3)reasons.push('目前已有 '+pct(pnl)+' 獲利，但中長期策略不因短線回落自動停利');
-  else reasons.push('中長期持股維持原策略與基本面／中期趨勢判斷');
-  return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,stage:stage,title:title,cls:cls,action:action,active:false,reasons:reasons};
+  reasons.push('中長期策略保留最高價紀錄，但不因短線浮盈回吐自動停利');
+  return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,stage:stage,title:title,cls:cls,action:action,active:false,reasons:reasons};
  }
- if(!(pnl>=0)){stage='loss';title='⚪ 尚未進入獲利保護';reasons.push('目前尚未獲利，交由原本風控與趨勢系統判斷');}
- else if(pnl<3){stage='breakeven';title='🟡 解套／小幅獲利區';reasons.push('剛翻紅不構成賣出理由，避免因小賺就提前下車');}
- else if(pnl<5){stage='watch';title='🟢 初步獲利觀察';cls='good';active=true;reasons.push('已開始累積獲利，但仍以趨勢是否轉弱為主');}
- else if(pnl<10){stage='protect';title='🛡️ 獲利保護已啟動';cls='good';active=true;reasons.push('目前獲利達 5% 以上，開始保護既有成果');}
- else{stage='strong';title='🛡️ 強獲利保護';cls='good';active=true;reasons.push('目前獲利達 10% 以上，提高對高點回落與轉弱的敏感度');}
- let below5=price<Number(stockAnalysis.ma5),below20=price<Number(stockAnalysis.ma20),trendWeak=t.score<5,trendBad=t.score<2;
+
+ // v5.14：是否啟動保護改看「最高曾獲利」，不是只看目前還剩多少獲利。
+ if(Number.isFinite(peakPnl)&&peakPnl>=10){stage='strong';active=true;title='🛡️ 強獲利保護';cls='good';reasons.push('最高曾獲利達 '+pct(peakPnl)+'，提高回吐保護敏感度')}
+ else if(Number.isFinite(peakPnl)&&peakPnl>=5){stage='protect';active=true;title='🛡️ 獲利保護已啟動';cls='good';reasons.push('最高曾獲利達 '+pct(peakPnl)+'，即使目前已回到成本附近，保護狀態仍保留')}
+ else if(Number.isFinite(peakPnl)&&peakPnl>=3){stage='watch';active=true;title='🟢 浮盈回吐觀察';cls='good';reasons.push('最高曾獲利達 '+pct(peakPnl)+'，開始追蹤浮盈是否快速回吐')}
+ else if(pnl>=0){stage='breakeven';title='🟡 解套／小幅獲利區';reasons.push('最高曾獲利未達 3%，暫不啟動停利')}
+ else{stage='loss';title='⚪ 尚未進入獲利保護';reasons.push('持有期間尚未出現足以啟動保護的浮盈')}
+
+ let below5=price<Number(stockAnalysis.ma5),below20=price<Number(stockAnalysis.ma20),
+     trendWeak=t.score<5,trendBad=t.score<2;
+
  if(active){
-  reasons.push('持有期間更新高點 '+fmt(peak)+'；目前距高點回落 '+fmt(drawdown)+'%');
+  reasons.push('持有最高價 '+fmt(peak)+'；目前距高點回落 '+fmt(drawdown)+'%');
+  reasons.push('浮盈已回吐 '+fmt(giveback)+' 個百分點（約 '+fmt(givebackRatio)+'%）');
   if(below5)reasons.push('股價已跌破 MA5');
   if(below20)reasons.push('股價已跌破 MA20');
   if(trendWeak)reasons.push('技術趨勢分數降至 '+t.score+'/9');
-  let warnDD=stage==='strong'?4:stage==='protect'?5:6, sellDD=stage==='strong'?7:stage==='protect'?9:11;
-  if(drawdown>=sellDD && (below20||trendBad)){action='sell';title='🔴 停利訊號';cls='bad';reasons.push('高點回落已達 '+fmt(sellDD)+'% 左右，且中短期趨勢明顯轉弱');}
-  else if(drawdown>=warnDD && (below5||trendWeak)){action='reduce';title='🟠 獲利保護：考慮減碼';cls='warn';reasons.push('高點回落已達 '+fmt(warnDD)+'% 左右，並出現趨勢轉弱訊號');}
-  else if((stage==='strong'||stage==='protect')&&below20&&trendWeak){action='reduce';title='🟠 獲利保護：考慮減碼';cls='warn';reasons.push('雖未達回落門檻，但已跌破 MA20 且趨勢分數同步轉弱');}
-  else{action='hold';reasons.push('目前尚未同時出現足夠的「回落＋轉弱」條件，維持續抱');}
+
+  let warnRatio=stage==='strong'?35:stage==='protect'?45:55,
+      sellRatio=stage==='strong'?70:stage==='protect'?85:95,
+      warnDD=stage==='strong'?3:stage==='protect'?4:5,
+      sellDD=stage==='strong'?6:stage==='protect'?7:9;
+
+  // 先警戒，再減碼；接近全數回吐且趨勢同步惡化才升級停利。
+  if(givebackRatio>=sellRatio && drawdown>=sellDD && (below20||trendBad)){
+    action='sell';title='🔴 浮盈保護：停利／退出';cls='bad';
+    reasons.push('大部分曾有浮盈已回吐，且高點回落與趨勢轉弱同時成立');
+  }else if((givebackRatio>=warnRatio||drawdown>=warnDD) && (below5||below20||trendWeak)){
+    action='reduce';title='🟠 浮盈保護：考慮分批減碼';cls='warn';
+    reasons.push('浮盈回吐已達警戒區，並出現趨勢轉弱；不再等到獲利全部消失才處理');
+  }else{
+    action='hold';title=stage==='watch'?'🟢 浮盈回吐觀察':title;
+    reasons.push('回吐或趨勢轉弱尚未同時達門檻，維持續抱');
+  }
  }
- return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,stage:stage,title:title,cls:cls,action:action,active:active,reasons:reasons};
+ return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,stage:stage,title:title,cls:cls,action:action,active:active,reasons:reasons};
 }
-function profitProtectionHtml(p){if(!p)return'';let actionText=p.action==='sell'?'建議停利':p.action==='reduce'?'考慮減碼':p.action==='hold'?'續抱':'原策略判斷';return `<div class="profit-protect"><div class="profit-protect-head"><span class="${p.cls}">${esc(p.title)}</span><span>${esc(actionText)}</span></div><div class="profit-grid"><div class="kpi"><small>目前獲利</small><b>${Number.isFinite(Number(p.currentPnl))?pct(Number(p.currentPnl)):'—'}</b></div><div class="kpi"><small>持有最高價</small><b>${fmt(p.peakPrice)}</b></div><div class="kpi"><small>最高曾獲利</small><b>${Number.isFinite(Number(p.peakPnl))?pct(Number(p.peakPnl)):'—'}</b></div><div class="kpi"><small>距高點回落</small><b>${fmt(p.drawdown)}%</b></div></div><div class="profit-note">停利不是固定報酬率到價即賣；只有在已有獲利後，高點回落與趨勢轉弱同時出現才升級訊號。</div><ul class="profit-reasons">${(p.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
+function profitProtectionHtml(p){if(!p)return'';let actionText=p.action==='sell'?'建議停利':p.action==='reduce'?'考慮減碼':p.action==='hold'?'續抱':'原策略判斷';return `<div class="profit-protect"><div class="profit-protect-head"><span class="${p.cls}">${esc(p.title)}</span><span>${esc(actionText)}</span></div><div class="profit-grid"><div class="kpi"><small>目前獲利</small><b>${Number.isFinite(Number(p.currentPnl))?pct(Number(p.currentPnl)):'—'}</b></div><div class="kpi"><small>最高曾獲利</small><b>${Number.isFinite(Number(p.peakPnl))?pct(Number(p.peakPnl)):'—'}</b></div><div class="kpi"><small>浮盈回吐</small><b>${Number.isFinite(Number(p.giveback))?fmt(Number(p.giveback))+' 個百分點':'—'}</b></div><div class="kpi"><small>距高點回落</small><b>${fmt(p.drawdown)}%</b></div></div><div class="profit-note">v5.14 改以「最高曾獲利」啟動保護；即使目前已回到成本附近，保護狀態也不會消失。回吐達警戒區且趨勢同步轉弱時，才升級為分批減碼／停利。</div><ul class="profit-reasons">${(p.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
 function buildPositionAdvice(stockAnalysis,holding,capitalState){
  let mr=marketRisk(),technical=stockAnalysis.advice||buildAdvice(stockAnalysis),level=holdingLevel(holding),
      pp=stockAnalysis.profitProtection,cr=stockAnalysis.chaseRisk,rs=stockAnalysis.relativeStrength,
