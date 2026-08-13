@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.11.3（行情來源診斷版）</title>
+<title>股倉雷達 v5.11.4（診斷顯示修正版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -125,7 +125,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.11.3 · 行情來源診斷版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.11.4 · 診斷顯示修正版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -178,9 +178,9 @@ body.analysis-open{overflow:hidden}
 
 <div class="card"><strong>🛑 v5.10 止損防殺低</strong><div class="note" style="margin-top:8px">「趨勢偏空」不再直接等於「賣出」。持股若已急跌或 RSI 超賣，系統會先進入防殺低觀察；只有支撐破壞再搭配放量、非超賣／非急跌，或基本面轉差等較完整證據，才升級為減碼／止損。原本最大可接受虧損改為風險警報，不再單靠虧損百分比強迫賣出。</div></div>
 <div class="card"><strong>⚡ v5.11 即時行情雙資料源</strong><div class="note" style="margin-top:8px">盤中現價優先使用 TWSE MIS；Yahoo／TWSE／TPEx 日線繼續負責 MA、RSI 與歷史技術分析。每次更新都停用瀏覽器／Worker 快取，並顯示「成交時間、行情來源、延遲分鐘數」。若即時來源失敗，會明確標示為備援行情，不把舊價冒充即時價。</div></div>
-<div class="card"><strong>🔧 v5.11.3 行情連線修正</strong><div class="note" style="margin-top:8px">移除前端自訂 Cache-Control 請求標頭，避免瀏覽器 CORS 預檢干擾；Worker 回傳改先讀取原始內容再解析 JSON，若異常會直接顯示真正回傳內容，不再只顯示 HTTP 200。即時 MIS 失敗時仍保留歷史行情備援。</div></div>
-<div class="card"><strong>⚡ v5.11.3 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
-<div class="card"><strong>🔎 v5.11.3 行情來源診斷</strong><div class="note" style="margin-top:8px">暫時在完整持股分析中顯示最終來源、MIS 現價／更新時間／最後成交時間、歷史來源與 fallback 狀態，用來比對即時與延遲標的。此版不改變既有買賣判斷。</div></div>
+<div class="card"><strong>🔧 v5.11.4 行情連線修正</strong><div class="note" style="margin-top:8px">移除前端自訂 Cache-Control 請求標頭，避免瀏覽器 CORS 預檢干擾；Worker 回傳改先讀取原始內容再解析 JSON，若異常會直接顯示真正回傳內容，不再只顯示 HTTP 200。即時 MIS 失敗時仍保留歷史行情備援。</div></div>
+<div class="card"><strong>⚡ v5.11.4 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
+<div class="card"><strong>🔎 v5.11.4 行情來源診斷</strong><div class="note" style="margin-top:8px">暫時在完整持股分析中顯示最終來源、MIS 現價／更新時間／最後成交時間、歷史來源與 fallback 狀態，用來比對即時與延遲標的。此版不改變既有買賣判斷。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -484,7 +484,28 @@ function openAnalysis(type,id){
  $('analysisOverlay').classList.add('show');
  document.body.classList.add('analysis-open');
  $('analysisSheetBody').scrollTop=0;
+
+ setTimeout(forceQuoteDiagnosticsIntoAnalysis,0);
 }
+
+function forceQuoteDiagnosticsIntoAnalysis(){
+ try{
+  let body=$('analysisSheetBody'); if(!body)return;
+  let stock=body.querySelector('.stock'); if(!stock)return;
+  if(stock.querySelector('.quote-diagnostics'))return;
+  let title=String($('analysisSheetTitle')&&$('analysisSheetTitle').textContent||'');
+  let m=title.match(/^([0-9A-Z]{4,7})/); if(!m)return;
+  let ticker=m[1],h=holdings().find(function(x){return String(x.ticker||'').toUpperCase()===ticker});
+  if(!h)return;
+  let a=getSnapshot(h.id)||{},box=document.createElement('div');
+  box.innerHTML=quoteDiagnosticsHtml(a.meta||{});
+  let node=box.firstElementChild;if(!node)return;
+  let sub=stock.querySelector('.stocksub');
+  if(sub&&sub.parentNode)sub.parentNode.insertBefore(node,sub.nextSibling);
+  else stock.insertBefore(node,stock.firstChild);
+ }catch(e){console.warn('diagnostics render failed',e)}
+}
+
 function closeAnalysis(){
  $('analysisOverlay').classList.remove('show');
  document.body.classList.remove('analysis-open');
@@ -525,7 +546,7 @@ async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare
 function quoteInfoFromMeta(meta){let ts=Number(meta&&meta.regularMarketTime),tradeTs=Number(meta&&meta.lastTradeTime),now=Date.now()/1000,age=Number.isFinite(ts)?Math.max(0,Math.round((now-ts)/60)):null,tradeAge=Number.isFinite(tradeTs)&&tradeTs>0?Math.max(0,Math.round((now-tradeTs)/60)):null,status=meta&&meta.quoteStatus==='live'?'live':'fallback',source=(meta&&meta.liveSource)||(meta&&meta.dataSource)||'未知來源',text;if(status==='live'){text=age!=null&&age<=3?'🟢 即時行情':age!=null?'🟡 資料更新延遲 '+age+' 分鐘':'🟢 即時行情'}else{text='🟠 備援行情（非即時）'}return{age:age,tradeAge:tradeAge,status:status,source:source,text:text}}
 
 function quoteDiagnosticsHtml(meta){
- let d=meta&&meta.diagnostics;if(!d)return '<div class="note">診斷資料：—</div>';
+ let d=meta&&meta.diagnostics;if(!d)return '<div class="quote-diagnostics" style="margin-top:10px;padding:11px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff;font-size:12px;line-height:1.65"><b>🔎 行情來源診斷</b><br>診斷資料：尚未寫入 Snapshot。請按「更新全部」後重新開啟此持股。</div>';
  function tm(v){let n=Number(v);if(!Number.isFinite(n)||n<=0)return '—';return new Date(n*1000).toLocaleTimeString('zh-TW',{timeZone:'Asia/Taipei',hour12:false})}
  return '<div class="quote-diagnostics" style="margin-top:10px;padding:11px 12px;border:1px dashed var(--line);border-radius:12px;background:#fff;font-size:12px;line-height:1.65">'+
  '<b>🔎 行情來源診斷</b><br>'+
