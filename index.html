@@ -768,7 +768,7 @@ function stopLossGuardAnalysis(a,holding){
  if(volumeBreak&&price<ma20){evidence+=1;reasons.push('跌破 MA20 且量比 '+fmt(vr)+'，有放量弱勢（+1）')}else reasons.push('未出現明確放量破位確認');
  if(fundBad){evidence+=2;reasons.push('基本面／原持有理由已轉差（+2）')}
  if(lossAlert)reasons.push('已觸及原風控 '+holding.maxLoss+'%，列為風險警報，但不單獨觸發賣出');
- if(oversold)reasons.push('RSI '+fmt(rsi)+' 已進入超賣區，避免在情緒最弱處追殺');
+ if(oversold)reasons.push('RSI '+fmt(rsi)+' 已進入超賣區，避免在情緒最弱處砍在阿呆谷');
  if(sharpDrop)reasons.push('近 5 日已急跌 '+fmt(ret5)+'%，提高反彈／殺低風險');
  let belowBoth=price<ma20&&price<ma60,trendConfirmed=belowBoth&&Number(a.trendScore)<=1,reboundFailure=price<ma20&&Number(a.ma5)<ma20;
  if(trendConfirmed){evidence+=1;reasons.push('MA20／MA60 同時失守且趨勢評分偏弱（+1 趨勢確認）')}
@@ -776,7 +776,7 @@ function stopLossGuardAnalysis(a,holding){
  let blocked=(oversold||sharpDrop)&&!fundBad,qualified=evidence>=3&&!blocked;
  let level='observe',title='🟡 尚未取得止損資格',cls='warn',action='hold';
  if(qualified){level='qualified';title='🔴 止損／減碼資格成立';cls='bad';action='reduce'}
- else if(blocked){level='anti-chase';title='🛑 防殺低：暫不追殺';cls='warn';action='wait'}
+ else if(blocked){level='anti-chase';title='🛑 防殺低：不宜砍在阿呆谷';cls='warn';action='wait'}
  else if(lossAlert||supportBroken){level='confirm';title='🟠 風險升高，等待確認';cls='warn';action='confirm'}
  return{level:level,title:title,cls:cls,action:action,qualified:qualified,blocked:blocked,evidence:evidence,lossAlert:lossAlert,oversold:oversold,sharpDrop:sharpDrop,ret5:ret5,volumeBreak:volumeBreak,supportBroken:supportBroken,fundBad:fundBad,trendConfirmed:trendConfirmed,reboundFailure:reboundFailure,reasons:reasons};
 }
@@ -943,7 +943,7 @@ function buildPositionAdvice(stockAnalysis,holding,capitalState){
  if(sg&&sg.qualified)
   return{text:'🔴 建議分批降低部位／止損。這次不是只因趨勢偏空，而是支撐破壞等賣出證據已達門檻；採分批方式控制風險，避免一次全砍。',cls:'bad',allowed:false,reason:'stoploss-qualified'};
  if(sg&&sg.blocked)
-  return{text:'🛑 弱勢但暫不追殺。技術面偏空，但目前已出現超賣或短期急跌，直接止損有殺低風險；先停止加碼，等待反彈失敗、再次破底或基本面轉差再決定是否減碼。',cls:'warn',allowed:false,reason:'anti-chase-stoploss'};
+  return{text:'🛑 弱勢，但不宜砍在阿呆谷。技術面偏空，但目前已出現超賣或短期急跌，直接止損容易賣在短線低點；先停止加碼，等待反彈失敗、再次破底或基本面轉差再決定是否減碼。',cls:'warn',allowed:false,reason:'anti-chase-stoploss'};
  if(pb&&pb.level==='broken')
   return{text:'🟠 支撐已轉弱，但止損證據尚未完整。暫停加碼並提高警覺；等待放量破位、反彈無法站回關鍵均線等確認後，再考慮分批降低部位。',cls:'warn',allowed:false,reason:'support-break-unconfirmed'};
  if(pb&&pb.level==='warning'&&!isBuyAdvice(technical))
