@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.14（雙層風控／浮盈回吐保護版）</title>
+<title>股倉雷達 v5.15（ATR 自適應獲利保護版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -125,7 +125,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.14 · 雙層風控／浮盈回吐保護版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.15 · ATR 自適應獲利保護版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -177,6 +177,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>📱 v5.9 清單＋分析彈幕</strong><div class="note" style="margin-top:8px">持股與觀察頁改為精簡總覽卡，只保留股票代號／名稱、現價、損益或目標價差、技術狀態與最終動作。點擊任一標的後，從畫面底部滑出完整分析面板；原本的追高風險、相對強弱、支撐結構、獲利保護、決策環境、最終建議與操作按鈕全部保留。更新全部仍會一次更新所有標的。</div></div>
 
 <div class="card"><strong>🛑 v5.10 止損防殺低</strong><div class="note" style="margin-top:8px">「趨勢偏空」不再直接等於「賣出」。持股若已急跌或 RSI 超賣，系統會先進入防殺低觀察；只有支撐破壞再搭配放量、非超賣／非急跌，或基本面轉差等較完整證據，才升級為減碼／止損。原本最大可接受虧損改為風險警報，不再單靠虧損百分比強迫賣出。</div></div><div class="card"><strong>🛡️ v5.14 雙層風控／浮盈回吐保護</strong><div class="note" style="margin-top:8px">停利改以「最高曾獲利」而非目前獲利啟動，避免曾經有可保護浮盈、回到成本附近後保護狀態反而消失；止損則新增趨勢破壞與反彈失敗確認，同時保留急跌／超賣防殺低。既有最高價與最高曾獲利紀錄沿用，不重置。</div></div>
+<div class="card"><strong>📐 v5.15 ATR 自適應獲利保護</strong><div class="note" style="margin-top:8px">取消用固定獲利百分比決定鎖利層級。系統以歷史行情計算 ATR 與波動基準，將「距最高價回撤」換算成 ATR 單位，再搭配最高浮盈保留率與動能狀態判斷：動能健康讓獲利續跑、降溫進入警戒、回撤異常且動能轉弱才收緊或停利。若來源暫無完整高低價，ATR 會以收盤變動作保守備援。</div></div>
 <div class="card"><strong>⚡ v5.11 即時行情雙資料源</strong><div class="note" style="margin-top:8px">盤中現價優先使用 TWSE MIS；Yahoo／TWSE／TPEx 日線繼續負責 MA、RSI 與歷史技術分析。每次更新都停用瀏覽器／Worker 快取，並顯示「成交時間、行情來源、延遲分鐘數」。若即時來源失敗，會明確標示為備援行情，不把舊價冒充即時價。</div></div>
 <div class="card"><strong>🔧 v5.11.4 行情連線修正</strong><div class="note" style="margin-top:8px">移除前端自訂 Cache-Control 請求標頭，避免瀏覽器 CORS 預檢干擾；Worker 回傳改先讀取原始內容再解析 JSON，若異常會直接顯示真正回傳內容，不再只顯示 HTTP 200。即時 MIS 失敗時仍保留歷史行情備援。</div></div>
 <div class="card"><strong>⚡ v5.11.4 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
@@ -427,6 +428,10 @@ function fmt(x){return x==null||Number.isNaN(x)?'—':Number(x).toLocaleString('
 function money(x){return x==null||Number.isNaN(x)?'—':'$'+Math.round(x).toLocaleString('zh-TW')}
 function pct(x){return(x>=0?'+':'')+x.toFixed(2)+'%'} function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null} function sma(a,n){return a.length<n?null:avg(a.slice(-n))}
 function rsi14(c){if(c.length<15)return null;let g=0,l=0;for(let i=c.length-14;i<c.length;i++){let d=c[i]-c[i-1];if(d>0)g+=d;else l-=d}let ag=g/14,al=l/14;if(al===0)return 100;return 100-100/(1+ag/al)}
+function trueRanges(rows){let out=[];for(let i=1;i<rows.length;i++){let r=rows[i],pc=Number(rows[i-1].c),h=Number(r.h),l=Number(r.l),c=Number(r.c),tr;if(Number.isFinite(h)&&Number.isFinite(l)&&Number.isFinite(pc))tr=Math.max(h-l,Math.abs(h-pc),Math.abs(l-pc));else if(Number.isFinite(c)&&Number.isFinite(pc))tr=Math.abs(c-pc);if(Number.isFinite(tr)&&tr>=0)out.push(tr)}return out}
+function atrFromRows(rows,n){n=n||14;let tr=trueRanges(rows);return tr.length>=n?avg(tr.slice(-n)):null}
+function atrBaselineFromRows(rows,windowDays){let tr=trueRanges(rows),w=Math.min(windowDays||60,tr.length);if(w<20)return null;return avg(tr.slice(-w))}
+function adaptiveMomentumState(a){let score=0,reasons=[],price=Number(a.price),ma5=Number(a.ma5),ma20=Number(a.ma20),cl=Array.isArray(a.closes)?a.closes:[],ret5=cl.length>=6?(price/cl[cl.length-6]-1)*100:null,prev5=cl.length>=10?avg(cl.slice(-10,-5)):null;if(Number.isFinite(ma5)&&Number.isFinite(ma20)&&ma5>ma20){score+=1;reasons.push('MA5 位於 MA20 上方')}if(Number.isFinite(price)&&Number.isFinite(ma5)&&price>=ma5){score+=1;reasons.push('現價仍守在 MA5 上方')}if(Number.isFinite(ret5)&&ret5>2){score+=1;reasons.push('近 5 日仍有正向推進')}if(Number(a.vr)>=1.2&&Number.isFinite(ret5)&&ret5>0){score+=1;reasons.push('上漲伴隨量能')}if(Number.isFinite(prev5)&&Number.isFinite(ma5)&&ma5<prev5){score-=1;reasons.push('MA5 推進速度下降')}let level=score>=3?'high':score>=1?'healthy':score>=0?'cooling':'weak',title=level==='high'?'🔥 高動能':level==='healthy'?'🟢 動能健康':level==='cooling'?'🟡 動能降溫':'🟠 動能明顯轉弱';return{level:level,title:title,score:score,reasons:reasons,ret5:ret5}}
 function holdings(){try{return JSON.parse(localStorage.getItem(HOLD)||'[]')}catch{return[]}} function store(v){localStorage.setItem(HOLD,JSON.stringify(v))}
 function watchlist(){try{return JSON.parse(localStorage.getItem(WATCH)||'[]')}catch(e){return[]}} function storeWatch(v){localStorage.setItem(WATCH,JSON.stringify(v))}
 function watchCache(){try{return JSON.parse(localStorage.getItem(WATCH_CACHE)||'{}')}catch(e){return{}}}
@@ -544,7 +549,7 @@ function renderHoldingCard(x,a,state,error){
 function render(){let h=holdings(),cache=snapshots();$('sumCount').textContent=h.length;$('portfolio').innerHTML=h.length?h.map(function(x){return'<div class="stock" id="s-'+x.id+'"></div>'}).join(''):'<div class="empty">尚無持股</div>';h.forEach(function(x){let a=cache[x.id],usable=a&&(!a.ticker||a.ticker===x.ticker);renderHoldingCard(x,usable?a:null,usable?'loading':'idle')});summary()}
 let LIVE_BATCH_CACHE={quotes:{},errors:{},at:0};
 async function fetchLiveBatch(symbols){symbols=(symbols||[]).map(normalizeTicker).filter(validTicker);if(!symbols.length)return LIVE_BATCH_CACHE;let r=await fetch(api()+'/live-batch?symbols='+encodeURIComponent(symbols.join(','))+'&_='+Date.now(),{cache:'no-store'}),raw=await r.text(),j=null;try{j=JSON.parse(raw)}catch(e){}if(!r.ok||!j||j.ok!==true)throw new Error((j&&j.error)||('批次 MIS HTTP '+r.status));LIVE_BATCH_CACHE={quotes:j.quotes||{},errors:j.errors||{},at:Date.now()};return LIVE_BATCH_CACHE}
-async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare Worker 網址');ticker=normalizeTicker(ticker);if(!validTicker(ticker))throw new Error('股票代號須為 4–7 碼英文或數字');try{let url=api()+'/stock?symbol='+encodeURIComponent(ticker)+'&_='+Date.now(),r=await fetch(url,{cache:'no-store'}),raw=await r.text(),j=null;try{j=JSON.parse(raw)}catch(e){}if(!r.ok)throw new Error(j&&j.error?j.error:'Worker HTTP '+r.status+(raw?'：'+raw.slice(0,120):''));if(!j)throw new Error('Worker 回傳的不是 JSON（HTTP '+r.status+'）：'+raw.slice(0,120));if(j.ok!==true)throw new Error(j.error||'Worker 回傳 ok=false（HTTP '+r.status+'）');let history=Array.isArray(j.history)?j.history:[],rows=history.map(function(x){let t=Date.parse(x.date+'T00:00:00+08:00')/1000,c=Number(x.close),v=x.volume==null?null:Number(x.volume);return{t:t,c:c,v:Number.isFinite(v)?v:null}}).filter(function(x){return Number.isFinite(x.t)&&Number.isFinite(x.c)}).sort(function(a,b){return a.t-b.t});if(rows.length<60)throw new Error('目前取得的有效交易日不足 60 日');let last=rows[rows.length-1],price=Number(j.price),timestamp=Number(j.timestamp),meta={longName:j.name||ticker,shortName:j.name||ticker,regularMarketPrice:Number.isFinite(price)?price:last.c,regularMarketTime:Number.isFinite(timestamp)?timestamp:last.t,exchangeName:j.market||'',dataSource:j.source||'',liveSource:j.liveSource||j.source||'',historySource:j.historySource||j.source||'',quoteStatus:j.quoteStatus||'fallback',serverTime:Number(j.serverTime)||Math.floor(Date.now()/1000),lastTradeTime:Number(j.tradeTimestamp)||0,diagnostics:j.diagnostics||null,liveError:j.liveError||''};let b=LIVE_BATCH_CACHE.quotes&&LIVE_BATCH_CACHE.quotes[ticker];if(b&&Number.isFinite(Number(b.price))){meta.regularMarketPrice=Number(b.price);meta.regularMarketTime=Number(b.timestamp)||meta.regularMarketTime;meta.lastTradeTime=Number(b.tradeTimestamp)||meta.regularMarketTime;meta.exchangeName=b.market||meta.exchangeName;meta.dataSource='TWSE MIS';meta.liveSource='TWSE MIS';meta.quoteStatus='live';meta.liveError='';meta.diagnostics={finalSource:'TWSE MIS 批次',finalPrice:meta.regularMarketPrice,finalTimestamp:meta.regularMarketTime,misOk:true,misPrice:meta.regularMarketPrice,misUpdateTimestamp:meta.regularMarketTime,misTradeTimestamp:meta.lastTradeTime,historySource:j.historySource||j.source||'',fallback:false}}else if(LIVE_BATCH_CACHE.errors&&LIVE_BATCH_CACHE.errors[ticker]){meta.liveError=LIVE_BATCH_CACHE.errors[ticker]}return{symbol:ticker,d:{meta:meta},rows:rows,source:meta.dataSource||j.source||'',market:meta.exchangeName||j.market||''}}catch(e){if(/^目前無法取得/.test(e.message)||/^尚未設定/.test(e.message)||/^股票代號/.test(e.message))throw e;throw new Error('目前無法取得 '+ticker+' 行情，已嘗試即時 MIS 與 Yahoo、TWSE、TPEx 歷史來源。'+(e.message?'（'+e.message+'）':''))}}
+async function market(ticker){if(!api())throw new Error('尚未設定 Cloudflare Worker 網址');ticker=normalizeTicker(ticker);if(!validTicker(ticker))throw new Error('股票代號須為 4–7 碼英文或數字');try{let url=api()+'/stock?symbol='+encodeURIComponent(ticker)+'&_='+Date.now(),r=await fetch(url,{cache:'no-store'}),raw=await r.text(),j=null;try{j=JSON.parse(raw)}catch(e){}if(!r.ok)throw new Error(j&&j.error?j.error:'Worker HTTP '+r.status+(raw?'：'+raw.slice(0,120):''));if(!j)throw new Error('Worker 回傳的不是 JSON（HTTP '+r.status+'）：'+raw.slice(0,120));if(j.ok!==true)throw new Error(j.error||'Worker 回傳 ok=false（HTTP '+r.status+'）');let history=Array.isArray(j.history)?j.history:[],rows=history.map(function(x){let t=Date.parse(x.date+'T00:00:00+08:00')/1000,c=Number(x.close),v=x.volume==null?null:Number(x.volume);let o=Number(x.open),h=Number(x.high),l=Number(x.low);return{t:t,o:Number.isFinite(o)?o:null,h:Number.isFinite(h)?h:null,l:Number.isFinite(l)?l:null,c:c,v:Number.isFinite(v)?v:null}}).filter(function(x){return Number.isFinite(x.t)&&Number.isFinite(x.c)}).sort(function(a,b){return a.t-b.t});if(rows.length<60)throw new Error('目前取得的有效交易日不足 60 日');let last=rows[rows.length-1],price=Number(j.price),timestamp=Number(j.timestamp),meta={longName:j.name||ticker,shortName:j.name||ticker,regularMarketPrice:Number.isFinite(price)?price:last.c,regularMarketTime:Number.isFinite(timestamp)?timestamp:last.t,exchangeName:j.market||'',dataSource:j.source||'',liveSource:j.liveSource||j.source||'',historySource:j.historySource||j.source||'',quoteStatus:j.quoteStatus||'fallback',serverTime:Number(j.serverTime)||Math.floor(Date.now()/1000),lastTradeTime:Number(j.tradeTimestamp)||0,diagnostics:j.diagnostics||null,liveError:j.liveError||''};let b=LIVE_BATCH_CACHE.quotes&&LIVE_BATCH_CACHE.quotes[ticker];if(b&&Number.isFinite(Number(b.price))){meta.regularMarketPrice=Number(b.price);meta.regularMarketTime=Number(b.timestamp)||meta.regularMarketTime;meta.lastTradeTime=Number(b.tradeTimestamp)||meta.regularMarketTime;meta.exchangeName=b.market||meta.exchangeName;meta.dataSource='TWSE MIS';meta.liveSource='TWSE MIS';meta.quoteStatus='live';meta.liveError='';meta.diagnostics={finalSource:'TWSE MIS 批次',finalPrice:meta.regularMarketPrice,finalTimestamp:meta.regularMarketTime,misOk:true,misPrice:meta.regularMarketPrice,misUpdateTimestamp:meta.regularMarketTime,misTradeTimestamp:meta.lastTradeTime,historySource:j.historySource||j.source||'',fallback:false}}else if(LIVE_BATCH_CACHE.errors&&LIVE_BATCH_CACHE.errors[ticker]){meta.liveError=LIVE_BATCH_CACHE.errors[ticker]}return{symbol:ticker,d:{meta:meta},rows:rows,source:meta.dataSource||j.source||'',market:meta.exchangeName||j.market||''}}catch(e){if(/^目前無法取得/.test(e.message)||/^尚未設定/.test(e.message)||/^股票代號/.test(e.message))throw e;throw new Error('目前無法取得 '+ticker+' 行情，已嘗試即時 MIS 與 Yahoo、TWSE、TPEx 歷史來源。'+(e.message?'（'+e.message+'）':''))}}
 
 function quoteInfoFromMeta(meta){let ts=Number(meta&&meta.regularMarketTime),tradeTs=Number(meta&&meta.lastTradeTime),now=Date.now()/1000,age=Number.isFinite(ts)?Math.max(0,Math.round((now-ts)/60)):null,tradeAge=Number.isFinite(tradeTs)&&tradeTs>0?Math.max(0,Math.round((now-tradeTs)/60)):null,status=meta&&meta.quoteStatus==='live'?'live':'fallback',source=(meta&&meta.liveSource)||(meta&&meta.dataSource)||'未知來源',text;if(status==='live'){text=age!=null&&age<=3?'🟢 即時行情':age!=null?'🟡 資料更新延遲 '+age+' 分鐘':'🟢 即時行情'}else{text='🟠 備援行情'+(meta&&meta.liveError?'｜'+String(meta.liveError).replace(/^MIS\s*[:：]?\s*/,'').slice(0,42):'')}return{age:age,tradeAge:tradeAge,status:status,source:source,text:text}}
 
@@ -726,6 +731,7 @@ function analyze(x,m){
  validVol=rows.slice(-20).map(function(r){return r.v}).filter(function(v){return v>0}),
  baseVol=avg(validVol.slice(0,-1)),vr=last.v>0&&baseVol>0?last.v/baseVol:1,
  pnl=(price-x.cost)/x.cost*100,t=trendEngine({price:price,ma5:ma5,ma20:ma20,ma60:ma60,rsi:rsi,vr:vr}),
+ atr14=atrFromRows(rows,14),atrBase=atrBaselineFromRows(rows,60),atrPct=Number.isFinite(atr14)&&price>0?atr14/price*100:null,atrBasePct=Number.isFinite(atrBase)&&price>0?atrBase/price*100:null,atrExpansion=Number.isFinite(atr14)&&Number.isFinite(atrBase)&&atrBase>0?atr14/atrBase:null,
  chaseRisk=chaseRiskAnalysis(price,ma20,rsi,cl),pullbackStructure=pullbackStructureAnalysis(price,ma5,ma20,ma60,vr,cl,t.score),score=t.score,re=t.reasons.slice(),tags=[];
 
  if(t.trend==='bull')tags.push('多頭排列');
@@ -764,7 +770,7 @@ function analyze(x,m){
   trendScore:t.score,trendMax:t.maxScore,trendMin:t.minScore,trendText:t.text,trendCls:t.cls,trendReasons:t.reasons,trend:t.trend,
   score:score,re:re,tags:tags,decision:decision,cls:cls,fund:x.fund,strategy:x.strategy,maxLoss:x.maxLoss,
   name:meta.longName||meta.shortName||m.symbol,value:price*x.qty,costValue:x.cost*x.qty,pnlMoney:(price-x.cost)*x.qty,
-  chaseRisk:chaseRisk,relativeStrength:null,pullbackStructure:pullbackStructure,closes:cl.slice(-30),stopLossGuard:null,
+  chaseRisk:chaseRisk,relativeStrength:null,pullbackStructure:pullbackStructure,closes:cl.slice(-30),atr14:atr14,atrPct:atrPct,atrBase:atrBase,atrBasePct:atrBasePct,atrExpansion:atrExpansion,stopLossGuard:null,
   time:new Date((meta.regularMarketTime||last.t)*1000),
   meta:meta,
   quoteInfo:quoteInfoFromMeta(meta)
@@ -804,58 +810,48 @@ function holdingLevel(holding){let invested=(+holding.cost||0)*(+holding.qty||0)
 function isBuyAdvice(advice){return advice&&advice.actions&&advice.actions.some(function(x){return/加碼|布局|買進/.test(x)&&!/暫停|不急|避免/.test(x)})}
 function profitProtection(stockAnalysis,holding,previous){
  let price=Number(stockAnalysis.price),cost=Number(holding.cost),pnl=Number(stockAnalysis.pnl),
-     prevPeak=Number(previous&&previous.peakPrice),
-     peak=Number.isFinite(prevPeak)&&prevPeak>0?Math.max(prevPeak,price):price,
-     peakPnl=cost>0?(peak-cost)/cost*100:null,
-     drawdown=peak>0?(peak-price)/peak*100:0,
+     prevPeak=Number(previous&&previous.peakPrice),peak=Number.isFinite(prevPeak)&&prevPeak>0?Math.max(prevPeak,price):price,
+     peakPnl=cost>0?(peak-cost)/cost*100:null,drawdown=peak>0?(peak-price)/peak*100:0,
      giveback=Number.isFinite(peakPnl)&&Number.isFinite(pnl)?Math.max(0,peakPnl-pnl):0,
      givebackRatio=Number.isFinite(peakPnl)&&peakPnl>0?giveback/peakPnl*100:0,
-     t=trendInfoFromAnalysis(stockAnalysis),reasons=[],
+     atr=Number(stockAnalysis.atr14),atrBase=Number(stockAnalysis.atrBase),atrExpansion=Number(stockAnalysis.atrExpansion),
+     atrDrawdown=Number.isFinite(atr)&&atr>0?(peak-price)/atr:null,
+     retained=Number.isFinite(peakPnl)&&peakPnl>0?Math.max(0,pnl)/peakPnl*100:null,
+     momentum=adaptiveMomentumState(stockAnalysis),t=trendInfoFromAnalysis(stockAnalysis),reasons=[],
      stage='none',title='⚪ 尚未啟動',cls='warn',action='none',active=false;
-
  if(holding.strategy==='long'){
-  stage='long';title='🔵 中長期：僅追蹤獲利';cls='good';
-  reasons.push('中長期策略保留最高價紀錄，但不因短線浮盈回吐自動停利');
-  return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,stage:stage,title:title,cls:cls,action:action,active:false,reasons:reasons};
+  reasons.push('中長期策略保留最高價與自適應回撤資訊，但不因短線波動自動停利');
+  return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,retained:retained,atr:atr,atrBase:atrBase,atrExpansion:atrExpansion,atrDrawdown:atrDrawdown,momentum:momentum,stage:'long',title:'🔵 中長期：僅追蹤獲利',cls:'good',action:'none',active:false,reasons:reasons};
  }
-
- // v5.14：是否啟動保護改看「最高曾獲利」，不是只看目前還剩多少獲利。
- if(Number.isFinite(peakPnl)&&peakPnl>=10){stage='strong';active=true;title='🛡️ 強獲利保護';cls='good';reasons.push('最高曾獲利達 '+pct(peakPnl)+'，提高回吐保護敏感度')}
- else if(Number.isFinite(peakPnl)&&peakPnl>=5){stage='protect';active=true;title='🛡️ 獲利保護已啟動';cls='good';reasons.push('最高曾獲利達 '+pct(peakPnl)+'，即使目前已回到成本附近，保護狀態仍保留')}
- else if(Number.isFinite(peakPnl)&&peakPnl>=3){stage='watch';active=true;title='🟢 浮盈回吐觀察';cls='good';reasons.push('最高曾獲利達 '+pct(peakPnl)+'，開始追蹤浮盈是否快速回吐')}
- else if(pnl>=0){stage='breakeven';title='🟡 解套／小幅獲利區';reasons.push('最高曾獲利未達 3%，暫不啟動停利')}
- else{stage='loss';title='⚪ 尚未進入獲利保護';reasons.push('持有期間尚未出現足以啟動保護的浮盈')}
-
- let below5=price<Number(stockAnalysis.ma5),below20=price<Number(stockAnalysis.ma20),
-     trendWeak=t.score<5,trendBad=t.score<2;
-
+ // v5.15 不再用固定 +3/+5/+10% 決定保護層級。只要曾有正浮盈，就開始建立動態基準；真正動作由 ATR 回撤＋浮盈保留率＋動能共同決定。
+ if(Number.isFinite(peakPnl)&&peakPnl>0){active=true;stage='adaptive';title='🟢 自適應獲利追蹤';cls='good';reasons.push('最高曾獲利 '+pct(peakPnl)+'；目前保留 '+(Number.isFinite(retained)?fmt(retained)+'%':'—')+' 的最高浮盈')}
+ else if(pnl>=0){stage='breakeven';title='🟡 成本附近';reasons.push('尚未形成可量化的最高浮盈')}
+ else{stage='loss';title='⚪ 尚未進入獲利保護';reasons.push('持有期間尚未出現正浮盈')}
  if(active){
-  reasons.push('持有最高價 '+fmt(peak)+'；目前距高點回落 '+fmt(drawdown)+'%');
-  reasons.push('浮盈已回吐 '+fmt(giveback)+' 個百分點（約 '+fmt(givebackRatio)+'%）');
-  if(below5)reasons.push('股價已跌破 MA5');
-  if(below20)reasons.push('股價已跌破 MA20');
-  if(trendWeak)reasons.push('技術趨勢分數降至 '+t.score+'/9');
-
-  let warnRatio=stage==='strong'?35:stage==='protect'?45:55,
-      sellRatio=stage==='strong'?70:stage==='protect'?85:95,
-      warnDD=stage==='strong'?3:stage==='protect'?4:5,
-      sellDD=stage==='strong'?6:stage==='protect'?7:9;
-
-  // 先警戒，再減碼；接近全數回吐且趨勢同步惡化才升級停利。
-  if(givebackRatio>=sellRatio && drawdown>=sellDD && (below20||trendBad)){
-    action='sell';title='🔴 浮盈保護：停利／退出';cls='bad';
-    reasons.push('大部分曾有浮盈已回吐，且高點回落與趨勢轉弱同時成立');
-  }else if((givebackRatio>=warnRatio||drawdown>=warnDD) && (below5||below20||trendWeak)){
-    action='reduce';title='🟠 浮盈保護：考慮分批減碼';cls='warn';
-    reasons.push('浮盈回吐已達警戒區，並出現趨勢轉弱；不再等到獲利全部消失才處理');
+  reasons.push('目前距持有最高價回落 '+fmt(drawdown)+'%'+(Number.isFinite(atrDrawdown)?'，約 '+fmt(atrDrawdown)+' ATR':''));
+  if(Number.isFinite(atrExpansion))reasons.push('近期 ATR 約為歷史波動基準的 '+fmt(atrExpansion)+' 倍'+(atrExpansion>=1.5?'，波動正在擴張':'，波動未異常放大'));
+  reasons.push('動能狀態：'+momentum.title+'（'+momentum.score+'）');
+  // 門檻使用 ATR 單位而非固定報酬率；波動擴張時不直接把尺無限放寬。
+  let softATR=1.5,hardATR=2.5;
+  if(Number.isFinite(atrExpansion)&&atrExpansion>=1.5){softATR=1.35;hardATR=2.2}
+  let softHit=Number.isFinite(atrDrawdown)&&atrDrawdown>=softATR,
+      hardHit=Number.isFinite(atrDrawdown)&&atrDrawdown>=hardATR,
+      resultLoss=Number.isFinite(retained)&&retained<=50,
+      severeLoss=Number.isFinite(retained)&&retained<=30,
+      cooling=momentum.level==='cooling'||momentum.level==='weak',weak=momentum.level==='weak'||t.score<2;
+  if((hardHit&&weak&&resultLoss)||(severeLoss&&softHit&&cooling)){
+    action='sell';title='🔴 自適應鎖利：停利／退出';cls='bad';reasons.push('回撤已超出個股正常波動，最高浮盈大量流失，且動能同步轉弱')
+  }else if((softHit&&cooling)||(resultLoss&&cooling)){
+    action='reduce';title='🟠 自適應鎖利：收緊保護';cls='warn';reasons.push('ATR 回撤或浮盈流失已進入警戒，且動能正在降溫；開始考慮分批保護成果')
+  }else if(cooling){
+    action='hold';title='🟡 動能降溫：獲利警戒';cls='warn';reasons.push('動能已有轉弱跡象，但回撤尚未超出自適應保護範圍')
   }else{
-    action='hold';title=stage==='watch'?'🟢 浮盈回吐觀察':title;
-    reasons.push('回吐或趨勢轉弱尚未同時達門檻，維持續抱');
+    action='hold';title=momentum.level==='high'?'🔥 高動能：讓獲利續跑':'🟢 動能健康：續抱';cls='good';reasons.push('目前回撤仍可由個股波動解釋，尚未達鎖利退出條件')
   }
  }
- return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,stage:stage,title:title,cls:cls,action:action,active:active,reasons:reasons};
+ return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,retained:retained,atr:atr,atrBase:atrBase,atrExpansion:atrExpansion,atrDrawdown:atrDrawdown,momentum:momentum,stage:stage,title:title,cls:cls,action:action,active:active,reasons:reasons};
 }
-function profitProtectionHtml(p){if(!p)return'';let actionText=p.action==='sell'?'建議停利':p.action==='reduce'?'考慮減碼':p.action==='hold'?'續抱':'原策略判斷';return `<div class="profit-protect"><div class="profit-protect-head"><span class="${p.cls}">${esc(p.title)}</span><span>${esc(actionText)}</span></div><div class="profit-grid"><div class="kpi"><small>目前獲利</small><b>${Number.isFinite(Number(p.currentPnl))?pct(Number(p.currentPnl)):'—'}</b></div><div class="kpi"><small>最高曾獲利</small><b>${Number.isFinite(Number(p.peakPnl))?pct(Number(p.peakPnl)):'—'}</b></div><div class="kpi"><small>浮盈回吐</small><b>${Number.isFinite(Number(p.giveback))?fmt(Number(p.giveback))+' 個百分點':'—'}</b></div><div class="kpi"><small>距高點回落</small><b>${fmt(p.drawdown)}%</b></div></div><div class="profit-note">v5.14 改以「最高曾獲利」啟動保護；即使目前已回到成本附近，保護狀態也不會消失。回吐達警戒區且趨勢同步轉弱時，才升級為分批減碼／停利。</div><ul class="profit-reasons">${(p.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
+function profitProtectionHtml(p){if(!p)return'';let actionText=p.action==='sell'?'建議停利':p.action==='reduce'?'收緊／減碼':p.action==='hold'?'續抱':'原策略判斷';return `<div class="profit-protect"><div class="profit-protect-head"><span class="${p.cls}">${esc(p.title)}</span><span>${esc(actionText)}</span></div><div class="profit-grid"><div class="kpi"><small>最高曾獲利</small><b>${Number.isFinite(Number(p.peakPnl))?pct(Number(p.peakPnl)):'—'}</b></div><div class="kpi"><small>最高浮盈保留</small><b>${Number.isFinite(Number(p.retained))?fmt(Number(p.retained))+'%':'—'}</b></div><div class="kpi"><small>ATR 回撤</small><b>${Number.isFinite(Number(p.atrDrawdown))?fmt(Number(p.atrDrawdown))+' ATR':'—'}</b></div><div class="kpi"><small>近期 ATR%</small><b>${Number.isFinite(Number(p.atr))&&Number(p.peakPrice)>0?fmt(Number(p.atr)/Number(p.peakPrice)*100)+'%':'—'}</b></div></div><div class="profit-note">v5.15 改為個股自適應：ATR 衡量這次回檔相對於個股自身波動是否異常；最高浮盈保留率衡量成果流失；再由動能健康／降溫／轉弱決定是否收緊或停利。最高價紀錄沿用，不重置。</div><ul class="profit-reasons">${(p.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
 function buildPositionAdvice(stockAnalysis,holding,capitalState){
  let mr=marketRisk(),technical=stockAnalysis.advice||buildAdvice(stockAnalysis),level=holdingLevel(holding),
      pp=stockAnalysis.profitProtection,cr=stockAnalysis.chaseRisk,rs=stockAnalysis.relativeStrength,
