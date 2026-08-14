@@ -908,14 +908,22 @@ function profitProtection(stockAnalysis,holding,previous){
   }else{
     action='hold';title=momentum.level==='high'?'🔥 高動能：讓獲利續跑':'🟢 動能健康：續抱';cls='good';reasons.push('目前回撤仍可由個股波動解釋，尚未達鎖利退出條件')
   }
-  // v5.16：支撐／壓力只作為獲利保護的結構證據，不單獨觸發賣出。
+  // v5.17：支撐／壓力正式加入獲利保護；接近壓力需搭配動能與 ATR 回撤，不單獨觸發賣出。
   let sr=stockAnalysis.supportResistance||{};
   if(sr.breakout&&momentum.level!=='weak'){
     if(action==='reduce'){action='hold';title='🟢 突破壓力：讓獲利續跑';cls='good';reasons.push('原壓力已突破且動能未轉弱，暫不因舊壓力提前減碼')}
     else reasons.push('已突破原壓力區，讓趨勢繼續發展');
-  }else if(sr.nearResistance&&(momentum.level==='cooling'||momentum.level==='weak')){
-    reasons.push('股價接近壓力區且動能降溫，分批保護獲利的證據增加');
-    if(action==='hold'&&Number.isFinite(atrDrawdown)&&atrDrawdown>=1){action='reduce';title='🟠 壓力受阻：分批保護獲利';cls='warn'}
+  }else if(sr.nearResistance){
+    reasons.push('股價接近壓力區，開始檢查獲利保護需求');
+    // v5.17：接近壓力不直接賣出；需同時有動能降溫或 ATR 回撤才升級。
+    if(momentum.level==='cooling'||momentum.level==='weak'){
+      reasons.push('接近壓力且動能降溫，獲利回吐風險提高');
+      if(action==='hold'&&Number.isFinite(atrDrawdown)&&atrDrawdown>=0.8){
+        action='reduce';title='🟠 壓力區警戒：分批保護獲利';cls='warn';
+      }
+    }else{
+      reasons.push('雖接近壓力，但動能仍健康，避免因壓力提前賣飛');
+    }
   }
   if(sr.breakdown&&active){
     reasons.push('最近支撐區已跌破，獲利保護敏感度提高');
