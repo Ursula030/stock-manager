@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.16（動態支撐壓力／獲利保護整合版）</title>
+<title>股倉雷達 v5.17.1（最終建議一致性／壓力區語意修正版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -129,7 +129,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.16 · 動態支撐壓力／獲利保護整合版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.17.1 · 最終建議一致性／壓力區語意修正版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -191,6 +191,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>⚙️ v5.14 MIS 穩定更新</strong><div class="note" style="margin-top:8px">「更新全部」改為逐檔更新，不再同時對 MIS 發出大量請求；每檔間隔約 0.35 秒。Worker 也會依上市／上櫃市場優先查正確頻道並短暫重試，降低只有第一檔即時、其他退回 Yahoo 約 20 分鐘延遲行情的情況。</div></div>
 <div class="card"><strong>💰 v5.15.3 操作檢查／停利判斷</strong><div class="note" style="margin-top:8px">操作檢查新增「保護獲利／大盤風險／技術風險」原因，減碼或賣出時會讀取目前損益、ATR 獲利保護、支撐結構與大盤風險，直接回答續抱、可小幅分批停利、偏向分批獲利了結或退出，不再把所有賣出念頭都當成恐慌殺低。</div></div>
 <div class="card"><strong>🧭 v5.16 動態支撐／壓力＋獲利保護整合</strong><div class="note" style="margin-top:8px">不使用第三方支撐壓力預測。直接用既有歷史 K 線的轉折高低點、成交量、MA20／MA60 與 ATR 自算價格區域；ATR 決定區間寬度，重複測試與均線重疊提高強度。接近壓力不等於賣出：只有壓力區受阻且動能降溫才提高分批停利權重；帶量／強勢突破則讓獲利續跑。跌破重要支撐會提高獲利保護敏感度。</div></div>
+<div class="card"><strong>🧭 v5.17.1 最終建議一致性／壓力區語意修正</strong><div class="note" style="margin-top:8px">獲利保護判定為續抱且支撐未破壞時，低權重的短線弱勢文字不再覆蓋最終建議。接近壓力改稱「壓力觀察區」：壓力本身不是賣出訊號；動能健康時優先等待突破，只有壓力受阻並伴隨動能降溫、ATR 回撤擴大時，才提高分批保護獲利的層級。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -734,9 +735,9 @@ function supportResistanceAnalysis(rows,price,ma20,ma60,atr){
  let prev=rs.length>=2?Number(rs[rs.length-2].c):price,breakout=!!(resistance&&price>resistance.high&&prev<=resistance.high),breakdown=!!(support&&price<support.low&&prev>=support.low);
  if(support)reasons.push('最近支撐 '+fmt(support.low)+'～'+fmt(support.high)+'｜強度 '+support.strength+'/5');
  if(resistance)reasons.push('最近壓力 '+fmt(resistance.low)+'～'+fmt(resistance.high)+'｜強度 '+resistance.strength+'/5');
- if(nearR)reasons.push('現價已接近／進入壓力區，需看動能與量價是否能突破');if(nearS)reasons.push('現價接近支撐區，觀察是否守住');
+ if(nearR)reasons.push('現價已接近／進入壓力區；這是突破觀察區，不代表應先賣出，需搭配動能、量價與獲利回撤判斷');if(nearS)reasons.push('現價接近支撐區，觀察是否守住');
  if(breakout)reasons.push('現價已突破原壓力區上緣，原壓力不再直接視為停利點');if(breakdown)reasons.push('現價已跌破最近支撐區下緣，提高風險警戒');
- let title=breakout?'🟢 壓力突破':breakdown?'🔴 支撐跌破':nearR?'🟡 接近壓力區':nearS?'🟢 接近支撐區':'⚪ 支撐壓力區間內',cls=breakdown?'bad':(nearR?'warn':'good');
+ let title=breakout?'🟢 壓力突破':breakdown?'🔴 支撐跌破':nearR?'🟡 接近壓力・觀察突破':nearS?'🟢 接近支撐區':'⚪ 支撐壓力區間內',cls=breakdown?'bad':(nearR?'warn':'good');
  return{status:'ok',title:title,cls:cls,support:support,resistance:resistance,nearSupport:nearS,nearResistance:nearR,breakout:breakout,breakdown:breakdown,tolerance:tol,reasons:reasons};
 }
 function srStars(n){n=Math.max(0,Math.min(5,Number(n)||0));return'★'.repeat(n)+'☆'.repeat(5-n)}
@@ -914,15 +915,15 @@ function profitProtection(stockAnalysis,holding,previous){
     if(action==='reduce'){action='hold';title='🟢 突破壓力：讓獲利續跑';cls='good';reasons.push('原壓力已突破且動能未轉弱，暫不因舊壓力提前減碼')}
     else reasons.push('已突破原壓力區，讓趨勢繼續發展');
   }else if(sr.nearResistance){
-    reasons.push('股價接近壓力區，開始檢查獲利保護需求');
+    reasons.push('股價進入壓力觀察區：先看能否突破，不因接近壓力本身提前停利');
     // v5.17：接近壓力不直接賣出；需同時有動能降溫或 ATR 回撤才升級。
     if(momentum.level==='cooling'||momentum.level==='weak'){
-      reasons.push('接近壓力且動能降溫，獲利回吐風險提高');
+      reasons.push('壓力區附近動能開始降溫，且需搭配 ATR 回撤確認；若突破失敗才提高獲利保護層級');
       if(action==='hold'&&Number.isFinite(atrDrawdown)&&atrDrawdown>=0.8){
-        action='reduce';title='🟠 壓力區警戒：分批保護獲利';cls='warn';
+        action='reduce';title='🟠 壓力受阻：分批保護獲利';cls='warn';
       }
     }else{
-      reasons.push('雖接近壓力，但動能仍健康，避免因壓力提前賣飛');
+      reasons.push('接近壓力但動能仍健康：維持續抱，優先觀察突破，避免因看到壓力就提前賣飛');
     }
   }
   if(sr.breakdown&&active){
@@ -951,7 +952,7 @@ function buildPositionAdvice(stockAnalysis,holding,capitalState){
  if(sg&&sg.qualified)
   return{text:'🔴 建議分批降低部位／止損。這次不是只因趨勢偏空，而是支撐破壞等賣出證據已達門檻；採分批方式控制風險，避免一次全砍。',cls:'bad',allowed:false,reason:'stoploss-qualified'};
  if(sg&&sg.blocked)
-  return{text:'🛑 弱勢，但不宜砍在阿呆谷。技術面偏空，但目前已出現超賣或短期急跌，直接止損容易賣在短線低點；先停止加碼，等待反彈失敗、再次破底或基本面轉差再決定是否減碼。',cls:'warn',allowed:false,reason:'anti-chase-stoploss'};
+  return{text:'🛑 短線偏弱，但不宜急殺。技術面出現壓力或回檔訊號，但目前可能接近短線低點；先停止加碼，等待反彈失敗、再次破底或基本面轉差再決定是否減碼。',cls:'warn',allowed:false,reason:'anti-chase-stoploss'};
  if(pb&&pb.level==='broken')
   return{text:'🟠 支撐已轉弱，但止損證據尚未完整。暫停加碼並提高警覺；等待放量破位、反彈無法站回關鍵均線等確認後，再考慮分批降低部位。',cls:'warn',allowed:false,reason:'support-break-unconfirmed'};
  if(pb&&pb.level==='warning'&&!isBuyAdvice(technical))
@@ -959,7 +960,13 @@ function buildPositionAdvice(stockAnalysis,holding,capitalState){
  if(pb&&pb.level==='healthy'&&!isBuyAdvice(technical))
   return{text:'🟢 先續抱，不因短線回檔賣出。主要支撐結構仍在，目前較像正常整理；暫不追價加碼，等待趨勢重新轉強或出現更好的加碼位置。',cls:'good',allowed:false,reason:'healthy-pullback'};
 
- // 2. 持股建議完整版：盤整／偏空／空頭都要回答「現在做什麼＋接下來等什麼」。
+  // v5.17.1 決策一致性：獲利保護判定為續抱時，不讓低權重短線弱勢文字覆蓋。
+ if(pp&&pp.action==='hold'&&pp.momentum&&pp.momentum.level!=='weak'&&!(pb&&pb.level==='broken')){
+  let pressureText=sr&&sr.nearResistance?'目前雖進入壓力觀察區，但壓力本身不是賣出訊號；動能仍健康時優先等待突破。':'目前回檔仍屬個股正常波動。';
+  return{text:'🟢 續抱觀察。獲利保護目前判定為 '+(pp.title||'動能健康')+'。'+pressureText+' 若之後出現壓力受阻＋動能降溫＋ATR 回撤擴大，或支撐破壞，再升級獲利保護。',cls:'good',allowed:false,reason:'profit-hold-consistency'};
+ }
+
+// 2. 持股建議完整版：盤整／偏空／空頭都要回答「現在做什麼＋接下來等什麼」。
  if(Number.isFinite(score)&&score>=2&&score<5){
   let text='🟡 續抱觀察，暫不急著加碼或賣出。技術評分 '+score+'/9，目前屬盤整，代表多空訊號尚未形成明確方向。';
   if(Number.isFinite(pnl)){
