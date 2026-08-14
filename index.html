@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.15.3（操作檢查停利判斷版・乾淨重建）</title>
+<title>股倉雷達 v5.15.2（最高獲利校正修正版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -125,7 +125,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.15.3 · 操作檢查停利判斷版・乾淨重建</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.15.2 · 最高獲利校正修正版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -185,7 +185,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>⚡ v5.11.4 MIS 即時行情修正</strong><div class="note" style="margin-top:8px">修正同時查詢上市／上櫃時可能選到錯誤市場資料的問題；行情新鮮度改以 MIS 資料更新時間判斷，最後成交時間與資料更新時間分開處理，避免把「一段時間沒有新成交」誤判成行情延遲。</div></div>
 <div class="card"><strong>🔎 v5.11.4 行情來源診斷</strong><div class="note" style="margin-top:8px">暫時在完整持股分析中顯示最終來源、MIS 現價／更新時間／最後成交時間、歷史來源與 fallback 狀態，用來比對即時與延遲標的。此版不改變既有買賣判斷。</div></div>
 <div class="card"><strong>⚙️ v5.14 MIS 穩定更新</strong><div class="note" style="margin-top:8px">「更新全部」改為逐檔更新，不再同時對 MIS 發出大量請求；每檔間隔約 0.35 秒。Worker 也會依上市／上櫃市場優先查正確頻道並短暫重試，降低只有第一檔即時、其他退回 Yahoo 約 20 分鐘延遲行情的情況。</div></div>
-<div class="card"><strong>🧠 v5.15.3 操作檢查停利判斷</strong><div class="note" style="margin-top:8px">從最後正常的 v5.15.2 乾淨重建；行情與更新流程不修改。操作檢查新增獲利保護、大盤風險與 ATR／動能／支撐風險，減碼／賣出時直接回答續抱、分批停利或退出。</div></div>
+<div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
 </div>
@@ -199,9 +199,6 @@ body.analysis-open{overflow:hidden}
       <div><label>系統目前建議</label><input id="guardSystem" disabled></div>
     </div>
     <div class="guard-question"><label><input type="checkbox" id="guardFear">我現在想減碼／賣出，主要是因為看到虧損很難受或害怕繼續跌。</label></div>
-    <div class="guard-question"><label><input type="checkbox" id="guardProfit">目前已有一段獲利，我想保護成果、避免明顯回吐。</label></div>
-    <div class="guard-question"><label><input type="checkbox" id="guardMarketRisk">個股本身未明顯走壞，但我擔心大盤整理／市場風險升高。</label></div>
-    <div class="guard-question"><label><input type="checkbox" id="guardTechnical">動能降溫、ATR 回撤或支撐結構已讓我考慮先收一部分。</label></div>
     <div class="guard-question"><label><input type="checkbox" id="guardFomo">我現在想買進／加碼，主要是因為怕它繼續上漲、怕錯過。</label></div>
     <div class="guard-question"><label><input type="checkbox" id="guardPlan">這個操作符合我原本設定的策略與部位規則。</label></div>
     <div class="guard-question"><label><input type="checkbox" id="guardFundChanged">基本面或原本持有理由已經明顯改變。</label></div>
@@ -236,54 +233,37 @@ function openDecisionCheck(id){
  $('guardHoldingId').value=id;$('guardTicker').textContent=x.ticker+'｜策略：'+(x.strategy==='short'?'短線':x.strategy==='long'?'中長期':'波段');
  $('guardPrice').value=Number.isFinite(Number(a.price))?fmt(Number(a.price)):'尚未更新';
  $('guardSystem').value=system;
- $('guardAction').value='hold';$('guardFear').checked=false;$('guardProfit').checked=false;$('guardMarketRisk').checked=false;$('guardTechnical').checked=false;$('guardFomo').checked=false;$('guardPlan').checked=true;$('guardFundChanged').checked=false;
+ $('guardAction').value='hold';$('guardFear').checked=false;$('guardFomo').checked=false;$('guardPlan').checked=true;$('guardFundChanged').checked=false;
  $('guardResult').className='guard-result';$('guardResult').innerHTML='';
  $('guardOverlay').classList.add('show');
 }
 function closeDecisionCheck(){$('guardOverlay').classList.remove('show')}
 function guardBackdrop(e){if(e.target===$('guardOverlay'))closeDecisionCheck()}
 function runDecisionCheck(){
- let id=$('guardHoldingId').value,x=holdings().find(function(v){return v.id===id}),a=getSnapshot(id)||{},action=$('guardAction').value,
- fear=$('guardFear').checked,profit=$('guardProfit').checked,marketRisk=$('guardMarketRisk').checked,technical=$('guardTechnical').checked,
- fomo=$('guardFomo').checked,plan=$('guardPlan').checked,fundChanged=$('guardFundChanged').checked,score=100,reasons=[],level='good',title='🟢 操作狀態穩定';
- let pnl=Number(a.pnl),pp=a.profitProtection||{},sl=a.stopLossGuard||{},pb=a.pullbackStructure||{},system=(a.finalAdvice&&a.finalAdvice.text)||(a.decision||'');
+ let id=$('guardHoldingId').value,x=holdings().find(function(v){return v.id===id}),a=getSnapshot(id)||{},action=$('guardAction').value,fear=$('guardFear').checked,fomo=$('guardFomo').checked,plan=$('guardPlan').checked,fundChanged=$('guardFundChanged').checked,score=100,reasons=[],level='good',title='🟢 操作狀態穩定';
  if((action==='sell'||action==='reduce')&&fear){score-=35;reasons.push('疑似因虧損壓力而想賣出')}
  if(action==='add'&&fomo){score-=35;reasons.push('疑似 FOMO 追價')}
  if(!plan){score-=30;reasons.push('這筆操作不符合原本策略')}
- if(fundChanged&&(action==='sell'||action==='reduce')){score+=10;reasons.push('基本面／持有理由改變，屬較明確的退出理由')}
+ if(fundChanged&&(action==='sell'||action==='reduce')){score+=10;reasons.push('基本面／持有理由改變，減碼理由較具體')}
  if(action==='add'&&Number(a.rsi)>75){score-=20;reasons.push('RSI 偏熱，加碼追高風險較高')}
  if(action==='add'&&a.finalAdvice&&a.finalAdvice.allowed===false){score-=25;reasons.push('目前倉位／現金規則不允許加碼')}
- if((action==='sell'||action==='reduce')&&profit){reasons.push(Number.isFinite(pnl)&&pnl>0?'目前仍有 '+fmt(pnl)+'% 浮盈，屬獲利保護情境，不視為虧損恐慌':'勾選獲利保護，但目前 Snapshot 未顯示正報酬')}
- if((action==='sell'||action==='reduce')&&marketRisk)reasons.push('大盤整理／市場風險可作為降低部位的輔助理由，但不單獨等於全部賣出');
- if((action==='sell'||action==='reduce')&&technical)reasons.push('已把 ATR／動能／支撐風險納入停利判斷');
- if((action==='sell'||action==='reduce')&&fear&&!fundChanged&&!profit&&!technical&&!/賣出|停損|減碼|停利/.test(system)){score=Math.min(score,45);reasons.push('系統尚未出現明確賣出訊號')}
+ let system=(a.finalAdvice&&a.finalAdvice.text)||(a.decision||'');
+ if((action==='sell'||action==='reduce')&&fear&&!fundChanged&&!/賣出|停損|減碼/.test(system)){score=Math.min(score,45);reasons.push('系統尚未出現明確賣出訊號')}
  score=Math.max(0,Math.min(100,score));
  let advice='';
- if(action==='sell'||action==='reduce'){
-   let profitable=Number.isFinite(pnl)&&pnl>0;
-   let hardExit=fundChanged||/賣出|退出|停損/.test(system)||(sl&&Number(sl.level)>=3)||(pb&&Number(pb.level)>=3);
-   let protectSignal=(pp&&Number(pp.level)>=2)||technical;
-   let objectiveProfit=profitable&&(profit||marketRisk||technical);
-   if(hardExit){level='bad';title='🔴 偏向退出／明確減碼';advice='已有較完整的退出理由，優先依原策略與風控執行。';}
-   else if(objectiveProfit&&protectSignal){level='warn';title='🟠 偏向分批獲利了結';advice='目前有浮盈且出現獲利保護／技術風險，較適合先分批收回部分獲利，剩餘部位繼續交給 ATR、動能與支撐管理。';}
-   else if(objectiveProfit){level='warn';title='🟡 可小幅分批停利';advice='目前有獲利但個股尚未明確轉弱。若只是擔心大盤整理，可小幅收回部分成果，剩餘部位續抱等待更明確訊號。';}
-   else if(score<50){level='bad';title='🔴 疑似情緒性操作';advice='目前比較像因壓力想賣，但系統沒有足夠退出證據。';}
-   else{title='🟢 續抱為主';advice='目前沒有足夠證據支持主動賣出，續抱並依既有獲利保護、支撐與風控訊號處理。';}
- }else{
-   if(score<50){level='bad';title='🔴 疑似情緒性操作';advice='建議先不要立即下單，先確認是否符合原策略與資金規則。'}
-   else if(score<75){level='warn';title='🟡 這筆操作需要再確認';advice='先確認買賣理由是否能用一句具體規則說明，再決定是否執行。'}
-   else advice='目前沒有明顯的情緒性警訊，仍請依原策略與資金水位執行。';
- }
+ if(score<50){level='bad';title='🔴 疑似情緒性操作';advice='建議先不要立即下單。若不是停損規則或基本面惡化，可先保留 24 小時冷靜期再重看一次。'}
+ else if(score<75){level='warn';title='🟡 這筆操作需要再確認';advice='先確認買賣理由是否能用一句具體規則說明，再決定是否執行。'}
+ else{advice='目前沒有明顯的情緒性警訊，仍請依原策略與資金水位執行。'}
  if(!reasons.length)reasons.push('未偵測到明顯恐慌、FOMO 或違反策略的訊號');
  $('guardResult').className='guard-result show '+level;
  $('guardResult').innerHTML='<div style="font-size:18px">'+title+'｜冷靜度 '+score+'/100</div><div style="margin-top:6px">'+advice+'</div><ul style="margin:8px 0 0;padding-left:20px">'+reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')+'</ul>';
- let logs=guardLogs();logs.push({id:Date.now().toString(),holdingId:id,ticker:x?x.ticker:'',action:action,score:score,fear:fear,profit:profit,marketRisk:marketRisk,technical:technical,fomo:fomo,plan:plan,fundChanged:fundChanged,system:system,createdAt:Date.now()});storeGuardLog(logs);render();renderWatch();
+ let logs=guardLogs();logs.push({id:Date.now().toString(),holdingId:id,ticker:x?x.ticker:'',action:action,score:score,fear:fear,fomo:fomo,plan:plan,fundChanged:fundChanged,system:system,createdAt:Date.now()});storeGuardLog(logs);render();renderWatch();
 }
 function sendGuardToReplay(){
  let id=$('guardHoldingId').value,x=holdings().find(function(v){return v.id===id}),a=getSnapshot(id)||{};if(!x)return;
  closeDecisionCheck();showPage('replay');$('replayForm').style.display='block';$('rTicker').value=x.ticker;$('rPrice').value=Number.isFinite(Number(a.price))?Number(a.price):'';$('rDecision').value=(a.finalAdvice&&a.finalAdvice.text)||(a.decision||'');
  let map={hold:'持有',sell:'賣出',reduce:'賣出',add:'加碼'},val=map[$('guardAction').value]||'持有',radio=document.querySelector('input[name="rAction"][value="'+val+'"]');if(radio)radio.checked=true;
- let notes=[];if($('guardFear').checked)notes.push('恐慌／虧損壓力');if($('guardProfit').checked)notes.push('獲利保護');if($('guardMarketRisk').checked)notes.push('大盤整理／風險升高');if($('guardTechnical').checked)notes.push('ATR／動能／支撐風險');if($('guardFomo').checked)notes.push('FOMO');if(!$('guardPlan').checked)notes.push('不符合原策略');if($('guardFundChanged').checked)notes.push('基本面／持有理由改變');$('rNote').value=notes.length?'操作檢查：'+notes.join('、'):'操作檢查後建立紀錄';
+ let notes=[];if($('guardFear').checked)notes.push('恐慌／虧損壓力');if($('guardFomo').checked)notes.push('FOMO');if(!$('guardPlan').checked)notes.push('不符合原策略');if($('guardFundChanged').checked)notes.push('基本面／持有理由改變');$('rNote').value=notes.length?'操作檢查：'+notes.join('、'):'操作檢查後建立紀錄';
 }
 async function requestRadarNotification(){
  let el=$('pwaStatus');if(!('Notification' in window)){el.textContent='此瀏覽器不支援通知 API。';return}
