@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.15.3（操作檢查停利判斷版）</title>
+<title>股倉雷達 v5.15.4（更新全部容錯修正版）</title>
 <style>
 :root{--bg:#f5f6f8;--card:#fff;--text:#16181d;--muted:#70757f;--line:#e7e9ee;--good:#147a42;--warn:#b56a00;--bad:#c2332b;--blue:#315fd4;--soft:#f8f9fb}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}
@@ -125,7 +125,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.15.3 · 操作檢查停利判斷版</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.15.4 · 更新全部容錯修正版</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -186,6 +186,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🔎 v5.11.4 行情來源診斷</strong><div class="note" style="margin-top:8px">暫時在完整持股分析中顯示最終來源、MIS 現價／更新時間／最後成交時間、歷史來源與 fallback 狀態，用來比對即時與延遲標的。此版不改變既有買賣判斷。</div></div>
 <div class="card"><strong>⚙️ v5.14 MIS 穩定更新</strong><div class="note" style="margin-top:8px">「更新全部」改為逐檔更新，不再同時對 MIS 發出大量請求；每檔間隔約 0.35 秒。Worker 也會依上市／上櫃市場優先查正確頻道並短暫重試，降低只有第一檔即時、其他退回 Yahoo 約 20 分鐘延遲行情的情況。</div></div>
 <div class="card"><strong>💰 v5.15.3 操作檢查／停利判斷</strong><div class="note" style="margin-top:8px">操作檢查新增「保護獲利／大盤風險／技術風險」原因，減碼或賣出時會讀取目前損益、ATR 獲利保護、支撐結構與大盤風險，直接回答續抱、可小幅分批停利、偏向分批獲利了結或退出，不再把所有賣出念頭都當成恐慌殺低。</div></div>
+<div class="card"><strong>🔧 v5.15.4 更新全部容錯</strong><div class="note" style="margin-top:8px">個股主行情取得成功後，不再因 0050 相對強弱基準暫時失敗而把整檔更新判定失敗；基準失敗時會沿用舊資料或暫略相對強弱。更新全部若仍有失敗，總覽會直接顯示第一個失敗標的與錯誤原因，方便診斷。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
 </section>
@@ -966,10 +967,65 @@ function resolvedHoldingActions(advice,finalAdvice){
  return actions;
 }
 function listHtml(items){return items.map(function(item){return'<li>'+item+'</li>'}).join('')}
-async function refreshOne(id){let original=holdings().find(function(x){return x.id===id});if(!original)return{ok:false,id:id,error:'找不到持股'};let cached=snapshots()[id],usable=cached&&(!cached.ticker||cached.ticker===original.ticker);renderHoldingCard(original,usable?cached:null,usable?'loading':'idle');try{let m=await market(original.ticker),current=holdings().find(function(x){return x.id===id});if(!current||current.ticker!==original.ticker)return{ok:false,id:id,stale:true};let a=analyze(current,m),bench=await relativeStrengthBenchmark(false);a.relativeStrength=relativeStrengthAnalysis(a.price,m.rows.map(function(r){return r.c}),bench,current.ticker);let advice=buildAdvice(a),previous=snapshots()[current.id];a.advice=advice;a.profitProtection=profitProtection(a,current,previous);a.profitProtection.currentPnl=a.pnl;a.peakPrice=a.profitProtection.peakPrice;a.stopLossGuard=stopLossGuardAnalysis(a,current);a.finalAdvice=buildPositionAdvice(a,current,getCapitalState());a.ticker=current.ticker;a.updatedAt=Date.now();saveSnapshot(current.id,a);renderHoldingCard(current,a,'fresh');summary();return{ok:true,id:id}}catch(e){let current=holdings().find(function(x){return x.id===id}),fallback=snapshots()[id],okFallback=current&&fallback&&(!fallback.ticker||fallback.ticker===current.ticker);if(current)renderHoldingCard(current,okFallback?fallback:null,'error',e.message);summary();return{ok:false,id:id,error:e.message}}}
+async function refreshOne(id){
+ let original=holdings().find(function(x){return x.id===id});
+ if(!original)return{ok:false,id:id,error:'找不到持股'};
+ let cached=snapshots()[id],usable=cached&&(!cached.ticker||cached.ticker===original.ticker);
+ renderHoldingCard(original,usable?cached:null,usable?'loading':'idle');
+ try{
+  let m=await market(original.ticker),
+      current=holdings().find(function(x){return x.id===id});
+  if(!current||current.ticker!==original.ticker)return{ok:false,id:id,stale:true};
+
+  // 主行情成功後，個股更新不應再被「0050 相對強弱基準」的暫時失敗拖垮。
+  let a=analyze(current,m),bench=null,rsWarning='';
+  try{
+   bench=await relativeStrengthBenchmark(false);
+  }catch(rsErr){
+   bench=rsBenchmarkCache();
+   rsWarning='0050 相對強弱基準暫時無法更新，已略過／沿用舊基準';
+  }
+  a.relativeStrength=relativeStrengthAnalysis(a.price,m.rows.map(function(r){return r.c}),bench,current.ticker);
+  if(rsWarning){
+   a.relativeStrength.reasons=a.relativeStrength.reasons||[];
+   a.relativeStrength.reasons.push(rsWarning);
+  }
+
+  let advice=buildAdvice(a),previous=snapshots()[current.id];
+  a.advice=advice;
+  a.profitProtection=profitProtection(a,current,previous);
+  a.profitProtection.currentPnl=a.pnl;
+  a.peakPrice=a.profitProtection.peakPrice;
+  a.stopLossGuard=stopLossGuardAnalysis(a,current);
+  a.finalAdvice=buildPositionAdvice(a,current,getCapitalState());
+  a.ticker=current.ticker;
+  a.updatedAt=Date.now();
+  saveSnapshot(current.id,a);
+  renderHoldingCard(current,a,'fresh');
+  summary();
+  return{ok:true,id:id,warning:rsWarning};
+ }catch(e){
+  let current=holdings().find(function(x){return x.id===id}),
+      fallback=snapshots()[id],
+      okFallback=current&&fallback&&(!fallback.ticker||fallback.ticker===current.ticker);
+  if(current)renderHoldingCard(current,okFallback?fallback:null,'error',e.message);
+  summary();
+  return{ok:false,id:id,error:e.message};
+ }
+}
 function toggleDetails(id){let d=$('d-'+id);if(d)d.style.display=d.style.display==='block'?'none':'block'}
 function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
-async function refreshAll(){await refreshMarketContext(true);let h=holdings();if(!h.length){$('globalStatus').textContent='目前沒有持股';return}$('globalStatus').textContent='正在批次取得全部持股 MIS 即時行情…';try{await fetchLiveBatch(h.map(function(x){return x.ticker}))}catch(e){LIVE_BATCH_CACHE={quotes:{},errors:{_batch:String(e&&e.message||e)},at:Date.now()}}let results=[];for(let i=0;i<h.length;i++){$('globalStatus').textContent='正在更新 '+(i+1)+' / '+h.length+'：'+h[i].ticker+'…';try{results.push(await refreshOne(h[i].id))}catch(e){results.push({ok:false,id:h[i].id,error:e.message})}if(i<h.length-1)await sleep(100)}let ok=results.filter(function(r){return r&&r.ok}).length,fail=results.filter(function(r){return r&&!r.ok&&!r.stale}).length;$('globalStatus').textContent=fail?('更新完成：'+ok+' 檔成功，'+fail+' 檔失敗'):('持股更新完成，共 '+ok+' 檔');summary()}
+async function refreshAll(){await refreshMarketContext(true);let h=holdings();if(!h.length){$('globalStatus').textContent='目前沒有持股';return}$('globalStatus').textContent='正在批次取得全部持股 MIS 即時行情…';try{await fetchLiveBatch(h.map(function(x){return x.ticker}))}catch(e){LIVE_BATCH_CACHE={quotes:{},errors:{_batch:String(e&&e.message||e)},at:Date.now()}}let results=[];for(let i=0;i<h.length;i++){$('globalStatus').textContent='正在更新 '+(i+1)+' / '+h.length+'：'+h[i].ticker+'…';try{results.push(await refreshOne(h[i].id))}catch(e){results.push({ok:false,id:h[i].id,error:e.message})}if(i<h.length-1)await sleep(100)}let ok=results.filter(function(r){return r&&r.ok}).length,
+    failRows=results.filter(function(r){return r&&!r.ok&&!r.stale}),
+    fail=failRows.length,
+    warnings=results.filter(function(r){return r&&r.ok&&r.warning}).length;
+ let msg=fail?('更新完成：'+ok+' 檔成功，'+fail+' 檔失敗'):('持股更新完成，共 '+ok+' 檔');
+ if(warnings)msg+='；'+warnings+' 檔相對強弱使用舊基準／暫略';
+ if(failRows.length){
+  let first=failRows[0],hx=holdings().find(function(x){return x.id===first.id});
+  msg+='｜首個失敗：'+(hx?hx.ticker:'未知')+'：'+(first.error||'未知錯誤');
+ }
+ $('globalStatus').textContent=msg;summary()}
 function summary(){let els=[...document.querySelectorAll('#portfolio .stock')],v=0,c=0,p=0,n=0;for(const el of els){let a=+el.dataset.value,b=+el.dataset.cost,d=+el.dataset.pnl;if(Number.isFinite(a)&&a>0){v+=a;c+=b;p+=d;n++}}$('sumCost').textContent=n?money(c):money(investedCost());$('sumValue').textContent=n?money(v):'—';$('sumPnl').textContent=n?((p>=0?'+':'')+money(p)):'—';$('sumPnl').className=p>=0?'good':'bad';renderCapital();renderDashboard()}
 function toggleWatch(){$('watchForm').style.display=$('watchForm').style.display==='block'?'none':'block'}
 function resetWatchForm(){['wTicker','wTarget','wBudget','wReason','watchEditId'].forEach(function(id){$(id).value=''});$('suggestPriceBox').style.display='none';$('suggestPriceBox').innerHTML=''}
