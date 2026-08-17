@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.17.3c（編輯持股自動定位）</title>
+<title>股倉雷達 v5.17.4（盤中建議防翻轉）</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -129,7 +129,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.17.3c · 編輯持股自動定位</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.17.4 · 盤中建議防翻轉</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -194,6 +194,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🧭 v5.17.1 最終建議一致性／壓力區語意修正</strong><div class="note" style="margin-top:8px">獲利保護判定為續抱且支撐未破壞時，低權重的短線弱勢文字不再覆蓋最終建議。接近壓力改稱「壓力觀察區」：壓力本身不是賣出訊號；動能健康時優先等待突破，只有壓力受阻並伴隨動能降溫、ATR 回撤擴大時，才提高分批保護獲利的層級。</div></div>
 <div class="card"><strong>🔎 v5.17.3a 技術 K 診斷顯示補強</strong><div class="note" style="margin-top:8px">完整持股分析的「趨勢評分明細」下方固定顯示行情來源與技術 K 狀態，包括正式技術 K、來源最後 K、K 棒數與是否已定稿。僅補強顯示層，不改變 v5.17.3 的日 K 防呆與買賣判斷。</div></div>
 <div class="card"><strong>🧱 v5.17.3 日 K 完整性防呆</strong><div class="note" style="margin-top:8px">即時現價與歷史日 K 分開處理。當日 K 一律視為未定稿，不納入 MA／RSI／量比／ATR／支撐壓力；前一交易日 K 在台北時間隔日 08:00 前也暫不採用，避免 Yahoo 收盤後補齊 OHLCV 時造成技術分數漂移。08:00 後才納入前一日完整 K；週末與休市日同樣依最後完整 K 計算。</div></div>
+<div class="card"><strong>🧭 v5.17.4 盤中建議防翻轉</strong><div class="note" style="margin-top:8px">修正「剛進入壓力觀察區就被當成壓力受阻」的誤判。接近壓力、動能降溫或 0.8 ATR 回撤現在只會顯示警戒，不再單獨把續抱升級為分批減碼；減碼必須由原本較完整的 ATR 浮盈流失條件、支撐跌破或其他結構破壞觸發，避免上午減碼、價格略升後下午又改回續抱。</div></div>
 <div class="card"><strong>🧠 v5.17.2 單一操作出口／阿呆谷執行閘門</strong><div class="note" style="margin-top:8px">各分析模組可以同時保留風險訊號，但真正的操作指令只由最終決策層輸出。若止損防殺低判定為超賣／急跌且尚未確認支撐破壞，會暫停獲利保護的減碼／停利執行：獲利保護改顯示「警戒中／暫緩減碼」，最終建議統一為「不宜砍在阿呆谷」。等待反彈失敗、再次破底或支撐破壞確認後再重新評估；基本面轉差不受此閘門保護。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
@@ -959,12 +960,11 @@ function profitProtection(stockAnalysis,holding,previous){
     else reasons.push('已突破原壓力區，讓趨勢繼續發展');
   }else if(sr.nearResistance){
     reasons.push('股價進入壓力觀察區：先看能否突破，不因接近壓力本身提前停利');
-    // v5.17：接近壓力不直接賣出；需同時有動能降溫或 ATR 回撤才升級。
+    // v5.17.4：接近壓力不等於「壓力受阻」。目前沒有盤中反轉 K、突破失敗或收盤確認資料，
+    // 因此即使動能降溫且已有部分 ATR 回撤，也只保留警戒，不可在這裡新建減碼指令。
+    // 真正減碼仍由上方完整的 ATR／浮盈流失條件，或下方支撐跌破等結構證據觸發。
     if(momentum.level==='cooling'||momentum.level==='weak'){
-      reasons.push('壓力區附近動能開始降溫，且需搭配 ATR 回撤確認；若突破失敗才提高獲利保護層級');
-      if(action==='hold'&&Number.isFinite(atrDrawdown)&&atrDrawdown>=0.8){
-        action='reduce';title='🟠 壓力受阻：分批保護獲利';cls='warn';
-      }
+      reasons.push('壓力區附近動能開始降溫，但目前沒有突破失敗／收盤受阻證據；維持原獲利保護判定，不因盤中碰到壓力就提前減碼');
     }else{
       reasons.push('接近壓力但動能仍健康：維持續抱，優先觀察突破，避免因看到壓力就提前賣飛');
     }
