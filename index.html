@@ -473,6 +473,7 @@ function trueRanges(rows){let out=[];for(let i=1;i<rows.length;i++){let r=rows[i
 function atrFromRows(rows,n){n=n||14;let tr=trueRanges(rows);return tr.length>=n?avg(tr.slice(-n)):null}
 function atrBaselineFromRows(rows,windowDays){let tr=trueRanges(rows),w=Math.min(windowDays||60,tr.length);if(w<20)return null;return avg(tr.slice(-w))}
 function adaptiveMomentumState(a){let score=0,reasons=[],price=Number(a.price),ma5=Number(a.ma5),ma20=Number(a.ma20),cl=Array.isArray(a.closes)?a.closes:[],ret5=cl.length>=6?(price/cl[cl.length-6]-1)*100:null,prev5=cl.length>=10?avg(cl.slice(-10,-5)):null;if(Number.isFinite(ma5)&&Number.isFinite(ma20)&&ma5>ma20){score+=1;reasons.push('MA5 位於 MA20 上方')}if(Number.isFinite(price)&&Number.isFinite(ma5)&&price>=ma5){score+=1;reasons.push('現價仍守在 MA5 上方')}if(Number.isFinite(ret5)&&ret5>2){score+=1;reasons.push('近 5 日仍有正向推進')}if(Number(a.vr)>=1.2&&Number.isFinite(ret5)&&ret5>0){score+=1;reasons.push('上漲伴隨量能')}if(Number.isFinite(prev5)&&Number.isFinite(ma5)&&ma5<prev5){score-=1;reasons.push('MA5 推進速度下降')}let level=score>=3?'high':score>=1?'healthy':score>=0?'cooling':'weak',title=level==='high'?'🔥 高動能':level==='healthy'?'🟢 動能健康':level==='cooling'?'🟡 動能降溫':'🟠 動能明顯轉弱';return{level:level,title:title,score:score,reasons:reasons,ret5:ret5}}
+function sharedTrendMomentumState(a,momentum){let t=trendInfoFromAnalysis(a),score=Number(t.score),m=momentum||adaptiveMomentumState(a),sideways=Number.isFinite(score)&&score>=2&&score<5;if(sideways&&m.level!=='weak')return{sideways:true,text:'盤整、動能尚未轉弱',title:'🟡 盤整、動能尚未轉弱',cls:'warn'};return{sideways:false,text:m.title.replace(/^[^ ]+ /,''),title:m.title,cls:m.level==='high'||m.level==='healthy'?'good':'warn'}}
 function holdings(){try{return JSON.parse(localStorage.getItem(HOLD)||'[]')}catch{return[]}} function store(v){localStorage.setItem(HOLD,JSON.stringify(v))}
 function watchlist(){try{return JSON.parse(localStorage.getItem(WATCH)||'[]')}catch(e){return[]}} function storeWatch(v){localStorage.setItem(WATCH,JSON.stringify(v))}
 function watchCache(){try{return JSON.parse(localStorage.getItem(WATCH_CACHE)||'{}')}catch(e){return{}}}
@@ -930,7 +931,7 @@ function profitProtection(stockAnalysis,holding,previous){
      atr=Number(stockAnalysis.atr14),atrBase=Number(stockAnalysis.atrBase),atrExpansion=Number(stockAnalysis.atrExpansion),
      atrDrawdown=Number.isFinite(atr)&&atr>0?(peak-price)/atr:null,
      retained=Number.isFinite(peakPnl)&&peakPnl>0?Math.max(0,pnl)/peakPnl*100:null,
-     momentum=adaptiveMomentumState(stockAnalysis),t=trendInfoFromAnalysis(stockAnalysis),reasons=[],
+     momentum=adaptiveMomentumState(stockAnalysis),t=trendInfoFromAnalysis(stockAnalysis),sharedState=sharedTrendMomentumState(stockAnalysis,momentum),reasons=[],
      manualCorrected=Number.isFinite(manualPeak)&&manualPeak>0;
      stage='none',title='⚪ 尚未啟動',cls='warn',action='none',active=false;
  if(manualCorrected)reasons.push('已使用手動校正最高持有價 '+fmt(manualPeak)+'；之後若現價創新高會繼續自動上修');
@@ -945,7 +946,7 @@ function profitProtection(stockAnalysis,holding,previous){
  if(active){
   reasons.push('目前距持有最高價回落 '+fmt(drawdown)+'%'+(Number.isFinite(atrDrawdown)?'，約 '+fmt(atrDrawdown)+' ATR':''));
   if(Number.isFinite(atrExpansion))reasons.push('近期 ATR 約為歷史波動基準的 '+fmt(atrExpansion)+' 倍'+(atrExpansion>=1.5?'，波動正在擴張':'，波動未異常放大'));
-  reasons.push('動能狀態：'+momentum.title+'（'+momentum.score+'）');
+  reasons.push('共用技術判斷：'+sharedState.title+'；動能分數 '+momentum.score);
   // 門檻使用 ATR 單位而非固定報酬率；波動擴張時不直接把尺無限放寬。
   let softATR=1.5,hardATR=2.5;
   if(Number.isFinite(atrExpansion)&&atrExpansion>=1.5){softATR=1.35;hardATR=2.2}
@@ -961,7 +962,7 @@ function profitProtection(stockAnalysis,holding,previous){
   }else if(cooling){
     action='hold';title='🟡 動能降溫：獲利警戒';cls='warn';reasons.push('動能已有轉弱跡象，但回撤尚未超出自適應保護範圍')
   }else{
-    action='hold';title=momentum.level==='high'?'🔥 高動能：讓獲利續跑':'🟢 動能健康：續抱';cls='good';reasons.push('目前回撤仍可由個股波動解釋，尚未達鎖利退出條件')
+    action='hold';title=sharedState.sideways?'🟡 盤整、動能尚未轉弱：續抱':momentum.level==='high'?'🔥 高動能：讓獲利續跑':'🟢 動能健康：續抱';cls=sharedState.sideways?'warn':'good';reasons.push('目前回撤仍可由個股波動解釋，尚未達鎖利退出條件')
   }
   // v5.17：支撐／壓力正式加入獲利保護；接近壓力需搭配動能與 ATR 回撤，不單獨觸發賣出。
   let sr=stockAnalysis.supportResistance||{};
@@ -1017,8 +1018,9 @@ function buildPositionAdvice(stockAnalysis,holding,capitalState){
 
   // v5.17.1 決策一致性：獲利保護判定為續抱時，不讓低權重短線弱勢文字覆蓋。
  if(pp&&pp.action==='hold'&&pp.momentum&&pp.momentum.level!=='weak'&&!(pb&&pb.level==='broken')){
-  let pressureText=sr&&sr.nearResistance?'目前雖進入壓力觀察區，但壓力本身不是賣出訊號；動能仍健康時優先等待突破。':'目前回檔仍屬個股正常波動。';
-  return{text:'🟢 續抱觀察。獲利保護目前判定為 '+(pp.title||'動能健康')+'。'+pressureText+' 若之後出現壓力受阻＋動能降溫＋ATR 回撤擴大，或支撐破壞，再升級獲利保護。',cls:'good',allowed:false,reason:'profit-hold-consistency'};
+  let sharedState=sharedTrendMomentumState(stockAnalysis,pp.momentum),pressureText=sr&&sr.nearResistance?'目前雖進入壓力觀察區，但壓力本身不是賣出訊號；動能尚未轉弱時優先等待突破。':'目前回檔仍屬個股正常波動。';
+  if(sharedState.sideways)return{text:'🟡 盤整、動能尚未轉弱｜續抱觀察，暫不加碼。'+pressureText+' 若之後趨勢重新轉強，可再評估加碼；若出現壓力受阻＋動能降溫＋ATR 回撤擴大，或支撐破壞，再升級獲利保護。',cls:'warn',allowed:false,reason:'sideways-profit-hold-consistency'};
+  return{text:'🟢 續抱觀察。獲利保護目前判定為 '+(pp.title||'動能尚未轉弱')+'。'+pressureText+' 若之後出現壓力受阻＋動能降溫＋ATR 回撤擴大，或支撐破壞，再升級獲利保護。',cls:'good',allowed:false,reason:'profit-hold-consistency'};
  }
 
 // 2. 持股建議完整版：盤整／偏空／空頭都要回答「現在做什麼＋接下來等什麼」。
@@ -1162,8 +1164,8 @@ function buildWatchPositionAdvice(a,capitalState){
   return{text:txt,cls:'warn',reason:'bearish-watch'};
  }
  if(Number.isFinite(score)&&score<5){
-  let txt='🟡 目前屬盤整，方向尚未確認。先等待趨勢評分升到偏多、站穩 MA20，並確認相對 0050 沒有明顯轉弱後再考慮進場。';
-  if(rs&&rs.blockAdd)txt='🟡 技術面仍在盤整，而且近期相對 0050 偏弱；先等待個股重新轉強並停止落後市場，再評估布局。';
+  let txt='🟡 盤整、動能尚未轉弱｜暫不進場。方向尚未確認；先等待趨勢評分升到偏多、站穩 MA20，並確認相對 0050 沒有明顯轉弱後再考慮布局。';
+  if(rs&&rs.blockAdd)txt='🟡 盤整、動能尚未轉弱｜暫不進場。近期相對 0050 偏弱；先等待個股重新轉強並停止落後市場，再評估布局。';
   return{text:txt,cls:'warn',reason:'sideways'};
  }
  if(mr&&mr.level==='medium')return{text:'🟡 個股條件偏強，但大盤處於震盪警戒，降低追價力度並等待更佳位置。',cls:'warn',reason:'market-risk'};
