@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.18</title>
+<title>股倉雷達 v5.18.1</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -129,7 +129,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.18</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.18.1</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -197,6 +197,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🧭 v5.17.4 盤中建議防翻轉</strong><div class="note" style="margin-top:8px">修正「剛進入壓力觀察區就被當成壓力受阻」的誤判。接近壓力、動能降溫或 0.8 ATR 回撤現在只會顯示警戒，不再單獨把續抱升級為分批減碼；減碼必須由原本較完整的 ATR 浮盈流失條件、支撐跌破或其他結構破壞觸發，避免上午減碼、價格略升後下午又改回續抱。</div></div>
 <div class="card"><strong>🗑️ v5.17.5 刪除後自動關閉</strong><div class="note" style="margin-top:8px">從觀察分析或回放紀錄彈窗確認刪除後，立即清除對應分析快取並關閉彈窗，再更新清單與總覽；取消刪除時維持原畫面。</div></div>
 <div class="card"><strong>〽️ v5.18 MA10 短波段防守</strong><div class="note" style="margin-top:8px">短線／波段持股新增十日線防守層。盤中接近或短暫跌破只顯示「測試支撐」，不直接賣出；首次正式收盤跌破會暫停加碼，連續兩個正式交易日收破才確認支撐失效。若再搭配放量、動能轉弱或其他支撐破壞，才提高分批減碼／停利層級。中長期策略僅顯示資訊，不由 MA10 單獨觸發賣出。</div></div>
+<div class="card"><strong>🎯 v5.18.1 觀察清單 MA10 進場閘門</strong><div class="note" style="margin-top:8px">觀察清單新增 MA10 進場時機判斷。向上的十日線可作為短線回測依據，但接近或盤中跌破只會等待止跌；首次正式收破暫不買進，連續兩日收破判定支撐失效。只有正式收盤守住／重新站回 MA10，且趨勢、大盤、追高、相對強弱與現金水位同時允許，才可考慮小額分批布局。</div></div>
 <div class="card"><strong>🧠 v5.17.2 單一操作出口／阿呆谷執行閘門</strong><div class="note" style="margin-top:8px">各分析模組可以同時保留風險訊號，但真正的操作指令只由最終決策層輸出。若止損防殺低判定為超賣／急跌且尚未確認支撐破壞，會暫停獲利保護的減碼／停利執行：獲利保護改顯示「警戒中／暫緩減碼」，最終建議統一為「不宜砍在阿呆谷」。等待反彈失敗、再次破底或支撐破壞確認後再重新評估；基本面轉差不受此閘門保護。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
@@ -841,8 +842,22 @@ function ma10GuardAnalysis(rows,price,atr,trendScore,strategy){
  return{level:level,title:title,cls:cls,action:action,active:active,ma10:ma10,prevMA10:prevMA10,slopeUp:slopeUp,lastClose:lastClose,belowDays:belowDays,near:near,nearBand:nearBand,dist:dist,volumeRatio:volumeRatio,volumeBreak:volumeBreak,trendWeak:trendWeak,reasons:reasons};
 }
 function ma10GuardHtml(g){if(!g)return'';let note=g.level==='failed'?'連續正式收破才確認失效；是否執行減碼仍與放量、動能、ATR 獲利保護及支撐結構共同判斷。':g.level==='first_break'?'首次收破只暫停加碼，等待下一個正式交易日確認。':g.level==='intraday_break'?'盤中破線不算有效跌破，正式收盤前不觸發賣出。':g.level==='testing'?'接近十日線是觀察位置，不是無條件買點；等待止跌確認。':'MA10 是短波段輔助防守，不取代 MA20／MA60、ATR 與主要支撐結構。';return `<div class="pullback-structure"><div class="pullback-head"><span class="${g.cls||'warn'}">${esc(g.title||'MA10 短波段防守')}</span><span>正式收盤確認</span></div><div class="pullback-grid"><div class="kpi"><small>MA10</small><b>${fmt(g.ma10)}</b></div><div class="kpi"><small>MA10 方向</small><b>${g.slopeUp?'向上':'未向上'}</b></div><div class="kpi"><small>連續收破</small><b>${Number(g.belowDays)||0} 日</b></div><div class="kpi"><small>距 MA10</small><b>${Number.isFinite(Number(g.dist))?(Number(g.dist)>=0?'+':'')+fmt(g.dist)+'%':'—'}</b></div></div><div class="pullback-note">${esc(note)}</div><ul class="pullback-reasons">${(g.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
+function ma10EntryAnalysis(rows,price,atr,trendScore){
+ let g=ma10GuardAnalysis(rows,price,atr,trendScore,'swing'),rs=Array.isArray(rows)?rows:[],cl=rs.map(function(r){return Number(r.c)}).filter(Number.isFinite),
+     previousReclaimed=false,entryReady=false,entryLevel=g.level,entryTitle=g.title,entryCls=g.cls,reasons=(g.reasons||[]).slice();
+ if(cl.length>=12&&g.slopeUp){let prevCl=cl.slice(0,-1),prevMA=sma(prevCl,10),last=cl[cl.length-1],prev=cl[cl.length-2];previousReclaimed=prev<prevMA&&last>=g.ma10;}
+ if(previousReclaimed){entryLevel='reclaimed';entryTitle='🟡 正式收盤重新站回 MA10';entryCls='warn';reasons.push('前一正式收盤在 MA10 下方，最新正式收盤已重新站回；仍需趨勢與量價確認');}
+ if(g.active&&(entryLevel==='healthy'||entryLevel==='reclaimed')&&!g.near&&Number(trendScore)>=5)entryReady=true;
+ if(entryLevel==='reclaimed'&&Number(g.volumeRatio)<1.2)entryReady=false;
+ if(entryReady){entryTitle=entryLevel==='reclaimed'?'🟢 MA10 站回確認・可評估進場':'🟢 MA10 短線結構允許評估進場';entryCls='good';reasons.push('正式收盤位於向上的 MA10 之上，且趨勢評分達偏多；通過 MA10 進場閘門');}
+ else if(g.active&&(entryLevel==='testing'||entryLevel==='intraday_break'))reasons.push('目前只到觀察位置，等待正式收盤止跌確認，不因碰到 MA10 就買進');
+ return Object.assign({},g,{entryLevel:entryLevel,entryTitle:entryTitle,entryCls:entryCls,previousReclaimed:previousReclaimed,entryReady:entryReady,reasons:reasons});
+}
+function ma10EntryHtml(g){if(!g)return'';let note=g.entryReady?'MA10 進場閘門已通過；仍須同時通過大盤、追高、相對強弱及現金水位。':g.entryLevel==='failed'?'十日線支撐已失效，暫不進場，等待正式收盤重新站回。':g.entryLevel==='first_break'?'首次正式收破，先暫停買進，等待下一個交易日確認。':g.entryLevel==='testing'||g.entryLevel==='intraday_break'?'已接近短線觀察位置，但尚未確認止跌，暫不把它當成買點。':'MA10 尚未提供可執行的進場確認。';return `<div class="pullback-structure"><div class="pullback-head"><span class="${g.entryCls||'warn'}">${esc(g.entryTitle||'MA10 進場時機')}</span><span>觀察清單進場閘門</span></div><div class="pullback-grid"><div class="kpi"><small>MA10</small><b>${fmt(g.ma10)}</b></div><div class="kpi"><small>MA10 方向</small><b>${g.slopeUp?'向上':'未向上'}</b></div><div class="kpi"><small>正式收破</small><b>${Number(g.belowDays)||0} 日</b></div><div class="kpi"><small>距 MA10</small><b>${Number.isFinite(Number(g.dist))?(Number(g.dist)>=0?'+':'')+fmt(g.dist)+'%':'—'}</b></div></div><div class="pullback-note">${esc(note)}</div><ul class="pullback-reasons">${(g.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
 const pullbackStructureHtmlBase=pullbackStructureHtml;
 pullbackStructureHtml=function(p){return ma10GuardHtml(p&&p.ma10Guard)+pullbackStructureHtmlBase(p)};
+const chaseRiskHtmlBase=chaseRiskHtml;
+chaseRiskHtml=function(r,mode){return (mode==='watch'?ma10EntryHtml(r&&r.ma10Entry):'')+chaseRiskHtmlBase(r,mode)};
 
 function stopLossGuardAnalysis(a,holding){
  let price=Number(a.price),ma20=Number(a.ma20),ma60=Number(a.ma60),rsi=Number(a.rsi),vr=Number(a.vr),pnl=Number(a.pnl),
@@ -1172,15 +1187,16 @@ function watchSuggestion(m){
  ma5=sma(cl,5),ma20=sma(cl,20),ma60=sma(cl,60),rsi=rsi14(cl),
  volumes=rows.slice(-20).map(function(r){return r.v}).filter(function(v){return v>0}),
  baseVol=avg(volumes.slice(0,-1)),vr=last.v>0&&baseVol>0?last.v/baseVol:1,
- t=trendEngine({price:price,ma5:ma5,ma20:ma20,ma60:ma60,rsi:rsi,vr:vr}),chaseRisk=chaseRiskAnalysis(price,ma20,rsi,cl);
+ t=trendEngine({price:price,ma5:ma5,ma20:ma20,ma60:ma60,rsi:rsi,vr:vr}),chaseRisk=chaseRiskAnalysis(price,ma20,rsi,cl),atr14=atrFromRows(rows,14),ma10Entry=ma10EntryAnalysis(rows,price,atr14,t.score);
+ chaseRisk.ma10Entry=ma10Entry;
  return{
-  price:price,ma5:ma5,ma20:ma20,ma60:ma60,rsi:rsi,vr:vr,
-  text:t.text,cls:t.cls,reasons:t.reasons,trend:t.trend,score:t.score,maxScore:t.maxScore,chaseRisk:chaseRisk,relativeStrength:null
+  price:price,ma5:ma5,ma10:ma10Entry.ma10,ma20:ma20,ma60:ma60,rsi:rsi,vr:vr,
+  text:t.text,cls:t.cls,reasons:t.reasons.concat(ma10Entry.reasons||[]),trend:t.trend,score:t.score,maxScore:t.maxScore,chaseRisk:chaseRisk,ma10Entry:ma10Entry,relativeStrength:null
  }
 }
 
 function buildWatchPositionAdvice(a,capitalState){
- let mr=marketRisk(),cr=a&&a.chaseRisk,rs=a&&a.relativeStrength,score=Number(a&&a.score),
+ let mr=marketRisk(),cr=a&&a.chaseRisk,mg=a&&a.ma10Entry,rs=a&&a.relativeStrength,score=Number(a&&a.score),
      shortLead=rs&&Number.isFinite(Number(rs.lead5))?Number(rs.lead5):null,
      longLead=rs&&Number.isFinite(Number(rs.lead20))?Number(rs.lead20):null,
      shortImproving=shortLead!=null&&shortLead>0,
@@ -1205,6 +1221,11 @@ function buildWatchPositionAdvice(a,capitalState){
   if(rs&&rs.blockAdd)txt='🟡 盤整、動能尚未轉弱｜暫不進場。近期相對 0050 偏弱；先等待個股重新轉強並停止落後市場，再評估布局。';
   return{text:txt,cls:'warn',reason:'sideways'};
  }
+ if(!mg)return{text:'🟡 尚無 MA10 進場確認資料，請更新行情後再評估；在資料補齊前暫不新增部位。',cls:'warn',reason:'ma10-missing'};
+ if(mg&&mg.entryLevel==='failed')return{text:'🔴 MA10 短線支撐已連續兩個正式交易日收破，暫不進場。等待正式收盤重新站回向上的十日線，並確認趨勢與量價恢復後再評估。',cls:'bad',reason:'ma10-failed'};
+ if(mg&&mg.entryLevel==='first_break')return{text:'🟠 MA10 首次正式收破，暫不買進。先等待下一個正式交易日能否站回；第一次收破尚未等同趨勢完全走壞，但不在支撐未確認時接刀。',cls:'warn',reason:'ma10-first-break'};
+ if(mg&&(mg.entryLevel==='testing'||mg.entryLevel==='intraday_break'))return{text:'🟡 已接近／測試向上的 MA10，但尚未確認止跌，暫不買進。等待正式收盤守住或重新站回，再配合趨勢、量價與大盤條件評估小額分批布局。',cls:'warn',reason:'ma10-wait-confirm'};
+ if(mg&&!mg.entryReady)return{text:'🟡 MA10 尚未提供可執行的進場確認，暫不買進。十日線需向上，且正式收盤守住／重新站回後，才繼續檢查大盤、追高、相對強弱與現金水位。',cls:'warn',reason:'ma10-not-ready'};
  if(mr&&mr.level==='medium')return{text:'🟡 個股條件偏強，但大盤處於震盪警戒，降低追價力度並等待更佳位置。',cls:'warn',reason:'market-risk'};
  if(mr&&mr.shortTermShock)return{text:'⚡ 大盤代理出現單日急跌，暫緩追價與新買進。中期結構尚未因此轉空，等待下一交易日重新確認。',cls:'warn',reason:'market-daily-shock'};
  if(cr&&cr.blockAdd)return{text:(cr.level==='very_high'?'🔴':'🟠')+' 趨勢偏強，但目前'+cr.title.replace(/^[^ ]+ /,'')+'，建議等待拉回，不追價。',cls:cr.level==='very_high'?'bad':'warn',reason:'chase-risk'};
@@ -1216,11 +1237,12 @@ function applySuggestedPrice(value){$('wTarget').value=Number(value).toFixed(2).
 async function getSuggestedPrices(){let ticker=normalizeTicker($('wTicker').value),box=$('suggestPriceBox'),btn=$('suggestPriceBtn');$('wTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');box.style.display='block';box.innerHTML='<div class="status">正在取得行情與計算指標…</div>';btn.disabled=true;try{let m=await market(ticker),a=watchSuggestion(m),bench=await relativeStrengthBenchmark(false);a.relativeStrength=relativeStrengthAnalysis(a.price,m.rows.map(function(r){return r.c}),bench,ticker);let finalAdvice=buildWatchPositionAdvice(a,getCapitalState());box.innerHTML=`<div><strong>目前價格：${fmt(a.price)}</strong></div>
 <div class="suggest-grid">
 <div class="suggest-item"><span>🔴 積極型（MA5${a.trend==='bear'?'｜逆勢高風險':''}）</span><b>${fmt(a.ma5)}</b><button class="ghost" onclick="applySuggestedPrice(${a.ma5})">套用</button></div>
+<div class="suggest-item"><span>🎯 短波段觀察（MA10）</span><b>${fmt(a.ma10)}</b><button class="ghost" onclick="applySuggestedPrice(${a.ma10})">套用</button></div>
 <div class="suggest-item"><span>🟡 穩健型（MA20）</span><b>${fmt(a.ma20)}</b><button class="ghost" onclick="applySuggestedPrice(${a.ma20})">套用</button></div>
 <div class="suggest-item"><span>🟢 保守型（MA60）</span><b>${fmt(a.ma60)}</b><button class="ghost" onclick="applySuggestedPrice(${a.ma60})">套用</button></div>
 </div>
 <div class="note" style="margin-top:8px">目前趨勢：${a.text}（${a.score} / 9）｜均線結構：${a.trend==='bull'?'多頭排列':a.trend==='bear'?'空頭排列':'交錯整理'}</div>
-<div class="advice-summary ${a.cls}" style="margin-top:11px">技術判斷：${a.text}</div>${chaseRiskHtml(a.chaseRisk,'watch')}${relativeStrengthHtml(a.relativeStrength,'watch')}<div class="final-advice ${finalAdvice.cls}">最終建議：${finalAdvice.text}</div><strong>判斷原因</strong><ul class="suggest-reasons">${a.reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul><div class="note" style="margin-top:9px">參考價是均線位置，不等於買進訊號；市場訊號與現金水位須同時允許。</div>`}catch(e){box.innerHTML='<div class="bad">取得失敗：'+esc(e.message)+'</div>'}finally{btn.disabled=false}}
+<div class="advice-summary ${a.cls}" style="margin-top:11px">技術判斷：${a.text}</div>${chaseRiskHtml(a.chaseRisk,'watch')}${relativeStrengthHtml(a.relativeStrength,'watch')}<div class="final-advice ${finalAdvice.cls}">最終建議：${finalAdvice.text}</div><strong>判斷原因</strong><ul class="suggest-reasons">${a.reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul><div class="note" style="margin-top:9px">MA10 是短波段進場閘門與參考位置，不等於碰到就買；必須等待正式收盤確認，且趨勢、大盤、追高、相對強弱與現金水位須同時允許。</div>`}catch(e){box.innerHTML='<div class="bad">取得失敗：'+esc(e.message)+'</div>'}finally{btn.disabled=false}}
 async function refreshWatchOne(id){let original=watchlist().find(function(v){return v.id===id}),el=$('w-'+id);if(!original||!el)return{ok:false,id:id,error:'找不到觀察項目'};try{let m=await market(original.ticker),current=watchlist().find(function(v){return v.id===id});if(!current||current.ticker!==original.ticker)return{ok:false,id:id,stale:true};let signal=watchSuggestion(m),bench=await relativeStrengthBenchmark(false);signal.relativeStrength=relativeStrengthAnalysis(signal.price,m.rows.map(function(r){return r.c}),bench,current.ticker);signal.reasons=Array.isArray(signal.reasons)?signal.reasons.slice():[];let meta=m.d.meta||{},last=m.rows[m.rows.length-1],price=Number.isFinite(meta.regularMarketPrice)?meta.regularMarketPrice:last.c,time=new Date((meta.regularMarketTime||last.t)*1000);let data={cacheVersion:4,ticker:current.ticker,name:meta.longName||meta.shortName||m.symbol,price:price,time:time.toISOString(),signal:signal,quoteInfo:quoteInfoFromMeta(meta),updatedAt:Date.now()};saveWatchCache(id,data);renderWatchCard(current,data);return{ok:true,id:id}}catch(e){let current=watchlist().find(function(v){return v.id===id}),cached=watchCache()[id],usable=current&&cached&&(!cached.ticker||cached.ticker===current.ticker);if(current&&usable){renderWatchCard(current,Object.assign({},cached,{cached:true}));let card=$('w-'+id);if(card)card.insertAdjacentHTML('beforeend','<div class=\"status warn\">本次更新失敗，暫時顯示上次行情：'+esc(e.message)+'</div>')}else if(current){renderWatchCard(current,null);let card=$('w-'+id);if(card)card.insertAdjacentHTML('beforeend','<div class=\"status bad\">更新失敗：'+esc(e.message)+'</div>')}return{ok:false,id:id,error:e.message}}}
 async function refreshWatchAll(){await refreshMarketContext(true);let w=watchlist();if(!w.length){$('watchStatus').textContent='觀察名單目前沒有股票';return}$('watchStatus').textContent='正在更新 '+w.length+' 檔觀察行情…';let results=await Promise.all(w.map(function(x){return refreshWatchOne(x.id).catch(function(e){return{ok:false,id:x.id,error:e.message}})}));let ok=results.filter(function(r){return r&&r.ok}).length,fail=results.filter(function(r){return r&&!r.ok&&!r.stale}).length;$('watchStatus').textContent=fail?('更新完成：'+ok+' 檔成功，'+fail+' 檔失敗（失敗項目保留上次行情）'):('觀察名單更新完成，共 '+ok+' 檔');renderDashboard()}
 let AUTO_REFRESH_RUNNING=false,AUTO_REFRESH_LAST_MINUTE='';
