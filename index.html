@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.18.1</title>
+<title>股倉雷達 v5.19</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -129,7 +129,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.18.1</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.19</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -198,6 +198,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🗑️ v5.17.5 刪除後自動關閉</strong><div class="note" style="margin-top:8px">從觀察分析或回放紀錄彈窗確認刪除後，立即清除對應分析快取並關閉彈窗，再更新清單與總覽；取消刪除時維持原畫面。</div></div>
 <div class="card"><strong>〽️ v5.18 MA10 短波段防守</strong><div class="note" style="margin-top:8px">短線／波段持股新增十日線防守層。盤中接近或短暫跌破只顯示「測試支撐」，不直接賣出；首次正式收盤跌破會暫停加碼，連續兩個正式交易日收破才確認支撐失效。若再搭配放量、動能轉弱或其他支撐破壞，才提高分批減碼／停利層級。中長期策略僅顯示資訊，不由 MA10 單獨觸發賣出。</div></div>
 <div class="card"><strong>🎯 v5.18.1 觀察清單 MA10 進場閘門</strong><div class="note" style="margin-top:8px">觀察清單新增 MA10 進場時機判斷。向上的十日線可作為短線回測依據，但接近或盤中跌破只會等待止跌；首次正式收破暫不買進，連續兩日收破判定支撐失效。只有正式收盤守住／重新站回 MA10，且趨勢、大盤、追高、相對強弱與現金水位同時允許，才可考慮小額分批布局。</div></div>
+<div class="card"><strong>🕯️ v5.19 真實高點／高檔反轉保護</strong><div class="note" style="margin-top:8px">持股結構的「20 日高點」改用日 K 最高價，不再誤用最高收盤價。新增高檔反轉辨識：創近期高點後若出現長上影、收近當日低點且高點至收盤回落達 ATR 警戒，當日先進入獲利警戒；下一根正式日 K 未站回反轉區才確認分批保護。持有期間最高價與最高曾獲利紀錄繼續沿用，不重置；急跌／超賣時仍由阿呆谷防殺低閘門避免追殺。</div></div>
 <div class="card"><strong>🧠 v5.17.2 單一操作出口／阿呆谷執行閘門</strong><div class="note" style="margin-top:8px">各分析模組可以同時保留風險訊號，但真正的操作指令只由最終決策層輸出。若止損防殺低判定為超賣／急跌且尚未確認支撐破壞，會暫停獲利保護的減碼／停利執行：獲利保護改顯示「警戒中／暫緩減碼」，最終建議統一為「不宜砍在阿呆谷」。等待反彈失敗、再次破底或支撐破壞確認後再重新評估；基本面轉差不受此閘門保護。</div></div>
 <div class="card"><strong>🧠 決策防呆</strong><div class="note" style="margin-top:8px">持股卡片新增「操作檢查」。在加碼、減碼或賣出前，先檢查是否屬於恐慌賣出、FOMO 追價或違反原策略。</div></div>
 <div class="card settings-form" id="capitalForm"><strong>資金管理</strong><div class="grid3" style="margin-top:12px"><div><label>投資總資金</label><input id="capitalInput" type="number" min="0" step="1" placeholder="例如 200000"></div><div><label>最低希望保留現金比例（%）</label><input id="targetCashInput" type="number" min="0" max="100" step="1" placeholder="例如 30"></div><div class="row" style="align-items:flex-end"><button class="primary" onclick="saveCapital()">儲存設定</button></div></div></div>
@@ -507,7 +508,7 @@ function resetForm(){['fTicker','fCost','fQty','fMaxBudget','fPeakPrice','editId
 function saveHolding(){let ticker=normalizeTicker($('fTicker').value),cost=+$('fCost').value,qty=+$('fQty').value,maxBudgetText=$('fMaxBudget').value.trim(),maxBudget=maxBudgetText===''?0:+maxBudgetText;$('fTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');if(!(cost>0&&qty>0))return alert('請輸入成本與股數');if(!(maxBudget>=0))return alert('個股投入上限請留空或輸入大於 0 的數字');let h=holdings(),id=$('editId').value||Date.now().toString(),old=h.find(function(x){return x.id===id}),peakPriceText=$('fPeakPrice').value.trim(),peakPriceOverride=peakPriceText===''?0:+peakPriceText;if(!(peakPriceOverride>=0))return alert('最高持有價修正請留空或輸入大於 0 的數字');item={id:id,ticker:ticker,cost:cost,qty:qty,maxBudget:maxBudget,strategy:$('fStrategy').value,maxLoss:+$('fMaxLoss').value||12,fund:$('fFund').value,peakPriceOverride:peakPriceOverride},i=h.findIndex(function(x){return x.id===id});if(i>=0)h[i]=item;else h.push(item);if(old&&old.ticker!==ticker)removeSnapshot(id);store(h);resetForm();$('addForm').style.display='none';render();void refreshOne(id)}
 function editHolding(id){closeAnalysis();let x=holdings().find(v=>v.id===id);if(!x)return;$('fTicker').value=x.ticker;$('fCost').value=x.cost;$('fQty').value=x.qty;$('fMaxBudget').value=+x.maxBudget>0?x.maxBudget:'';$('fStrategy').value=x.strategy;$('fMaxLoss').value=x.maxLoss;$('fPeakPrice').value=+x.peakPriceOverride>0?x.peakPriceOverride:'';$('fFund').value=x.fund;$('editId').value=x.id;$('addForm').style.display='block';requestAnimationFrame(function(){$('addForm').scrollIntoView({behavior:'smooth',block:'start'})})}
 function removeHolding(id){if(confirm('確定刪除？')){store(holdings().filter(x=>x.id!==id));removeSnapshot(id);render();summary();closeAnalysis()}}
-function renderHoldingCardFull(x,a,state,error){let el=$('s-'+x.id);if(!el)return;let st=holdingStatusText(state||'idle',error||'');if(!a){el.removeAttribute('data-value');el.removeAttribute('data-cost');el.removeAttribute('data-pnl');el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">成本 ${fmt(x.cost)}｜${fmt(x.qty)} 股</div>${quoteDiagnosticsHtml({})}</div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div>${holdingLevelHtml(x)}<div class="status ${st.cls}">${esc(st.text)}</div>`;return}let price=Number(a.price),pnl=Number.isFinite(price)?(price-Number(x.cost))/Number(x.cost)*100:Number(a.pnl),value=Number.isFinite(price)?price*Number(x.qty):Number(a.value),costValue=Number(x.cost)*Number(x.qty),pnlMoney=Number.isFinite(price)?(price-Number(x.cost))*Number(x.qty):Number(a.pnlMoney),time=a.time?new Date(a.time):null,advice=a.advice||buildAdvice(a),finalAdvice=buildPositionAdvice(Object.assign({},a,{advice:advice}),x,getCapitalState()),tags=Array.isArray(a.tags)?a.tags:[];el.dataset.value=Number.isFinite(value)?value:'';el.dataset.cost=Number.isFinite(costValue)?costValue:'';el.dataset.pnl=Number.isFinite(pnlMoney)?pnlMoney:'';el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)} ${esc(a.name||'')}</div><div class="stocksub">行情 ${time&&!Number.isNaN(time.getTime())?time.toLocaleString('zh-TW'):'—'}｜${a.quoteInfo?esc(a.quoteInfo.text):'—'}｜來源 ${a.quoteInfo?esc(a.quoteInfo.source):'—'}</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="decision ${finalAdvice.cls||'warn'}">${esc(finalAdvice.text||'等待重新判斷')}</div><div>${tags.map(function(t){return'<span class="pill">'+esc(t)+'</span>'}).join('')}</div><div class="trend-score ${trendInfoFromAnalysis(a).cls}"><div class="trend-score-head"><span>技術趨勢：${esc(trendInfoFromAnalysis(a).text)}</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div></div><div class="stockgrid"><div class="kpi"><small>現價</small><b>${fmt(price)}</b></div><div class="kpi"><small>報酬</small><b class="${pnl>=0?'good':'bad'}">${Number.isFinite(pnl)?pct(pnl):'—'}</b></div><div class="kpi"><small>損益</small><b>${money(pnlMoney)}</b></div><div class="kpi"><small>趨勢</small><b>${Number.isFinite(price)&&Number.isFinite(Number(a.ma20))?(price>=Number(a.ma20)?'偏強':'偏弱'):'—'}</b></div><div class="kpi"><small>市場動能</small><b>${Number(a.rsi)<30?'接近超賣':Number(a.rsi)>75?'偏熱':'一般'}</b></div><div class="kpi"><small>成交量</small><b>${Number(a.vr)>=1.5?'增加':'一般'}</b></div></div>${holdingLevelHtml(x)}${chaseRiskHtml(a.chaseRisk,'holding')}${relativeStrengthHtml(a.relativeStrength,'holding')}${supportResistanceHtml(a.supportResistance)}${pullbackStructureHtml(a.pullbackStructure)}${stopLossGuardHtml(a.stopLossGuard)}${profitProtectionHtml(a.profitProtection,a.stopLossGuard)}${decisionEnvHtml(decisionEnvironment(x.ticker,a,x,0),'h-'+x.id)}<div class="row" style="margin-top:9px"><button class="ghost" onclick="toggleDetails('${x.id}')">查看原因</button><span class="note">市場訊號與倉位許可已分開判斷</span></div><div class="details" id="d-${x.id}"><strong>市場現況</strong><div class="advice-summary">${esc(advice.summary||'—')}</div><div class="trend-score"><div class="trend-score-head"><span>趨勢評分明細</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div><ul class="score-reasons">${trendInfoFromAnalysis(a).reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>${quoteDiagnosticsHtml(a.meta||{})}<div class="advice-grid"><div class="advice-box"><strong class="good">正向因素</strong><ul>${listHtml(advice.strengths||[])}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul>${listHtml(advice.risks||[])}</ul></div><div class="advice-box"><strong>建議行動</strong><ul>${listHtml(resolvedHoldingActions(advice,finalAdvice))}</ul></div></div></div><div class="status ${st.cls}">${esc(st.text)}</div>`}
+function renderHoldingCardFull(x,a,state,error){let el=$('s-'+x.id);if(!el)return;let st=holdingStatusText(state||'idle',error||'');if(!a){el.removeAttribute('data-value');el.removeAttribute('data-cost');el.removeAttribute('data-pnl');el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">成本 ${fmt(x.cost)}｜${fmt(x.qty)} 股</div>${quoteDiagnosticsHtml({})}</div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div>${holdingLevelHtml(x)}<div class="status ${st.cls}">${esc(st.text)}</div>`;return}let price=Number(a.price),pnl=Number.isFinite(price)?(price-Number(x.cost))/Number(x.cost)*100:Number(a.pnl),value=Number.isFinite(price)?price*Number(x.qty):Number(a.value),costValue=Number(x.cost)*Number(x.qty),pnlMoney=Number.isFinite(price)?(price-Number(x.cost))*Number(x.qty):Number(a.pnlMoney),time=a.time?new Date(a.time):null,advice=a.advice||buildAdvice(a),finalAdvice=buildPositionAdvice(Object.assign({},a,{advice:advice}),x,getCapitalState()),tags=Array.isArray(a.tags)?a.tags:[];el.dataset.value=Number.isFinite(value)?value:'';el.dataset.cost=Number.isFinite(costValue)?costValue:'';el.dataset.pnl=Number.isFinite(pnlMoney)?pnlMoney:'';el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)} ${esc(a.name||'')}</div><div class="stocksub">行情 ${time&&!Number.isNaN(time.getTime())?time.toLocaleString('zh-TW'):'—'}｜${a.quoteInfo?esc(a.quoteInfo.text):'—'}｜來源 ${a.quoteInfo?esc(a.quoteInfo.source):'—'}</div></div><div class="row"><button class="decision-check-btn" onclick="openDecisionCheck('${x.id}')">操作檢查</button><button class="ghost" onclick="editHolding('${x.id}')">編輯</button><button class="danger" onclick="removeHolding('${x.id}')">刪除</button></div></div><div class="decision ${finalAdvice.cls||'warn'}">${esc(finalAdvice.text||'等待重新判斷')}</div><div>${tags.map(function(t){return'<span class="pill">'+esc(t)+'</span>'}).join('')}</div><div class="trend-score ${trendInfoFromAnalysis(a).cls}"><div class="trend-score-head"><span>技術趨勢：${esc(trendInfoFromAnalysis(a).text)}</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div></div><div class="stockgrid"><div class="kpi"><small>現價</small><b>${fmt(price)}</b></div><div class="kpi"><small>報酬</small><b class="${pnl>=0?'good':'bad'}">${Number.isFinite(pnl)?pct(pnl):'—'}</b></div><div class="kpi"><small>損益</small><b>${money(pnlMoney)}</b></div><div class="kpi"><small>趨勢</small><b>${Number.isFinite(price)&&Number.isFinite(Number(a.ma20))?(price>=Number(a.ma20)?'偏強':'偏弱'):'—'}</b></div><div class="kpi"><small>市場動能</small><b>${Number(a.rsi)<30?'接近超賣':Number(a.rsi)>75?'偏熱':'一般'}</b></div><div class="kpi"><small>成交量</small><b>${Number(a.vr)>=1.5?'增加':'一般'}</b></div></div>${holdingLevelHtml(x)}${chaseRiskHtml(a.chaseRisk,'holding')}${relativeStrengthHtml(a.relativeStrength,'holding')}${supportResistanceHtml(a.supportResistance)}${pullbackStructureHtml(a.pullbackStructure)}${highReversalHtml(a.highReversal)}${stopLossGuardHtml(a.stopLossGuard)}${profitProtectionHtml(a.profitProtection,a.stopLossGuard)}${decisionEnvHtml(decisionEnvironment(x.ticker,a,x,0),'h-'+x.id)}<div class="row" style="margin-top:9px"><button class="ghost" onclick="toggleDetails('${x.id}')">查看原因</button><span class="note">市場訊號與倉位許可已分開判斷</span></div><div class="details" id="d-${x.id}"><strong>市場現況</strong><div class="advice-summary">${esc(advice.summary||'—')}</div><div class="trend-score"><div class="trend-score-head"><span>趨勢評分明細</span><span class="trend-score-num">${trendInfoFromAnalysis(a).score} / 9</span></div><ul class="score-reasons">${trendInfoFromAnalysis(a).reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>${quoteDiagnosticsHtml(a.meta||{})}<div class="advice-grid"><div class="advice-box"><strong class="good">正向因素</strong><ul>${listHtml(advice.strengths||[])}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul>${listHtml(advice.risks||[])}</ul></div><div class="advice-box"><strong>建議行動</strong><ul>${listHtml(resolvedHoldingActions(advice,finalAdvice))}</ul></div></div></div><div class="status ${st.cls}">${esc(st.text)}</div>`}
 
 const ANALYSIS_CACHE={holding:{},watch:{},replay:{}};
 
@@ -800,8 +801,10 @@ function supportResistanceAnalysis(rows,price,ma20,ma60,atr){
 function srStars(n){n=Math.max(0,Math.min(5,Number(n)||0));return'★'.repeat(n)+'☆'.repeat(5-n)}
 function supportResistanceHtml(s){if(!s)return'';let z=function(v){return v?(fmt(v.low)+'～'+fmt(v.high)):'—'},st=function(v){return v?srStars(v.strength):'—'};return `<div class="sr-zone"><div class="sr-head"><span class="${s.cls||'warn'}">${esc(s.title||'支撐／壓力')}</span><span>自算價格區域</span></div><div class="sr-grid"><div class="kpi"><small>第一支撐</small><b>${z(s.support)}</b></div><div class="kpi"><small>支撐強度</small><b>${st(s.support)}</b></div><div class="kpi"><small>第一壓力</small><b>${z(s.resistance)}</b></div><div class="kpi"><small>壓力強度</small><b>${st(s.resistance)}</b></div></div><div class="sr-note">由歷史 K 線轉折、成交量、MA20／MA60 與 ATR 自行計算；顯示區域而非假裝精準的單一價位。接近壓力不等於賣出，會與動能及獲利保護共同判斷。</div><ul class="sr-reasons">${(s.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
 
-function pullbackStructureAnalysis(price,ma5,ma20,ma60,vr,cl,trendScore){
- let high20=Array.isArray(cl)&&cl.length?Math.max.apply(null,cl.slice(-20).map(Number).filter(Number.isFinite)):null,
+function pullbackStructureAnalysis(price,ma5,ma20,ma60,vr,rows,trendScore){
+ let rs=Array.isArray(rows)?rows:[],cl=rs.map(function(r){return Number(r.c)}).filter(Number.isFinite),
+ highs20=rs.slice(-20).map(function(r){return Number(r.h)}).filter(Number.isFinite),
+ high20=highs20.length?Math.max.apply(null,highs20):null,
  drawdown=high20>0?(high20-price)/high20*100:null,level='neutral',title='🟡 結構觀察中',cls='warn',action='observe',reasons=[];
  let above20=Number.isFinite(ma20)&&price>=ma20,above60=Number.isFinite(ma60)&&price>=ma60,maHealthy=Number.isFinite(ma20)&&Number.isFinite(ma60)&&ma20>=ma60,volumeHeavy=Number(vr)>=1.5,score=Number(trendScore);
  if(Number.isFinite(drawdown))reasons.push('距近 20 日高點回落 '+fmt(drawdown)+'%');
@@ -814,7 +817,42 @@ function pullbackStructureAnalysis(price,ma5,ma20,ma60,vr,cl,trendScore){
  if(!Number.isFinite(drawdown)){title='🟡 結構資料不足';level='missing';reasons.push('歷史資料不足，暫時無法計算近 20 日高點回撤');}
  return{level:level,title:title,cls:cls,action:action,drawdown20:drawdown,high20:high20,aboveMA20:above20,aboveMA60:above60,vr:Number(vr),trendScore:score,reasons:reasons};
 }
-function pullbackStructureHtml(p){if(!p)return'';let note=p.level==='healthy'?'目前較像正常整理，不因短線下跌就提前賣出。':p.level==='warning'?'支撐開始轉弱，先停止加碼並觀察是否能重新站回 MA20。':p.level==='broken'?'已出現多個結構破壞訊號，應重新評估部位並考慮分批降低風險。':'目前維持其他條件綜合判斷。';return `<div class="pullback-structure"><div class="pullback-head"><span class="${p.cls}">${esc(p.title)}</span><span>持股結構</span></div><div class="pullback-grid"><div class="kpi"><small>20 日高點</small><b>${fmt(p.high20)}</b></div><div class="kpi"><small>高點回撤</small><b>${Number.isFinite(Number(p.drawdown20))?fmt(p.drawdown20)+'%':'—'}</b></div><div class="kpi"><small>MA20 支撐</small><b>${p.aboveMA20?'守住':'跌破'}</b></div><div class="kpi"><small>MA60 支撐</small><b>${p.aboveMA60?'守住':'跌破'}</b></div></div><div class="pullback-note">${esc(note)} 此模組用來區分正常回檔與結構走壞，不會因單一日線波動直接賣出。</div><ul class="pullback-reasons">${(p.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
+
+function twDateKey(value){
+ let d=value instanceof Date?value:new Date(value),parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d),out={};
+ parts.forEach(function(p){out[p.type]=p.value});return out.year+'-'+out.month+'-'+out.day;
+}
+function completedDailyRows(rows){
+ let rs=Array.isArray(rows)?rows.slice():[];if(!rs.length)return rs;
+ let now=new Date(),twParts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Taipei',hour:'2-digit',minute:'2-digit',hour12:false,weekday:'short'}).formatToParts(now),p={};
+ twParts.forEach(function(x){p[x.type]=x.value});let hm=(Number(p.hour)||0)*60+(Number(p.minute)||0),weekday=p.weekday,
+ last=rs[rs.length-1],lastKey=twDateKey(Number(last.t)*1000),todayKey=twDateKey(now),sessionDay=weekday!=='Sat'&&weekday!=='Sun';
+ if(lastKey===todayKey&&sessionDay&&hm<13*60+35)rs.pop();
+ return rs;
+}
+function highReversalAnalysis(rows,atr){
+ let rs=completedDailyRows(rows),none={level:'none',title:'⚪ 未出現高檔反轉',cls:'good',action:'hold',reasons:[]};
+ if(rs.length<8)return Object.assign({},none,{level:'missing',title:'⚪ 高檔反轉資料不足',cls:'warn',reasons:['完整日 K 不足，暫不啟用高檔反轉確認']});
+ function inspect(i){
+  let r=rs[i],o=Number(r.o),h=Number(r.h),l=Number(r.l),c=Number(r.c),range=h-l;
+  if(!(range>0&&[o,h,l,c].every(Number.isFinite)))return null;
+  let priorHighs=rs.slice(Math.max(0,i-20),i).map(function(x){return Number(x.h)}).filter(Number.isFinite),priorHigh=priorHighs.length?Math.max.apply(null,priorHighs):h,
+  closeLocation=(c-l)/range,upperWick=h-Math.max(o,c),upperRatio=upperWick/range,highClosePct=(h-c)/h*100,atrDrop=Number.isFinite(atr)&&atr>0?(h-c)/atr:null,
+  nearRecentHigh=h>=priorHigh*.98,rejection=nearRecentHigh&&closeLocation<=.30&&upperRatio>=.45&&highClosePct>=2&&(!Number.isFinite(atrDrop)||atrDrop>=.70);
+  return{index:i,row:r,o:o,h:h,l:l,c:c,range:range,mid:(h+l)/2,closeLocation:closeLocation,upperRatio:upperRatio,highClosePct:highClosePct,atrDrop:atrDrop,priorHigh:priorHigh,rejection:rejection};
+ }
+ let latest=inspect(rs.length-1);
+ if(latest&&latest.rejection)return{level:'alert',title:'🟡 高檔反轉警戒',cls:'warn',action:'alert',reversalHigh:latest.h,reversalClose:latest.c,highClosePct:latest.highClosePct,atrDrop:latest.atrDrop,reasons:['正式日 K 創近 20 日高檔後收近當日低點','最高價至收盤回落 '+fmt(latest.highClosePct)+'%'+(Number.isFinite(latest.atrDrop)?'，約 '+fmt(latest.atrDrop)+' ATR':''),'先停止加碼並保護成果；等待下一根正式日 K 是否站回反轉區']};
+ let start=Math.max(1,rs.length-5),candidate=null;
+ for(let i=rs.length-2;i>=start;i--){let x=inspect(i);if(x&&x.rejection){candidate=x;break}}
+ if(candidate){let after=rs.slice(candidate.index+1),latestClose=Number(rs[rs.length-1].c),failed=after.some(function(r){return Number(r.c)<candidate.c})&&latestClose<candidate.mid;
+  if(failed)return{level:'confirmed',title:'🟠 高檔反轉已確認',cls:'warn',action:'reduce',reversalHigh:candidate.h,reversalClose:candidate.c,highClosePct:candidate.highClosePct,atrDrop:candidate.atrDrop,reasons:['近期高點 '+fmt(candidate.h)+' 出現長上影並收近低點','後續正式收盤未站回反轉 K 中段 '+fmt(candidate.mid),'高檔反轉由後續日 K 確認，提高分批保護獲利優先度']};
+ }
+ return Object.assign({},none,{reasons:['近期待確認日 K 未形成「創高＋長上影＋收近低點」的完整組合']});
+}
+function pullbackStructureHtml(p){if(!p)return'';let note=p.level==='healthy'?'目前較像正常整理，不因短線下跌就提前賣出。':p.level==='warning'?'支撐開始轉弱，先停止加碼並觀察是否能重新站回 MA20。':p.level==='broken'?'已出現多個結構破壞訊號，應重新評估部位並考慮分批降低風險。':'目前維持其他條件綜合判斷。';return `<div class="pullback-structure"><div class="pullback-head"><span class="${p.cls}">${esc(p.title)}</span><span>持股結構</span></div><div class="pullback-grid"><div class="kpi"><small>20 日盤中高點</small><b>${fmt(p.high20)}</b></div><div class="kpi"><small>高點回撤</small><b>${Number.isFinite(Number(p.drawdown20))?fmt(p.drawdown20)+'%':'—'}</b></div><div class="kpi"><small>MA20 支撐</small><b>${p.aboveMA20?'守住':'跌破'}</b></div><div class="kpi"><small>MA60 支撐</small><b>${p.aboveMA60?'守住':'跌破'}</b></div></div><div class="pullback-note">${esc(note)} 此模組用來區分正常回檔與結構走壞，不會因單一日線波動直接賣出。</div><ul class="pullback-reasons">${(p.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
+
+function highReversalHtml(r){if(!r||r.level==='none'||r.level==='missing')return'';let note=r.level==='confirmed'?'反轉已由後續正式日 K 確認；若仍有可保護獲利，優先採分批方式，不必一次全數賣出。':'反轉當日先警戒並停止加碼；等待下一根正式日 K 確認，避免只因盤中震盪就提前賣飛。';return `<div class="pullback-structure"><div class="pullback-head"><span class="${r.cls||'warn'}">${esc(r.title||'高檔反轉')}</span><span>正式日 K 確認</span></div><div class="pullback-grid"><div class="kpi"><small>反轉高點</small><b>${fmt(r.reversalHigh)}</b></div><div class="kpi"><small>高點至收盤</small><b>${Number.isFinite(Number(r.highClosePct))?fmt(r.highClosePct)+'%':'—'}</b></div><div class="kpi"><small>回落 ATR</small><b>${Number.isFinite(Number(r.atrDrop))?fmt(r.atrDrop)+' ATR':'—'}</b></div><div class="kpi"><small>狀態</small><b>${r.level==='confirmed'?'已確認':'待確認'}</b></div></div><div class="pullback-note">${esc(note)}</div><ul class="pullback-reasons">${(r.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
 
 function ma10GuardAnalysis(rows,price,atr,trendScore,strategy){
  let rs=Array.isArray(rows)?rows:[],cl=rs.map(function(r){return Number(r.c)}).filter(Number.isFinite),reasons=[];
@@ -891,7 +929,7 @@ function analyze(x,m){
  baseVol=avg(validVol.slice(0,-1)),vr=last.v>0&&baseVol>0?last.v/baseVol:1,
  pnl=(price-x.cost)/x.cost*100,t=trendEngine({price:price,ma5:ma5,ma20:ma20,ma60:ma60,rsi:rsi,vr:vr}),
  atr14=atrFromRows(rows,14),atrBase=atrBaselineFromRows(rows,60),atrPct=Number.isFinite(atr14)&&price>0?atr14/price*100:null,atrBasePct=Number.isFinite(atrBase)&&price>0?atrBase/price*100:null,atrExpansion=Number.isFinite(atr14)&&Number.isFinite(atrBase)&&atrBase>0?atr14/atrBase:null,
- chaseRisk=chaseRiskAnalysis(price,ma20,rsi,cl),pullbackStructure=pullbackStructureAnalysis(price,ma5,ma20,ma60,vr,cl,t.score),supportResistance=supportResistanceAnalysis(rows,price,ma20,ma60,atr14),ma10Guard=ma10GuardAnalysis(rows,price,atr14,t.score,x.strategy||'swing'),score=t.score,re=t.reasons.slice(),tags=[];
+ chaseRisk=chaseRiskAnalysis(price,ma20,rsi,cl),pullbackStructure=pullbackStructureAnalysis(price,ma5,ma20,ma60,vr,rows,t.score),supportResistance=supportResistanceAnalysis(rows,price,ma20,ma60,atr14),ma10Guard=ma10GuardAnalysis(rows,price,atr14,t.score,x.strategy||'swing'),highReversal=highReversalAnalysis(rows,atr14),score=t.score,re=t.reasons.slice(),tags=[];
  pullbackStructure.ma10Guard=ma10Guard;
 
  if(t.trend==='bull')tags.push('多頭排列');
@@ -930,7 +968,7 @@ function analyze(x,m){
   trendScore:t.score,trendMax:t.maxScore,trendMin:t.minScore,trendText:t.text,trendCls:t.cls,trendReasons:t.reasons,trend:t.trend,
   score:score,re:re,tags:tags,decision:decision,cls:cls,fund:x.fund,strategy:x.strategy,maxLoss:x.maxLoss,
   name:meta.longName||meta.shortName||m.symbol,value:price*x.qty,costValue:x.cost*x.qty,pnlMoney:(price-x.cost)*x.qty,
-  chaseRisk:chaseRisk,relativeStrength:null,pullbackStructure:pullbackStructure,supportResistance:supportResistance,ma10Guard:ma10Guard,closes:cl.slice(-30),atr14:atr14,atrPct:atrPct,atrBase:atrBase,atrBasePct:atrBasePct,atrExpansion:atrExpansion,stopLossGuard:null,
+  chaseRisk:chaseRisk,relativeStrength:null,pullbackStructure:pullbackStructure,supportResistance:supportResistance,ma10Guard:ma10Guard,highReversal:highReversal,closes:cl.slice(-30),atr14:atr14,atrPct:atrPct,atrBase:atrBase,atrBasePct:atrBasePct,atrExpansion:atrExpansion,stopLossGuard:null,
   time:new Date((meta.regularMarketTime||last.t)*1000),
   meta:meta,
   quoteInfo:quoteInfoFromMeta(meta)
@@ -1011,8 +1049,14 @@ function profitProtection(stockAnalysis,holding,previous){
     action='hold';title=sharedState.sideways?'🟡 盤整、動能尚未轉弱：續抱':momentum.level==='high'?'🔥 高動能：讓獲利續跑':'🟢 動能健康：續抱';cls=sharedState.sideways?'warn':'good';reasons.push('目前回撤仍可由個股波動解釋，尚未達鎖利退出條件')
   }
   // v5.17：支撐／壓力正式加入獲利保護；接近壓力需搭配動能與 ATR 回撤，不單獨觸發賣出。
+  let reversal=stockAnalysis.highReversal||{};
+  if(reversal.level==='confirmed'&&action==='hold'){
+    action='reduce';title='🟠 高檔反轉確認：收緊獲利保護';cls='warn';reasons.push('創高反轉後，下一根正式日 K 未站回反轉區；分批保護獲利，不等待浮盈幾乎吐光')
+  }else if(reversal.level==='alert'&&action==='hold'){
+    title='🟡 高檔反轉警戒：先保護成果';cls='warn';reasons.push('最新正式日 K 出現高檔反轉外觀；先停止加碼，等待下一根日 K 確認，不在當天直接全數賣出')
+  }
   let sr=stockAnalysis.supportResistance||{};
-  if(sr.breakout&&momentum.level!=='weak'){
+  if(sr.breakout&&momentum.level!=='weak'&&reversal.level!=='confirmed'){
     if(action==='reduce'){action='hold';title='🟢 突破壓力：讓獲利續跑';cls='good';reasons.push('原壓力已突破且動能未轉弱，暫不因舊壓力提前減碼')}
     else reasons.push('已突破原壓力區，讓趨勢繼續發展');
   }else if(sr.nearResistance){
@@ -1037,7 +1081,7 @@ function profitProtectionHtml(p,sg){if(!p)return'';let paused=!!(sg&&sg.blocked&
 function buildPositionAdvice(stockAnalysis,holding,capitalState){
  let mr=marketRisk(),technical=stockAnalysis.advice||buildAdvice(stockAnalysis),level=holdingLevel(holding),
      pp=stockAnalysis.profitProtection,cr=stockAnalysis.chaseRisk,rs=stockAnalysis.relativeStrength,
-     pb=stockAnalysis.pullbackStructure,sr=stockAnalysis.supportResistance||{},mg=stockAnalysis.ma10Guard||{},sg=stockAnalysis.stopLossGuard,t=trendInfoFromAnalysis(stockAnalysis),
+     pb=stockAnalysis.pullbackStructure,sr=stockAnalysis.supportResistance||{},mg=stockAnalysis.ma10Guard||{},sg=stockAnalysis.stopLossGuard,hr=stockAnalysis.highReversal||{},t=trendInfoFromAnalysis(stockAnalysis),
      score=Number(t.score),pnl=Number(stockAnalysis.pnl),strategy=holding.strategy||'swing',
      price=Number(stockAnalysis.price),ma20=Number(stockAnalysis.ma20),ma60=Number(stockAnalysis.ma60),
      above20=Number.isFinite(price)&&Number.isFinite(ma20)&&price>=ma20,
@@ -1053,6 +1097,8 @@ function buildPositionAdvice(stockAnalysis,holding,capitalState){
   return{text:'🔴 建議分批停利／賣出。已有可保護獲利，且高點回落與趨勢轉弱同時成立；這不是因單日下跌賣出，而是獲利保護條件已觸發。',cls:'bad',allowed:false,reason:'profit-protection'};
  if(pp&&pp.action==='reduce')
   return{text:'🟠 建議分批減碼保護獲利。已有可保護成果，且 ATR／動能與支撐壓力結構出現警戒；先降低部分部位，剩餘持股再觀察支撐是否守住或壓力能否突破。',cls:'warn',allowed:false,reason:'profit-protection'};
+ if(pp&&pp.active&&hr.level==='alert')
+  return{text:'🟡 高檔反轉警戒｜先續抱但停止加碼。最新正式日 K 出現創高後長上影、收近低點的反轉外觀；今天先保護成果並等待下一根正式日 K。若未站回反轉區，再升級為分批減碼；若重新轉強則解除警戒。',cls:'warn',allowed:false,reason:'high-reversal-alert'};
  if(sg&&sg.qualified)
   return{text:'🔴 建議分批降低部位／止損。這次不是只因趨勢偏空，而是支撐破壞等賣出證據已達門檻；採分批方式控制風險，避免一次全砍。',cls:'bad',allowed:false,reason:'stoploss-qualified'};
  if(strategy!=='long'&&mg.active&&mg.action==='reduce')
