@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.22.1</title>
+<title>股倉雷達 v5.22.2</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -146,7 +146,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.1</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.2</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -210,6 +210,7 @@ body.analysis-open{overflow:hidden}
   <div class="card"><strong>📲 PWA App</strong><div class="install-box"><div><b>iPhone 安裝：</b>Safari → 分享 →「加入主畫面」。安裝後從桌面開啟，會以 App 模式顯示，不會有一般 Safari 網址列。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="requestRadarNotification()">開啟 Radar 通知權限</button><button class="ghost" onclick="testRadarNotification()">測試提醒</button></div><div id="pwaStatus" class="status"></div></div><div class="note" style="margin-top:8px">v5.0 的 Radar 通知會在你開啟／更新 App 時觸發；真正關閉 App 後仍可背景推播，需要另外串接 Web Push 伺服器。</div></div>
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
+<div class="card"><strong>🟠 v5.22.2 位置型追高保護</strong><div class="note" style="margin-top:8px">新增組合風險：當股價距 MA20 ≥ 8%，同時距近 20 日高點 ≤ 5%，即使追高總分未達 4 分，也視為「追高風險偏高」並阻止直接顯示可分批布局。沒有下修全市場的追高分數門檻，因此像目前 8046 這種乖離約 +4.47%、距 20 日高點仍約 9.58% 的型態不會被此規則誤擋。</div></div>
 <div class="card"><strong>🟡 v5.22.1 歷史 K 回溯／C 偏多等待發動</strong><div class="note" style="margin-top:8px">不再從新版安裝日開始等待 2～3 天，而是直接回溯既有正式日 K，檢查近期價格推進、整理區間與量能。技術結構偏多但缺乏延續時，直接降級為 C「偏多等待發動」；尚未進場者繼續等待，已有試單者暫停加碼。異常資金雷達 Worker 維持 App 啟動後自動測試，手動測試按鈕保留。</div></div>
 <div class="card"><strong>🛠️ v5.21.2 啟動／清單修正</strong><div class="note" style="margin-top:8px">已找到真正根因：B「早期轉強」程式碼曾誤插進持股最終建議函式，使用了不存在的變數 a，造成部分持股 render 時拋出 ReferenceError，整個啟動流程因此中斷；連帶造成首次畫面空白、自選觀察未 render、市場候選不自動掃描。v5.21.2 已移除持股中的錯誤區塊，B 早期轉強只在觀察／市場候選使用。</div></div>
 <div class="card"><strong>🧹 v5.21.1 儲存空間修正</strong><div class="note" style="margin-top:8px">v5.21 曾把完整日 K 陣列誤存進每一檔觀察快取與候選快取，可能迅速塞滿瀏覽器 localStorage，造成 Snapshot／觀察行情寫入失敗。v5.21.1 改為只保存早期轉強需要的精簡數值，啟動時只清除錯誤的 _rows 大型欄位，不刪持股、自選觀察、Replay 或其他既有資料。</div></div>
@@ -833,12 +834,19 @@ function chaseRiskAnalysis(price,ma20,rsi,cl){
   else if(ret5>=4){score+=1;reasons.push('近 5 日上漲 '+fmt(ret5)+'%，漲幅偏快（+1）')}
   else reasons.push('近 5 日漲跌 '+(ret5>=0?'+':'')+fmt(ret5)+'%，未出現明顯急漲（0）');
  }
- let level,title,cls,blockAdd=false;
+ let level,title,cls,blockAdd=false,positionCombo=false;
+ // v5.22.2: a strong trend must not override an objectively stretched entry position.
+ // Combination rule targets cases like 3017: MA20 extension >= 8% AND within 5% of the 20-day high.
+ // Do not lower the global score threshold; normal bullish names such as current 8046 remain eligible.
+ if(Number.isFinite(dist20)&&Number.isFinite(fromHigh)&&dist20>=8&&fromHigh<=5){
+  positionCombo=true;
+  reasons.push('乖離偏大且接近 20 日高點，屬位置型追高風險（直接攔截布局）');
+ }
  if(score>=6){level='very_high';title='🔴 追高風險很高';cls='bad';blockAdd=true}
- else if(score>=4){level='high';title='🟠 追高風險偏高';cls='warn';blockAdd=true}
+ else if(score>=4||positionCombo){level='high';title='🟠 追高風險偏高';cls='warn';blockAdd=true}
  else if(score>=2){level='medium';title='🟡 追高風險普通';cls='warn'}
  else{level='low';title='🟢 追高風險低';cls='good'}
- return{score:score,maxScore:9,level:level,title:title,cls:cls,blockAdd:blockAdd,distMA20:dist20,rsi:rsi,high20:high20,fromHigh20:fromHigh,return5:ret5,reasons:reasons};
+ return{score:score,maxScore:9,level:level,title:title,cls:cls,blockAdd:blockAdd,positionCombo:positionCombo,distMA20:dist20,rsi:rsi,high20:high20,fromHigh20:fromHigh,return5:ret5,reasons:reasons};
 }
 function chaseRiskHtml(r,mode){if(!r)return'';let action=mode==='holding'?(r.blockAdd?'目前不建議加碼':'可再配合其他條件判斷是否加碼'):(r.blockAdd?'目前不建議追價買進':'可再配合趨勢與資金水位判斷');return `<div class="chase-risk"><div class="chase-risk-head"><span class="${r.cls}">${esc(r.title)}</span><span>${r.score} / ${r.maxScore}</span></div><div class="chase-grid"><div class="kpi"><small>距 MA20</small><b>${Number.isFinite(Number(r.distMA20))?(Number(r.distMA20)>=0?'+':'')+fmt(r.distMA20)+'%':'—'}</b></div><div class="kpi"><small>RSI14</small><b>${fmt(r.rsi)}</b></div><div class="kpi"><small>距 20 日高點</small><b>${Number.isFinite(Number(r.fromHigh20))?fmt(r.fromHigh20)+'%':'—'}</b></div><div class="kpi"><small>近 5 日漲跌</small><b>${Number.isFinite(Number(r.return5))?(Number(r.return5)>=0?'+':'')+fmt(r.return5)+'%':'—'}</b></div></div><div class="chase-note">${esc(action)}。追高風險只限制新買進／加碼，不代表既有持股應該賣出。</div><ul class="chase-reasons">${(r.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
 
