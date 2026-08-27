@@ -11,12 +11,14 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.19.1</title>
+<title>股倉雷達 v5.19.2</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
 .wrap{max-width:1120px;margin:0 auto;padding:14px}.hero{padding:14px;margin:2px 0 8px;border:1px solid rgba(195,224,218,.9);border-radius:19px;background:linear-gradient(135deg,rgba(224,244,239,.94),rgba(235,241,250,.9));box-shadow:0 5px 18px rgba(37,97,87,.06)}h1{font-size:28px;margin:0 0 6px;color:#185f55}.sub,.note{color:var(--muted);line-height:1.55}.sub{font-size:14px}.note{font-size:12px}
 .card{background:var(--card);border:1px solid rgba(207,226,222,.95);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 5px 18px rgba(37,72,67,.055);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#addForm,#watchForm,#replayForm{position:relative;z-index:2;pointer-events:auto;-webkit-backdrop-filter:none;backdrop-filter:none}
+#addForm input,#addForm select,#watchForm input,#watchForm select,#replayForm input,#replayForm select{position:relative;z-index:3;pointer-events:auto;touch-action:manipulation;-webkit-user-select:text;user-select:text}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .metric,.kpi{background:var(--soft);border:1px solid var(--line);border-radius:13px;padding:11px}.metric small,.kpi small{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:20px;margin-top:4px}.kpi b{display:block;font-size:15px;margin-top:2px}
 label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px}input,select{width:100%;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.94);padding:11px 12px;font-size:16px}input:focus,select:focus{outline:2px solid rgba(40,125,112,.2);border-color:#68a99d}
@@ -129,7 +131,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.19.1</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.19.2</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -503,7 +505,8 @@ function holdingStatusText(state,error){if(state==='fresh')return{cls:'good',tex
 $('apiBase').value=api();
 
 async function testApi(){$('apiStatus').textContent='測試中…';try{let r=await fetch(api()+'/stock?symbol=2330&_='+Date.now(),{cache:'no-store'}),raw=await r.text(),j=null;try{j=JSON.parse(raw)}catch(_){ }if(!r.ok)throw new Error('HTTP '+r.status+(raw?'：'+raw.slice(0,100):''));if(!j)throw new Error('Worker 回傳非 JSON：'+raw.slice(0,100));if(j.ok!==true||!Array.isArray(j.history)||j.history.length<60)throw new Error(j.error||'回傳格式異常或歷史資料不足');$('apiStatus').textContent='✅ 固定 API 連線成功，可自動抓行情。';}catch(e){$('apiStatus').textContent='❌ 連線失敗：'+e.message}}
-function toggleAdd(){$('addForm').style.display=$('addForm').style.display==='block'?'none':'block'}
+function focusFormInput(id){requestAnimationFrame(function(){let el=$(id);if(!el)return;try{el.focus({preventScroll:true})}catch(e){el.focus()}})}
+function toggleAdd(){let open=$('addForm').style.display!=='block';$('addForm').style.display=open?'block':'none';if(open)focusFormInput('fTicker')}
 function resetForm(){['fTicker','fCost','fQty','fMaxBudget','fPeakPrice','editId'].forEach(x=>$(x).value='');$('fStrategy').value='swing';$('fMaxLoss').value='12';$('fFund').value='yes'}
 function saveHolding(){let ticker=normalizeTicker($('fTicker').value),cost=+$('fCost').value,qty=+$('fQty').value,maxBudgetText=$('fMaxBudget').value.trim(),maxBudget=maxBudgetText===''?0:+maxBudgetText;$('fTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');if(!(cost>0&&qty>0))return alert('請輸入成本與股數');if(!(maxBudget>=0))return alert('個股投入上限請留空或輸入大於 0 的數字');let h=holdings(),id=$('editId').value||Date.now().toString(),old=h.find(function(x){return x.id===id}),peakPriceText=$('fPeakPrice').value.trim(),peakPriceOverride=peakPriceText===''?0:+peakPriceText;if(!(peakPriceOverride>=0))return alert('最高持有價修正請留空或輸入大於 0 的數字');item={id:id,ticker:ticker,cost:cost,qty:qty,maxBudget:maxBudget,strategy:$('fStrategy').value,maxLoss:+$('fMaxLoss').value||12,fund:$('fFund').value,peakPriceOverride:peakPriceOverride},i=h.findIndex(function(x){return x.id===id});if(i>=0)h[i]=item;else h.push(item);if(old&&old.ticker!==ticker)removeSnapshot(id);store(h);resetForm();$('addForm').style.display='none';render();void refreshOne(id)}
 function editHolding(id){closeAnalysis();let x=holdings().find(v=>v.id===id);if(!x)return;$('fTicker').value=x.ticker;$('fCost').value=x.cost;$('fQty').value=x.qty;$('fMaxBudget').value=+x.maxBudget>0?x.maxBudget:'';$('fStrategy').value=x.strategy;$('fMaxLoss').value=x.maxLoss;$('fPeakPrice').value=+x.peakPriceOverride>0?x.peakPriceOverride:'';$('fFund').value=x.fund;$('editId').value=x.id;$('addForm').style.display='block';requestAnimationFrame(function(){$('addForm').scrollIntoView({behavior:'smooth',block:'start'})})}
@@ -1183,7 +1186,7 @@ function toggleDetails(id){let d=$('d-'+id);if(d)d.style.display=d.style.display
 function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
 async function refreshAll(){await refreshMarketContext(true);let h=holdings();if(!h.length){$('globalStatus').textContent='目前沒有持股';return}$('globalStatus').textContent='正在批次取得全部持股 MIS 即時行情…';try{await fetchLiveBatch(h.map(function(x){return x.ticker}))}catch(e){LIVE_BATCH_CACHE={quotes:{},errors:{_batch:String(e&&e.message||e)},at:Date.now()}}let results=[];for(let i=0;i<h.length;i++){$('globalStatus').textContent='正在更新 '+(i+1)+' / '+h.length+'：'+h[i].ticker+'…';try{results.push(await refreshOne(h[i].id))}catch(e){results.push({ok:false,id:h[i].id,error:e.message})}if(i<h.length-1)await sleep(100)}let ok=results.filter(function(r){return r&&r.ok}).length,fail=results.filter(function(r){return r&&!r.ok&&!r.stale}).length;$('globalStatus').textContent=fail?('更新完成：'+ok+' 檔成功，'+fail+' 檔失敗'):('持股更新完成，共 '+ok+' 檔');summary()}
 function summary(){let els=[...document.querySelectorAll('#portfolio .stock')],v=0,c=0,p=0,n=0;for(const el of els){let a=+el.dataset.value,b=+el.dataset.cost,d=+el.dataset.pnl;if(Number.isFinite(a)&&a>0){v+=a;c+=b;p+=d;n++}}$('sumCost').textContent=n?money(c):money(investedCost());$('sumValue').textContent=n?money(v):'—';$('sumPnl').textContent=n?((p>=0?'+':'')+money(p)):'—';$('sumPnl').className=p>=0?'good':'bad';renderCapital();renderDashboard()}
-function toggleWatch(){$('watchForm').style.display=$('watchForm').style.display==='block'?'none':'block'}
+function toggleWatch(){let open=$('watchForm').style.display!=='block';$('watchForm').style.display=open?'block':'none';if(open)focusFormInput('wTicker')}
 function resetWatchForm(){['wTicker','wTarget','wBudget','wReason','watchEditId'].forEach(function(id){$(id).value=''});$('suggestPriceBox').style.display='none';$('suggestPriceBox').innerHTML=''}
 function saveWatch(){let ticker=normalizeTicker($('wTicker').value),targetText=$('wTarget').value.trim(),target=targetText===''?null:+targetText,budgetText=$('wBudget').value.trim(),budget=budgetText===''?0:+budgetText,reason=$('wReason').value.trim();$('wTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');if(target!==null&&!(target>0))return alert('目標價請留空或輸入大於 0 的數字');if(!(budget>=0))return alert('請輸入正確預算');let w=watchlist(),id=$('watchEditId').value||Date.now().toString(),old=w.find(function(x){return x.id===id}),item={id:id,ticker:ticker,target:target,budget:budget,reason:reason},i=w.findIndex(function(x){return x.id===id});if(i>=0)w[i]=item;else w.push(item);if(old&&old.ticker!==ticker)removeWatchCache(id);storeWatch(w);resetWatchForm();$('watchForm').style.display='none';renderWatch();renderDashboard();void refreshWatchOne(id)}
 function editWatch(id){closeAnalysis();let x=watchlist().find(function(v){return v.id===id});if(!x)return;$('wTicker').value=x.ticker;$('wTarget').value=x.target;$('wBudget').value=x.budget;$('wReason').value=x.reason||'';$('watchEditId').value=x.id;$('watchForm').style.display='block';$('watchForm').scrollIntoView({behavior:'smooth',block:'start'})}
@@ -1283,7 +1286,7 @@ function replays(){try{return JSON.parse(localStorage.getItem(REPLAY)||'[]')}cat
 function storeReplays(v){localStorage.setItem(REPLAY,JSON.stringify(v))}
 function snapshotForTicker(ticker){let h=holdings(),s=snapshots();for(let i=0;i<h.length;i++)if(h[i].ticker===ticker&&s[h[i].id])return s[h[i].id];return null}
 function fillReplaySnapshot(){let ticker=normalizeTicker($('rTicker').value);$('rTicker').value=ticker;let a=snapshotForTicker(ticker);if(!a)return;$('rPrice').value=fmt(a.price).replace(/,/g,'');$('rDecision').value=a.finalAdvice&&a.finalAdvice.text?a.finalAdvice.text:(a.decision||'')}
-function toggleReplayForm(){$('replayForm').style.display=$('replayForm').style.display==='block'?'none':'block'}
+function toggleReplayForm(){let open=$('replayForm').style.display!=='block';$('replayForm').style.display=open?'block':'none';if(open)focusFormInput('rTicker')}
 function toggleReplayList(){$('replayPanel').style.display=$('replayPanel').style.display==='block'?'none':'block';if($('replayPanel').style.display==='block')renderReplay()}
 function replayNumber(id){let v=$(id).value.trim();return v===''?null:+v}
 function selectedReplayAction(){let nodes=document.getElementsByName('rAction');for(let i=0;i<nodes.length;i++)if(nodes[i].checked)return nodes[i].value;return'持有'}
