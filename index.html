@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.19.6</title>
+<title>股倉雷達 v5.19.7</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -136,7 +136,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.19.6</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.19.7</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -804,6 +804,12 @@ function intradayWatchSignalHtml(s){
  return `<div class="status ${s.cls||''}" style="margin-top:11px"><strong>${esc(s.title)}</strong><br>現價較 ${esc(s.formalDate||'最後完整日K')} 收盤 ${(s.change>=0?'+':'')+fmt(s.change)}%｜正式分析基準 ${fmt(s.formalPrice)}<br><span class="note">${esc(s.note)}</span></div>`;
 }
 function relativeStrengthHtml(r,mode){if(!r)return'';let note=r.blockAdd?(mode==='holding'?'相對弱勢，暫不建議新增加碼資金。':'相對弱勢，建議先等個股重新轉強再布局。'):(r.level==='strong'||r.level==='positive'?'個股表現優於市場，可作為買進／加碼的正向確認，但仍需通過追高與資金規則。':'相對表現沒有明顯優勢，維持其他條件綜合判斷。');return `<div class="relative-strength"><div class="relative-strength-head"><span class="${r.cls}">${esc(r.title)}</span><span>vs 0050</span></div><div class="relative-strength-grid"><div class="kpi"><small>個股 20 日</small><b>${Number.isFinite(Number(r.return20))?(Number(r.return20)>=0?'+':'')+fmt(r.return20)+'%':'—'}</b></div><div class="kpi"><small>0050 20 日</small><b>${Number.isFinite(Number(r.bench20))?(Number(r.bench20)>=0?'+':'')+fmt(r.bench20)+'%':'—'}</b></div><div class="kpi"><small>20 日領先</small><b class="${Number(r.relative20)>=2?'good':Number(r.relative20)<=-2?'bad':'warn'}">${Number.isFinite(Number(r.relative20))?(Number(r.relative20)>=0?'+':'')+fmt(r.relative20)+'pp':'—'}</b></div><div class="kpi"><small>5 日領先</small><b>${Number.isFinite(Number(r.relative5))?(Number(r.relative5)>=0?'+':'')+fmt(r.relative5)+'pp':'—'}</b></div></div><div class="relative-strength-note">${esc(note)} 相對強弱不等於 RSI，也不會單獨觸發賣出。</div><ul class="relative-strength-reasons">${(r.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
+const relativeStrengthHtmlBeforeSyncDisplayFix=relativeStrengthHtml;
+relativeStrengthHtml=function(r,mode){
+ if(!r||r.level!=='missing')return relativeStrengthHtmlBeforeSyncDisplayFix(r,mode);
+ let valid=function(v){return v!==null&&v!==''&&Number.isFinite(Number(v))},metric=function(v,suffix){return valid(v)?((Number(v)>=0?'+':'')+fmt(Number(v))+suffix):'—'};
+ return `<div class="relative-strength"><div class="relative-strength-head"><span class="${r.cls||'warn'}">${esc(r.title||'⚪ 相對強弱待更新')}</span><span>vs 0050</span></div><div class="relative-strength-grid"><div class="kpi"><small>個股 20 日</small><b>${metric(r.return20,'%')}</b></div><div class="kpi"><small>0050 20 日</small><b>—</b></div><div class="kpi"><small>20 日領先</small><b>—</b></div><div class="kpi"><small>5 日領先</small><b>—</b></div></div><div class="relative-strength-note">兩邊正式日K截止日一致後才恢復比較；等待期間不把相對強弱計入正式建議。</div><ul class="relative-strength-reasons">${(r.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`;
+};
 
 function supportResistanceAnalysis(rows,price,ma20,ma60,atr){
  let rs=Array.isArray(rows)?rows.slice(-80):[],reasons=[];
@@ -1277,10 +1283,12 @@ function watchSuggestion(m){
 
 function buildWatchPositionAdvice(a,capitalState){
  let mr=marketRisk(),cr=a&&a.chaseRisk,rs=a&&a.relativeStrength,score=Number(a&&a.score),
-     shortLead=rs&&Number.isFinite(Number(rs.relative5))?Number(rs.relative5):null,
-     longLead=rs&&Number.isFinite(Number(rs.relative20))?Number(rs.relative20):null,
+     shortLead=rs&&rs.relative5!=null&&Number.isFinite(Number(rs.relative5))?Number(rs.relative5):null,
+     longLead=rs&&rs.relative20!=null&&Number.isFinite(Number(rs.relative20))?Number(rs.relative20):null,
      shortImproving=shortLead!=null&&shortLead>0,
-     longWeak=longLead!=null&&longLead<=-3;
+     longWeak=longLead!=null&&longLead<=-3,
+     formalPrice=Number(a&&a.formalPrice),above20=Number.isFinite(formalPrice)&&formalPrice>=Number(a&&a.ma20),above60=Number.isFinite(formalPrice)&&formalPrice>=Number(a&&a.ma60),
+     relativeReady=!!(rs&&rs.level!=='missing'&&Number.isFinite(Number(rs.relative20)));
 
  if(mr&&mr.level==='high'){
   return{text:'🔴 大盤目前高風險，暫停新增部位。'+(a&&a.cls!=='good'?' 個股本身也尚未轉強，先等待趨勢評分回升、重新站回 MA20，再評估進場。':' 個股雖偏強，也先等大盤風險降級後再評估。'),cls:'bad',reason:'market-risk'};
@@ -1291,9 +1299,10 @@ function buildWatchPositionAdvice(a,capitalState){
   return{text:txt,cls:'bad',reason:'bearish-trend'};
  }
  if(Number.isFinite(score)&&score<2){
-  let txt='🟠 趨勢偏空，目前不急著進場。等待站回 MA20／MA60、趨勢評分回升到盤整以上，且相對 0050 不再持續落後後再評估。';
+  let txt=above20&&!above60?'🟠 正式日K已站回 MA20，但仍未站回 MA60，且均線維持空頭排列；目前不急著進場，等待站回 MA60、趨勢評分回升到盤整以上後再評估。':above20&&above60?'🟠 正式日K已站上 MA20／MA60，但均線結構與趨勢評分尚未確認轉強；目前不急著進場，等待評分回升到盤整以上後再評估。':'🟠 趨勢偏空，目前不急著進場。等待站回 MA20／MA60、趨勢評分回升到盤整以上後再評估。';
   if(shortImproving&&longWeak)txt='🟠 中期仍偏空，但近 5 日出現相對轉強跡象。暫不搶進，觀察是否站回 MA20、趨勢評分由偏空回升，且短線強勢能延續。';
   else if(shortImproving)txt='🟠 趨勢仍偏空，但短線相對市場開始改善。先觀察站回 MA20 與趨勢評分回升，不因幾天反彈就提前進場。';
+  if(!relativeReady)txt+=' 相對0050仍待日K同步，本次不納入判斷。';
   return{text:txt,cls:'warn',reason:'bearish-watch'};
  }
  if(Number.isFinite(score)&&score<5){
