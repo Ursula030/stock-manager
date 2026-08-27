@@ -35,7 +35,6 @@ button{border:0;border-radius:11px;padding:11px 14px;font-size:15px;font-weight:
 .status{font-size:13px;color:var(--muted);margin-top:8px}.empty{text-align:center;color:var(--muted);padding:20px 5px}#addForm,#watchForm,#replayForm{display:none}.reason{white-space:pre-wrap;word-break:break-word}.watch-status{font-weight:800;font-size:16px;margin-top:9px}.replay-actions{display:flex;gap:12px;flex-wrap:wrap}.radio-card{display:flex;align-items:center;gap:6px;background:var(--soft);border:1px solid var(--line);border-radius:11px;padding:10px 13px;font-size:14px;color:var(--text)}.radio-card input{width:auto;margin:0}.replay-result{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.replay-block{margin-top:12px}.replay-block strong{display:block;margin-bottom:5px}.replay-list{list-style:none;margin:0;padding:0;line-height:1.65;font-size:14px}.replay-conclusion{font-size:17px;font-weight:800;padding:10px 12px;background:var(--soft);border-radius:12px;margin-top:12px}
 .suggest-box{display:none;margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:13px;background:var(--soft)}.suggest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.suggest-item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px}.suggest-item b{display:block;font-size:18px;margin:4px 0 9px}.suggest-item button{width:100%;padding:8px}.suggest-reasons{margin:7px 0 0;padding-left:20px;line-height:1.55;font-size:13px}.ticker-hint{font-size:11px;color:var(--muted);margin-top:4px}
 .level-box{margin-top:11px;padding:12px;background:var(--soft);border:1px solid var(--line);border-radius:13px}.level-bar{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:20px;letter-spacing:1px;margin:6px 0}.level-lines{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;font-size:13px}.capital-alert{margin-top:9px;font-weight:750}.final-advice{font-size:17px;font-weight:800;line-height:1.55;padding:12px;margin-top:11px;border-radius:12px;background:var(--soft);border:1px solid var(--line)}
-.candidate-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.candidate-card{border:1px solid var(--line);border-radius:14px;padding:13px;background:linear-gradient(145deg,#fff,var(--soft))}.candidate-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.candidate-title{font-weight:850;font-size:17px}.candidate-flow{font-weight:800;font-size:14px}.candidate-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}.candidate-metrics .kpi{padding:8px}.candidate-verdict{margin-top:10px;padding:9px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);font-weight:800;line-height:1.45}.candidate-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.candidate-actions button{flex:1}.candidate-source{font-size:11px;color:var(--muted);margin-top:8px}.candidate-setup{margin-top:10px;padding:10px;border:1px dashed var(--line);border-radius:12px;background:var(--soft)}@media(max-width:720px){.candidate-grid{grid-template-columns:1fr}.candidate-metrics{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:820px){.stockgrid{grid-template-columns:repeat(3,1fr)}.grid4{grid-template-columns:repeat(2,1fr)}.advice-grid{grid-template-columns:1fr}}@media(max-width:620px){.wrap{padding:10px}.grid3{grid-template-columns:1fr}.stockgrid{grid-template-columns:repeat(2,1fr)}.replay-result,.suggest-grid,.level-lines{grid-template-columns:1fr}h1{font-size:25px}}
 
 body{padding-bottom:calc(82px + env(safe-area-inset-bottom))}.wrap{padding-bottom:18px}
@@ -133,11 +132,21 @@ body.analysis-open{overflow:hidden}
 .sr-zone{margin-top:11px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--soft)}
 .sr-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:850}.sr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.sr-grid .kpi{padding:9px}.sr-note{font-size:13px;line-height:1.55;margin-top:8px}.sr-reasons{margin:7px 0 0;padding-left:18px;font-size:13px;line-height:1.55}@media(max-width:620px){.sr-grid{grid-template-columns:repeat(2,1fr)}}
 
+/* v5.21 市場候選池：與原持股／自選觀察完全隔離 */
+.candidate-card{border:1px solid var(--line);border-radius:15px;padding:14px;margin:10px 0;background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(239,248,246,.94))}
+.candidate-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.candidate-title{font-size:18px;font-weight:850}.candidate-flow{font-size:15px;font-weight:800;margin-top:4px;color:var(--good)}
+.candidate-pr{font-size:12px;padding:5px 8px;border-radius:999px;background:#f0f2f5;white-space:nowrap}
+.candidate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.candidate-verdict{margin-top:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font-weight:850;line-height:1.5;background:var(--soft)}
+.candidate-empty{padding:16px 8px;text-align:center;color:var(--muted);line-height:1.65}
+@media(max-width:620px){.candidate-grid{grid-template-columns:repeat(2,1fr)}}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.19.7</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.21</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -164,7 +173,19 @@ body.analysis-open{overflow:hidden}
   <h2 class="page-title">⭐ 觀察</h2>
   <div class="card"><div class="space"><strong>觀察名單</strong><div class="row"><button class="secondary" onclick="refreshWatchAll()">更新行情</button><button class="primary" onclick="toggleWatch()">＋ 新增觀察</button></div></div><div class="note" style="margin-top:8px">參考價 ≠ 買進訊號；先判斷市場條件，再確認現金水位是否允許進場。</div><div id="watchStatus" class="status"></div></div>
   <div class="card" id="watchForm"><div class="space"><strong>新增／修改觀察股票</strong><button class="ghost" onclick="toggleWatch()">關閉</button></div><div class="grid4" style="margin-top:12px"><div><label>股票代號</label><input id="wTicker" class="ticker-input" type="text" autocapitalize="characters" autocomplete="off" maxlength="7" placeholder="例如 2330、00631L"><div class="ticker-hint">支援 4–7 碼英文與數字</div></div><div><label>目標價（可留空）</label><input id="wTarget" type="number" min="0" step="0.01" placeholder="可套用建議價或自行輸入"></div><div><label>預算</label><input id="wBudget" type="number" min="0" step="1" placeholder="例如 30000"></div><div><label>理由</label><input id="wReason" maxlength="200" placeholder="例如：等拉回月線"></div></div><div class="row" style="margin-top:12px"><button class="secondary" id="suggestPriceBtn" onclick="getSuggestedPrices()">取得建議價</button><button class="primary" onclick="saveWatch()">儲存觀察</button><button class="ghost" onclick="resetWatchForm()">清空</button></div><div id="suggestPriceBox" class="suggest-box" aria-live="polite"></div><input type="hidden" id="watchEditId"></div>
-  <div class="card" id="candidatePoolCard"><div class="space"><div><strong>📡 市場候選池</strong><div class="note" style="margin-top:4px">異常資金雷達先找股票；股倉雷達再用完整日K、趨勢、早期轉強、追高風險、支撐與相對0050做第二層篩選。畫面最多保留 5 檔接近操作條件的候選，不會自動加入觀察清單。</div></div><div class="row"><button class="secondary" onclick="refreshCandidatePool()">掃描候選</button></div></div><div id="candidatePoolStatus" class="status">尚未掃描</div><div id="candidatePool"></div></div>
+  
+  <div class="card" id="candidatePoolCard">
+    <div class="space">
+      <div>
+        <strong>🛰️ 市場候選池</strong>
+        <div class="note" style="margin-top:6px">異常資金雷達先找股票，再用完整日 K 篩選 A「結構已強」或 B「早期轉強」。背景最多檢查 12 檔異常流入，畫面最多顯示 5 檔。候選不會自動加入自選觀察。</div>
+      </div>
+      <button class="secondary" onclick="refreshCandidatePool(true)">重新掃描</button>
+    </div>
+    <div id="candidatePoolStatus" class="status">尚未掃描</div>
+    <div id="candidatePool"></div>
+  </div>
+
   <div class="card"><div class="space"><strong>觀察清單</strong><div class="note">含 MA5／MA20／MA60 半自動目標價</div></div><div id="watchlist"></div></div>
 </section>
 
@@ -178,12 +199,19 @@ body.analysis-open{overflow:hidden}
 <section class="page" id="page-settings">
   <h2 class="page-title">⚙️ 設定</h2>
 <div class="card"><strong>Cloudflare Worker API</strong><div class="note" style="margin:8px 0">已內嵌固定行情端點，分享工具後可直接使用，不需另外設定。</div><div class="row"><input id="apiBase" readonly aria-label="固定 Cloudflare Worker API" style="flex:1;min-width:0;background:var(--soft);color:var(--muted)"><button class="ghost" onclick="testApi()">測試連線</button></div><div id="apiStatus" class="status">✅ 固定 API 已啟用</div><div id="autoRefreshStatus" class="status">盤中自動更新準備中…</div><div class="note" style="margin-top:6px">台北時間週一至週五 09:00～13:30，每分鐘自動更新持股與觀察；休市日不會產生新行情。頁面需保持開啟。</div></div>
-    <div class="card"><strong>📡 市場掃描 Worker</strong><div class="note" style="margin:8px 0">這是「異常資金雷達 v1.9」的獨立 Worker，與上方固定行情 Worker 分開。設定一次後會保存在這台裝置。</div><div class="row"><input id="marketScanApiBase" type="url" placeholder="例如 https://stock-radar-market-scan.xxxxx.workers.dev" style="flex:1;min-width:0"><button class="secondary" onclick="saveMarketScanApi()">儲存</button><button class="ghost" onclick="testMarketScanApi()">測試</button></div><div id="marketScanApiStatus" class="status"></div></div>
+  
+  <div class="card"><strong>🛰️ 異常資金雷達 Worker</strong>
+    <div class="note" style="margin:8px 0">v5.21 固定使用既有市場掃描 Worker；它只負責候選股發現，不會改動持股或自選觀察資料。</div>
+    <div class="row"><input id="marketScanBase" readonly style="flex:1;min-width:0;background:var(--soft);color:var(--muted)"><button class="ghost" onclick="testMarketScanApi()">測試</button></div>
+    <div id="marketScanStatus" class="status">等待測試</div>
+  </div>
+
 <div class="card"><strong>💰 目前資金設定</strong><div class="grid3" style="margin-top:12px"><div class="metric"><small>總資金</small><strong id="capitalTotal">未設定</strong></div><div class="metric"><small>已投入</small><strong id="capitalInvested">—</strong></div><div class="metric"><small>剩餘現金</small><strong id="capitalCash">—</strong></div></div><div id="capitalLevel"></div></div>
   <div class="card"><strong>📲 PWA App</strong><div class="install-box"><div><b>iPhone 安裝：</b>Safari → 分享 →「加入主畫面」。安裝後從桌面開啟，會以 App 模式顯示，不會有一般 Safari 網址列。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="requestRadarNotification()">開啟 Radar 通知權限</button><button class="ghost" onclick="testRadarNotification()">測試提醒</button></div><div id="pwaStatus" class="status"></div></div><div class="note" style="margin-top:8px">v5.0 的 Radar 通知會在你開啟／更新 App 時觸發；真正關閉 App 後仍可背景推播，需要另外串接 Web Push 伺服器。</div></div>
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
-<div class="card"><strong>🔵 v5.21 早期轉強／市場候選池</strong><div class="note" style="margin-top:8px">觀察清單新增 B「早期轉強」通道：即使趨勢分數尚未達 5/9，只要正式收盤站回短均線、RSI、量能、近 2／5 日動能與相對0050出現多項同步改善，就提高關注，不再一律等到 MA60 完整確認。市場候選池則從異常流入股中篩選 A「結構已強」或 B「早期轉強」，最多顯示 5 檔；追高過熱、大盤高風險或技術未配合者不佔版面。</div></div><div class="card"><strong>🔥 v5.5 追高風險／進場位置</strong><div class="note" style="margin-top:8px">綜合股價距 MA20、RSI、距近 20 日高點與近 5 日漲幅，判斷目前位置的追價風險。觀察清單用來決定「現在適不適合買」；持股用來決定「現在適不適合加碼」。追高風險不會直接觸發既有持股賣出。</div></div>
+<div class="card"><strong>🔵 v5.21 市場候選池／早期轉強</strong><div class="note" style="margin-top:8px">從 v5.19.7 正常版重新加入。自選觀察新增 B「早期轉強」通道：即使趨勢尚未達 5/9，只要正式收盤站回短均線、RSI、量能、近 2／5 日動能與相對 0050 有多項同步改善，就提高關注，不再一律等 MA60 全面確認。市場候選池只讀取異常資金雷達並做技術二次篩選，候選掃描失敗不會修改 HOLD／WATCH，也不會阻斷持股與自選觀察更新。</div></div>
+<div class="card"><strong>🔥 v5.5 追高風險／進場位置</strong><div class="note" style="margin-top:8px">綜合股價距 MA20、RSI、距近 20 日高點與近 5 日漲幅，判斷目前位置的追價風險。觀察清單用來決定「現在適不適合買」；持股用來決定「現在適不適合加碼」。追高風險不會直接觸發既有持股賣出。</div></div>
 <div class="card"><strong>🏁 v5.6 相對強弱／市場領先</strong><div class="note" style="margin-top:8px">以 0050 作為市場基準，比較個股近 5 日與近 20 日報酬。它回答的是「這檔股票有沒有跑贏市場」，不是 RSI。相對弱勢會降低買進／加碼意願；相對強勢只作為正向確認，不會蓋過追高、現金水位或停利規則，也不會單獨觸發賣出。</div></div>
 <div class="card"><strong>🧱 v5.7 正常回檔／支撐破壞</strong><div class="note" style="margin-top:8px">持股專用。綜合 MA20／MA60、近 20 日高點回撤、量能與趨勢評分，區分「正常整理」「支撐轉弱」「趨勢／支撐破壞」。單日跌破 MA5 不會直接判定走壞；只有多個結構訊號同時成立才會升級減碼或重新評估。</div></div>
 <div class="card"><strong>🌐 v5.8 大盤風險雷達</strong><div class="note" style="margin-top:8px">以 0050＋2330 作為目前可穩定取得的台股市場代理，檢查 MA5／MA20／MA60、均線方向、近 5 日動能、20 日高點回撤與量價。它是風險預警，不預測某一天一定上漲或下跌。黃燈會降低追價／加碼意願；紅燈會暫停新增部位，但不會單獨強迫賣出既有持股。</div></div>
@@ -250,7 +278,7 @@ body.analysis-open{overflow:hidden}
 
 <nav class="tabbar" aria-label="主要分頁"><button data-page="home" onclick="showPage('home')"><span class="tab-icon">🏠</span>總覽</button><button data-page="portfolio" onclick="showPage('portfolio')"><span class="tab-icon">📈</span>持股</button><button data-page="watch" onclick="showPage('watch')"><span class="tab-icon">⭐</span>觀察</button><button data-page="replay" onclick="showPage('replay')"><span class="tab-icon">🔁</span>回放</button><button data-page="settings" onclick="showPage('settings')"><span class="tab-icon">⚙️</span>設定</button></nav>
 <script>
-const $=id=>document.getElementById(id), HOLD='stockbot_v4_holdings', SNAP='stockbot_v4_snapshot', API='stockbot_v4_api', DEFAULT_API='https://proud-snowflake-8571.amor9420.workers.dev', WATCH='stockbot_v4_2_watchlist', WATCH_CACHE='stockbot_v482_watch_cache', REPLAY='stockbot_v44_replay', CAPITAL='stockbot_v45_capital', LAST_PAGE='stockbot_v46_last_page', GUARD_LOG='stockbot_v50_guard_log', MARKET_CTX='stockbot_v53_market_ctx', RS_BENCH='stockbot_v56_rs_benchmark', MARKET_SCAN_API='stockbot_v520_market_scan_api';
+const $=id=>document.getElementById(id), HOLD='stockbot_v4_holdings', SNAP='stockbot_v4_snapshot', API='stockbot_v4_api', DEFAULT_API='https://proud-snowflake-8571.amor9420.workers.dev', WATCH='stockbot_v4_2_watchlist', WATCH_CACHE='stockbot_v482_watch_cache', REPLAY='stockbot_v44_replay', CAPITAL='stockbot_v45_capital', LAST_PAGE='stockbot_v46_last_page', GUARD_LOG='stockbot_v50_guard_log', MARKET_CTX='stockbot_v53_market_ctx', RS_BENCH='stockbot_v56_rs_benchmark', MARKET_SCAN_API='https://stock-market-scan.amor9420.workers.dev', CANDIDATE_CACHE='stockbot_v521_candidate_cache';
 
 
 function guardLogs(){try{return JSON.parse(localStorage.getItem(GUARD_LOG)||'[]')}catch(e){return[]}}
@@ -512,7 +540,7 @@ function saveSnapshot(id,data){let s=snapshots();s[id]=data;localStorage.setItem
 function getSnapshot(id){return snapshots()[id]}
 function removeSnapshot(id){let s=snapshots();delete s[id];localStorage.setItem(SNAP,JSON.stringify(s))}
 function holdingStatusText(state,error){if(state==='fresh')return{cls:'good',text:'🟢 行情已更新'};if(state==='loading')return{cls:'warn',text:'🟡 顯示上次行情，背景更新中…'};if(state==='error')return{cls:'bad',text:'🔴 本次更新失敗，保留上次行情'+(error?'：'+error:'')};return{cls:'',text:'等待第一次更新行情…'}}
-$('apiBase').value=api();
+$('apiBase').value=api();if($('marketScanBase'))$('marketScanBase').value=marketScanApi();
 
 async function testApi(){$('apiStatus').textContent='測試中…';try{let r=await fetch(api()+'/stock?symbol=2330&_='+Date.now(),{cache:'no-store'}),raw=await r.text(),j=null;try{j=JSON.parse(raw)}catch(_){ }if(!r.ok)throw new Error('HTTP '+r.status+(raw?'：'+raw.slice(0,100):''));if(!j)throw new Error('Worker 回傳非 JSON：'+raw.slice(0,100));if(j.ok!==true||!Array.isArray(j.history)||j.history.length<60)throw new Error(j.error||'回傳格式異常或歷史資料不足');$('apiStatus').textContent='✅ 固定 API 連線成功，可自動抓行情。';}catch(e){$('apiStatus').textContent='❌ 連線失敗：'+e.message}}
 function focusFormInput(id){requestAnimationFrame(function(){let el=$(id);if(!el)return;try{el.focus({preventScroll:true})}catch(e){el.focus()}})}
@@ -1180,6 +1208,13 @@ function buildPositionAdvice(stockAnalysis,holding,capitalState){
   return{text:text,cls:'warn',allowed:false,reason:'bearish-holding'};
  }
 
+ let et=earlyTurnSignal(a);
+ if(et.active){
+  if(cr&&cr.blockAdd)return{text:'🔵 B 早期轉強已出現，但目前追高風險偏高；不再只因 MA60 尚未收復而忽略，改為等待拉回或突破後確認。',cls:'warn',reason:'early-turn-chase',earlyTurn:et};
+  if(rs&&rs.blockAdd)return{text:'🔵 B 早期轉強｜價格、量能與短線動能已有改善，但相對 0050 仍偏弱；提高關注，等待相對強弱同步後再布局。',cls:'warn',reason:'early-turn-relative',earlyTurn:et};
+  if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)return{text:'🔵 B 早期轉強訊號成立，但目前現金水位不足；先列入優先追蹤，不新增部位。',cls:'warn',reason:'early-turn-cash',earlyTurn:et};
+  return{text:(et.strong?'🔵 B 早期轉強訊號明顯｜價格、量能與短線動能同步改善；技術結構尚未完全翻多，不必等到 MA60 全面確認才開始注意，可觀察分批布局條件。':'🔵 B 早期轉強｜結構尚未完全翻多，但改善速度已值得提高關注；等待延續或更佳進場位置。'),cls:'good',reason:'early-turn',earlyTurn:et};
+ }
  if(Number.isFinite(score)&&score<-1){
   let text='🔴 暫停加碼，優先管理持股風險。技術評分 '+score+'/9，空頭訊號較明顯；先檢查 MA20／MA60、支撐結構與原本最大可接受虧損。';
   if(strategy==='long'&&holding.fund==='yes')
@@ -1230,27 +1265,6 @@ function toggleDetails(id){let d=$('d-'+id);if(d)d.style.display=d.style.display
 function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms)})}
 async function refreshAll(){await refreshMarketContext(true);let h=holdings();if(!h.length){$('globalStatus').textContent='目前沒有持股';return}$('globalStatus').textContent='正在批次取得全部持股 MIS 即時行情…';try{await fetchLiveBatch(h.map(function(x){return x.ticker}))}catch(e){LIVE_BATCH_CACHE={quotes:{},errors:{_batch:String(e&&e.message||e)},at:Date.now()}}let results=[];for(let i=0;i<h.length;i++){$('globalStatus').textContent='正在更新 '+(i+1)+' / '+h.length+'：'+h[i].ticker+'…';try{results.push(await refreshOne(h[i].id))}catch(e){results.push({ok:false,id:h[i].id,error:e.message})}if(i<h.length-1)await sleep(100)}let ok=results.filter(function(r){return r&&r.ok}).length,fail=results.filter(function(r){return r&&!r.ok&&!r.stale}).length;$('globalStatus').textContent=fail?('更新完成：'+ok+' 檔成功，'+fail+' 檔失敗'):('持股更新完成，共 '+ok+' 檔');summary()}
 function summary(){let els=[...document.querySelectorAll('#portfolio .stock')],v=0,c=0,p=0,n=0;for(const el of els){let a=+el.dataset.value,b=+el.dataset.cost,d=+el.dataset.pnl;if(Number.isFinite(a)&&a>0){v+=a;c+=b;p+=d;n++}}$('sumCost').textContent=n?money(c):money(investedCost());$('sumValue').textContent=n?money(v):'—';$('sumPnl').textContent=n?((p>=0?'+':'')+money(p)):'—';$('sumPnl').className=p>=0?'good':'bad';renderCapital();renderDashboard()}
-function marketScanApi(){return String(localStorage.getItem(MARKET_SCAN_API)||'').trim().replace(/\/+$/,'')}
-function saveMarketScanApi(){let el=$('marketScanApiBase'),v=String(el&&el.value||'').trim().replace(/\/+$/,'');if(v&&!/^https:\/\//i.test(v))return alert('請輸入完整 https:// Worker 網址');if(v)localStorage.setItem(MARKET_SCAN_API,v);else localStorage.removeItem(MARKET_SCAN_API);if($('marketScanApiStatus'))$('marketScanApiStatus').textContent=v?'✅ 已儲存市場掃描 Worker':'尚未設定市場掃描 Worker'}
-async function testMarketScanApi(){let base=marketScanApi(),st=$('marketScanApiStatus');if(!base){if(st)st.textContent='⚠️ 請先輸入並儲存市場掃描 Worker 網址';return}if(st)st.textContent='測試連線中…';try{let r=await fetch(base+'/health?_='+Date.now(),{cache:'no-store'}),j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));if(st)st.textContent='✅ 連線正常｜市場掃描 v'+(j.version||'—')}catch(e){if(st)st.textContent='❌ 連線失敗：'+e.message}}
-function candidateMoney(v){v=Number(v)||0;let a=Math.abs(v),sign=v>=0?'+':'-';if(a>=100000000)return sign+(a/100000000).toFixed(2)+' 億';if(a>=10000)return sign+(a/10000).toFixed(0)+' 萬';return sign+Math.round(a).toLocaleString('zh-TW')}
-function candidateVerdict(signal,sr){
- let cr=signal.chaseRisk,rs=signal.relativeStrength,score=Number(signal.score),mr=marketRisk(),et=earlyTurnSignal(signal);
- if(mr&&mr.level==='high')return{rank:9,show:false,text:'⚪ 大盤高風險，候選暫停',cls:'bad'};
- if(score>=5&&!(cr&&cr.blockAdd)&&!(rs&&rs.blockAdd)&&!(sr&&sr.nearResistance))
-   return{rank:0,show:true,channel:'A',text:sr&&sr.nearSupport?'🟢 A 結構已強｜接近支撐，可留意分批布局':'🟢 A 結構已強｜符合市場候選條件',cls:'good'};
- if(et.active){
-   if(cr&&cr.level==='very_high')return{rank:4,show:false,channel:'B',text:'🔵 B 早期轉強，但追高風險過高',cls:'warn'};
-   if(sr&&sr.nearResistance)return{rank:2,show:true,channel:'B',text:'🔵 B 早期轉強｜接近壓力，等待突破或拉回',cls:'warn'};
-   if(rs&&rs.blockAdd)return{rank:3,show:true,channel:'B',text:'🔵 B 早期轉強｜相對0050待同步',cls:'warn'};
-   return{rank:1,show:true,channel:'B',text:'🔵 B 早期轉強｜結構未完成，但價格／量能／動能已改善',cls:'good'};
- }
- return{rank:9,show:false,text:'⚪ 尚未接近操作條件',cls:''};
-}
-function candidateToWatch(symbol,name,pr){if(watchlist().some(function(x){return x.ticker===symbol}))return alert(symbol+' 已在觀察清單');let w=watchlist(),id=Date.now().toString()+Math.random().toString(36).slice(2,5);w.push({id:id,ticker:symbol,target:null,budget:0,reason:'市場候選池：異常資金 PR '+Number(pr||0).toFixed(1)+(name?'｜'+name:'')});storeWatch(w);renderWatch();renderDashboard();void refreshWatchOne(id);alert(symbol+' 已加入觀察清單')}
-function renderCandidatePool(rows,date){let box=$('candidatePool');if(!box)return;if(!rows.length){box.innerHTML='<div class="empty">今日暫無符合「資金異常＋技術轉強＋位置合理」的市場候選，不必硬找股票。</div>';return}box.innerHTML='<div class="candidate-grid">'+rows.map(function(x){let s=x.signal||{},sr=x.sr||{},v=x.verdict||candidateVerdict(s,sr),cr=s.chaseRisk||{},support=sr.support?fmt(sr.support.low)+'～'+fmt(sr.support.high):'—';return `<div class="candidate-card"><div class="candidate-head"><div><div class="candidate-title">${esc(x.symbol)} ${esc(x.name||'')}</div><div class="candidate-flow good">法人異常流入 ${candidateMoney(x.flowTwd)}</div></div><span class="pill">PR ${Number(x.anomalyPercentile||0).toFixed(1)}</span></div><div class="candidate-metrics"><div class="kpi"><small>異常分數</small><b>${Number(x.anomalyDisplayScore||0).toFixed(2)}</b></div><div class="kpi"><small>Raw</small><b>${Math.abs(Number(x.anomalyScore||0)).toFixed(2)}</b></div><div class="kpi"><small>技術趨勢</small><b>${Number.isFinite(Number(s.score))?Number(s.score)+'/9':'—'}</b></div><div class="kpi"><small>支撐區</small><b>${support}</b></div></div><div class="candidate-verdict ${v.cls}">${esc(v.text)}</div><div class="note" style="margin-top:7px">${esc(s.text||'')}｜${esc(cr.title||'追高風險待判斷')}${sr.nearSupport?'｜接近支撐':''}${sr.nearResistance?'｜接近壓力':''}${earlyTurnSignal(s).active?'｜早期轉強 '+earlyTurnSignal(s).points+' 項':''}</div><div class="candidate-actions"><button class="primary" onclick="candidateToWatch('${x.symbol}','${esc(x.name||'').replace(/'/g,'&#39;')}',${Number(x.anomalyPercentile||0)})">＋ 加入觀察</button></div><div class="candidate-source">市場資料 ${esc(date||'—')}｜只產生候選，不直接產生買進訊號</div></div>`}).join('')+'</div>'}
-async function refreshCandidatePool(){let base=marketScanApi(),st=$('candidatePoolStatus'),box=$('candidatePool');if(!base){if(st)st.textContent='⚠️ 尚未設定市場掃描 Worker';if(box)box.innerHTML='<div class="candidate-setup">請到「設定 → 市場掃描 Worker」貼上已部署的 market_scan_worker_v1.9 網址。行情 Worker 與市場掃描 Worker 是兩個不同服務。</div>';return}if(st)st.textContent='正在掃描資金異常＋技術轉強候選…';if(box)box.innerHTML='<div class="status">掃描中；系統會在異常流入股中找 A 結構已強或 B 早期轉強，最後最多顯示 5 檔。</div>';try{let r=await fetch(base+'/api/anomaly?limit=40&minFlowYi=0.5&minScore=3&minSamples=5&_='+Date.now(),{cache:'no-store'}),j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));let source=(j.rows||[]).filter(function(x){return Number(x.flowTwd)>0}).slice(0,20),bench=await relativeStrengthBenchmark(false,true),done=[];for(let i=0;i<source.length;i++){let x=source[i];if(st)st.textContent='機會篩選 '+(i+1)+' / '+source.length+'：'+x.symbol;try{let m=await market(x.symbol),signal=watchSuggestion(m);signal.relativeStrength=relativeStrengthAnalysis(signal.formalPrice,m.rows.map(function(z){return z.c}),bench,x.symbol,signal.formalDate);let atr=atrFromRows(m.rows,14),sr=supportResistanceAnalysis(m.rows,signal.formalPrice,signal.ma20,signal.ma60,atr),verdict=candidateVerdict(signal,sr);done.push(Object.assign({},x,{signal:signal,sr:sr,verdict:verdict}))}catch(e){}if(i<source.length-1)await sleep(80)}let qualified=done.filter(function(x){return x.verdict&&x.verdict.show}).sort(function(a,b){return a.verdict.rank-b.verdict.rank||Number(b.anomalyPercentile||0)-Number(a.anomalyPercentile||0)}).slice(0,5);renderCandidatePool(qualified,j.date);if(st)st.textContent=qualified.length?'✅ 市場候選 '+qualified.length+' 檔｜從異常流入 '+source.length+' 檔中篩出 A 結構已強／B 早期轉強｜最多顯示 5 檔｜資料日 '+(j.date||'—'):'✅ 今日暫無符合「資金異常＋技術轉強＋位置合理」的市場候選｜不必硬找股票｜資料日 '+(j.date||'—')}catch(e){if(st)st.textContent='❌ 市場候選池失敗：'+e.message;if(box)box.innerHTML='<div class="bad">'+esc(e.message)+'</div>'}}
-
 function toggleWatch(){setEntryForm('watchForm',$('watchForm').style.display!=='block','wTicker')}
 function resetWatchForm(){['wTicker','wTarget','wBudget','wReason','watchEditId'].forEach(function(id){$(id).value=''});$('suggestPriceBox').style.display='none';$('suggestPriceBox').innerHTML=''}
 function saveWatch(){let ticker=normalizeTicker($('wTicker').value),targetText=$('wTarget').value.trim(),target=targetText===''?null:+targetText,budgetText=$('wBudget').value.trim(),budget=budgetText===''?0:+budgetText,reason=$('wReason').value.trim();$('wTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');if(target!==null&&!(target>0))return alert('目標價請留空或輸入大於 0 的數字');if(!(budget>=0))return alert('請輸入正確預算');let w=watchlist(),id=$('watchEditId').value||Date.now().toString(),old=w.find(function(x){return x.id===id}),item={id:id,ticker:ticker,target:target,budget:budget,reason:reason},i=w.findIndex(function(x){return x.id===id});if(i>=0)w[i]=item;else w.push(item);if(old&&old.ticker!==ticker)removeWatchCache(id);storeWatch(w);resetWatchForm();setEntryForm('watchForm',false);renderWatch();renderDashboard();void refreshWatchOne(id)}
@@ -1306,24 +1320,21 @@ function watchSuggestion(m){
 }
 
 function earlyTurnSignal(a){
- let rows=a&&a._rows||[],cl=rows.map(function(r){return Number(r.c)}).filter(Number.isFinite),n=cl.length;
- let score=Number(a&&a.score),price=Number(a&&a.formalPrice),ma5=Number(a&&a.ma5),ma20=Number(a&&a.ma20),ma60=Number(a&&a.ma60),
-     rsi=Number(a&&a.rsi),vr=Number(a&&a.vr),rs=a&&a.relativeStrength,cr=a&&a.chaseRisk;
- let ret1=n>=2?(cl[n-1]/cl[n-2]-1)*100:null,ret2=n>=3?(cl[n-1]/cl[n-3]-1)*100:null,
-     ret5=n>=6?(cl[n-1]/cl[n-6]-1)*100:null;
- let points=0,reasons=[];
+ let rows=a&&Array.isArray(a._rows)?a._rows:[],cl=rows.map(function(r){return Number(r.c)}).filter(Number.isFinite),n=cl.length,
+     score=Number(a&&a.score),price=Number(a&&a.formalPrice),ma5=Number(a&&a.ma5),ma20=Number(a&&a.ma20),
+     rsi=Number(a&&a.rsi),vr=Number(a&&a.vr),rs=a&&a.relativeStrength,cr=a&&a.chaseRisk,
+     ret2=n>=3?(cl[n-1]/cl[n-3]-1)*100:null,ret5=n>=6?(cl[n-1]/cl[n-6]-1)*100:null,
+     points=0,reasons=[];
  if(Number.isFinite(price)&&Number.isFinite(ma5)&&price>=ma5){points++;reasons.push('正式收盤站上 MA5')}
  if(Number.isFinite(price)&&Number.isFinite(ma20)&&price>=ma20){points++;reasons.push('正式收盤站上 MA20')}
  if(Number.isFinite(rsi)&&rsi>=48&&rsi<=72){points++;reasons.push('RSI 回到健康／轉強區')}
  if(Number.isFinite(vr)&&vr>=1.15){points++;reasons.push('量能較近期基準增加')}
- if(Number.isFinite(ret2)&&ret2>=2){points++;reasons.push('近 2 日價格動能轉強 '+ret2.toFixed(1)+'%')}
+ if(Number.isFinite(ret2)&&ret2>=2){points++;reasons.push('近 2 日價格動能 +'+fmt(ret2)+'%')}
  if(Number.isFinite(ret5)&&ret5>0){points++;reasons.push('近 5 日報酬轉正')}
  if(rs&&Number.isFinite(Number(rs.relative5))&&Number(rs.relative5)>0){points++;reasons.push('近 5 日相對 0050 轉強')}
- let structureIncomplete=Number.isFinite(score)&&score<5;
- let active=structureIncomplete&&points>=4&&!(cr&&cr.level==='very_high');
- let strong=active&&points>=5;
- return{active:active,strong:strong,points:points,reasons:reasons,ret1:ret1,ret2:ret2,ret5:ret5,
-   title:strong?'🔵 早期轉強訊號明顯':'🔵 出現早期轉強跡象'};
+ let active=Number.isFinite(score)&&score<5&&points>=4&&!(cr&&cr.level==='very_high'),
+     strong=active&&points>=5;
+ return{active:active,strong:strong,points:points,reasons:reasons,ret2:ret2,ret5:ret5};
 }
 
 function buildWatchPositionAdvice(a,capitalState){
@@ -1337,12 +1348,6 @@ function buildWatchPositionAdvice(a,capitalState){
 
  if(mr&&mr.level==='high'){
   return{text:'🔴 大盤目前高風險，暫停新增部位。'+(a&&a.cls!=='good'?' 個股本身也尚未轉強，先等待趨勢評分回升、重新站回 MA20，再評估進場。':' 個股雖偏強，也先等大盤風險降級後再評估。'),cls:'bad',reason:'market-risk'};
- }
- let et=earlyTurnSignal(a);
- if(et.active&&Number.isFinite(score)&&score<5){
-  if(cr&&cr.blockAdd)return{text:'🔵 早期轉強已出現，但目前追高風險偏高；不再只因 MA60／均線結構尚未完成而忽略，改為等待拉回或突破後確認。',cls:'warn',reason:'early-turn-chase',earlyTurn:et};
-  if(rs&&rs.blockAdd)return{text:'🔵 價格／量能已有早期轉強，但相對 0050 仍偏弱；列入轉強追蹤，等待相對強弱同步後再布局。',cls:'warn',reason:'early-turn-relative',earlyTurn:et};
-  return{text:(et.strong?'🔵 早期轉強訊號明顯｜價格、量能與短線動能同步改善；技術結構尚未完全翻多，不必等到 MA60 全面確認才開始注意，可觀察分批布局條件。':'🔵 出現早期轉強｜結構尚未完全翻多，但短線改善速度已值得提高關注；等待延續或更佳進場位置。'),cls:'good',reason:'early-turn',earlyTurn:et};
  }
  if(Number.isFinite(score)&&score<-1){
   let txt='🔴 空頭趨勢尚未止穩，暫不進場。等待重新站回 MA20、趨勢評分至少回到盤整區，再重新評估。';
@@ -1386,6 +1391,104 @@ function setAutoRefreshStatus(text,cls){let el=$('autoRefreshStatus');if(!el)ret
 async function refreshQuotesNow(reason){if(AUTO_REFRESH_RUNNING)return;AUTO_REFRESH_RUNNING=true;setAutoRefreshStatus('🔄 '+(reason||'自動更新')+'：正在更新持股與觀察…','warn');try{await Promise.allSettled([refreshAll(),refreshWatchAll()]);let c=taipeiClock();setAutoRefreshStatus('✅ 最近自動更新：台北時間 '+c.time,'good')}catch(e){setAutoRefreshStatus('❌ 自動更新失敗：'+e.message,'bad')}finally{AUTO_REFRESH_RUNNING=false}}
 function autoRefreshTick(force){let c=taipeiClock();if(!isTaiwanTradingMinute(c)){setAutoRefreshStatus('⏸️ 非盤中時段，自動更新暫停','');return}if(document.hidden){setAutoRefreshStatus('⏸️ App 在背景，回到前景後會補更新','');return}if(!force&&AUTO_REFRESH_LAST_MINUTE===c.key)return;AUTO_REFRESH_LAST_MINUTE=c.key;void refreshQuotesNow('盤中每分鐘更新')}
 function startAutoQuoteRefresh(){let c=taipeiClock();AUTO_REFRESH_LAST_MINUTE=isTaiwanTradingMinute(c)?c.key:'';autoRefreshTick(false);setInterval(function(){autoRefreshTick(false)},10000);document.addEventListener('visibilitychange',function(){if(!document.hidden)autoRefreshTick(true)});window.addEventListener('focus',function(){autoRefreshTick(true)})}
+
+function marketScanApi(){return MARKET_SCAN_API}
+function candidateCache(){try{return JSON.parse(localStorage.getItem(CANDIDATE_CACHE)||'null')}catch(e){return null}}
+function saveCandidateCache(v){try{localStorage.setItem(CANDIDATE_CACHE,JSON.stringify(v))}catch(e){}}
+function formatFlowTwd(v){
+ let n=Number(v);if(!Number.isFinite(n))return'—';
+ let a=Math.abs(n),sign=n>=0?'+':'-';
+ if(a>=100000000)return sign+fmt(a/100000000)+' 億';
+ if(a>=10000)return sign+fmt(a/10000)+' 萬';
+ return sign+fmt(a);
+}
+async function testMarketScanApi(){
+ let st=$('marketScanStatus');if(st)st.textContent='測試中…';
+ try{
+  let r=await fetch(marketScanApi()+'/health?_='+Date.now(),{cache:'no-store'}),j=await r.json();
+  if(!r.ok||!j||j.ok!==true)throw new Error((j&&j.error)||('HTTP '+r.status));
+  if(st)st.textContent='✅ 連線正常｜市場掃描 v'+(j.version||'—');
+ }catch(e){if(st)st.textContent='❌ 市場掃描連線失敗：'+e.message}
+}
+function candidateVerdict(signal,sr){
+ let cr=signal&&signal.chaseRisk,rs=signal&&signal.relativeStrength,score=Number(signal&&signal.score),mr=marketRisk(),et=earlyTurnSignal(signal);
+ if(mr&&mr.level==='high')return{show:false,rank:99,text:'⚪ 大盤高風險，暫不列入候選',cls:'bad'};
+ if(score>=5&&!(cr&&cr.blockAdd)&&!(rs&&rs.blockAdd)&&!(sr&&sr.nearResistance))
+  return{show:true,rank:0,channel:'A',text:sr&&sr.nearSupport?'🟢 A 結構已強｜接近支撐，可留意分批布局':'🟢 A 結構已強｜資金＋技術條件配合',cls:'good'};
+ if(et.active){
+  if(cr&&cr.level==='very_high')return{show:false,rank:99,channel:'B',text:'🔵 B 早期轉強，但追高風險過高',cls:'warn'};
+  if(sr&&sr.nearResistance)return{show:true,rank:2,channel:'B',text:'🔵 B 早期轉強｜接近壓力，等待突破或拉回',cls:'warn'};
+  if(rs&&rs.blockAdd)return{show:true,rank:3,channel:'B',text:'🔵 B 早期轉強｜相對 0050 待同步',cls:'warn'};
+  return{show:true,rank:1,channel:'B',text:'🔵 B 早期轉強｜結構未完成，但價格／量能／動能已改善',cls:'good'};
+ }
+ return{show:false,rank:99,text:'⚪ 尚未接近操作條件',cls:''};
+}
+function candidateToWatch(symbol,name,flow){
+ let ticker=normalizeTicker(symbol),w=watchlist();
+ if(w.some(function(x){return x.ticker===ticker})){alert(ticker+' 已經在自選觀察清單');return}
+ let item={id:Date.now().toString(),ticker:ticker,target:0,budget:0,reason:'市場候選池：'+(name||ticker)+'｜法人異常流入 '+formatFlowTwd(flow)};
+ w.push(item);storeWatch(w);renderWatch();renderDashboard();alert(ticker+' 已加入自選觀察清單');
+}
+function candidateHtml(x){
+ let s=x.signal||{},sr=x.sr||{},v=x.verdict||{},et=earlyTurnSignal(s),
+     pr=Number(x.anomalyPercentile),display=Number(x.anomalyDisplayScore),raw=Math.abs(Number(x.anomalyScore||x.anomalyStrength||0));
+ return `<div class="candidate-card">
+  <div class="candidate-head"><div><div class="candidate-title">${esc(x.symbol)} ${esc(x.name||'')}</div><div class="candidate-flow">法人異常流入 ${esc(formatFlowTwd(x.flowTwd))}</div></div><div class="candidate-pr">PR ${Number.isFinite(pr)?fmt(pr):'—'}</div></div>
+  <div class="candidate-grid">
+    <div class="kpi"><small>異常分數</small><b>${Number.isFinite(display)?fmt(display):'—'}</b></div>
+    <div class="kpi"><small>Raw</small><b>${Number.isFinite(raw)?fmt(raw):'—'}</b></div>
+    <div class="kpi"><small>技術趨勢</small><b>${Number.isFinite(Number(s.score))?Number(s.score)+'/9':'—'}</b></div>
+    <div class="kpi"><small>支撐區</small><b>${sr.support?fmt(sr.support.low)+'～'+fmt(sr.support.high):'—'}</b></div>
+  </div>
+  <div class="candidate-verdict ${v.cls||'warn'}">${esc(v.text||'等待判斷')}</div>
+  <div class="note" style="margin-top:7px">${esc(s.text||'')}｜${esc((s.chaseRisk&&s.chaseRisk.title)||'追高風險待判斷')}${sr.nearSupport?'｜接近支撐':''}${sr.nearResistance?'｜接近壓力':''}${et.active?'｜早期轉強 '+et.points+' 項':''}</div>
+  <button class="primary" style="width:100%;margin-top:10px" onclick="candidateToWatch('${esc(x.symbol)}','${esc(x.name||'')}','${Number(x.flowTwd)||0}')">＋ 加入自選觀察</button>
+ </div>`;
+}
+function renderCandidatePool(rows,date,fromCache){
+ let box=$('candidatePool'),st=$('candidatePoolStatus');if(!box)return;
+ rows=Array.isArray(rows)?rows:[];
+ box.innerHTML=rows.length?rows.map(candidateHtml).join(''):'<div class="candidate-empty">今日暫無符合「資金異常＋技術轉強＋位置合理」的市場候選。沒有機會時就維持 0 檔，不必硬找股票。</div>';
+ if(st)st.textContent=(fromCache?'📦 上次候選':'✅ 候選完成')+'｜'+rows.length+' 檔｜資料日 '+(date||'—');
+}
+function renderCandidateCache(){
+ let c=candidateCache();if(c&&Array.isArray(c.rows))renderCandidatePool(c.rows,c.date,true);
+}
+let CANDIDATE_RUNNING=false;
+async function refreshCandidatePool(manual){
+ if(CANDIDATE_RUNNING)return;
+ let st=$('candidatePoolStatus'),box=$('candidatePool');CANDIDATE_RUNNING=true;
+ if(st)st.textContent=(manual?'手動':'自動')+'掃描候選中…';
+ try{
+  let r=await fetch(marketScanApi()+'/api/anomaly?limit=40&minFlowYi=0.5&minScore=3&minSamples=5&_='+Date.now(),{cache:'no-store'}),
+      j=await r.json();
+  if(!r.ok||!j||j.ok!==true)throw new Error((j&&j.error)||('HTTP '+r.status));
+  let source=(j.rows||[]).filter(function(x){return Number(x.flowTwd)>0}).slice(0,12),
+      bench=await relativeStrengthBenchmark(false,true),done=[];
+  for(let i=0;i<source.length;i++){
+   let x=source[i];if(st)st.textContent='候選技術篩選 '+(i+1)+' / '+source.length+'：'+x.symbol;
+   try{
+    let m=await market(x.symbol),signal=watchSuggestion(m);
+    signal.relativeStrength=relativeStrengthAnalysis(signal.formalPrice,m.rows.map(function(z){return z.c}),bench,x.symbol,signal.formalDate);
+    let atr=atrFromRows(m.rows,14),sr=supportResistanceAnalysis(m.rows,signal.formalPrice,signal.ma20,signal.ma60,atr),
+        verdict=candidateVerdict(signal,sr);
+    done.push(Object.assign({},x,{signal:signal,sr:sr,verdict:verdict}));
+   }catch(e){console.warn('candidate '+x.symbol+' skipped',e)}
+   if(i<source.length-1)await new Promise(function(resolve){setTimeout(resolve,160)});
+  }
+  let qualified=done.filter(function(x){return x.verdict&&x.verdict.show})
+    .sort(function(a,b){return a.verdict.rank-b.verdict.rank||Number(b.anomalyPercentile||0)-Number(a.anomalyPercentile||0)})
+    .slice(0,5);
+  let payload={date:j.date||'',rows:qualified,updatedAt:Date.now()};
+  saveCandidateCache(payload);renderCandidatePool(qualified,payload.date,false);
+ }catch(e){
+  let cached=candidateCache();
+  if(st)st.textContent='⚠️ 候選掃描失敗，'+(cached&&Array.isArray(cached.rows)?'保留上次候選':'目前無可用候選')+'：'+e.message;
+  if(cached&&Array.isArray(cached.rows))renderCandidatePool(cached.rows,cached.date,true);
+  else if(box)box.innerHTML='<div class="candidate-empty">候選掃描暫時失敗，但不影響持股與自選觀察功能。</div>';
+ }finally{CANDIDATE_RUNNING=false}
+}
+
 function replays(){try{return JSON.parse(localStorage.getItem(REPLAY)||'[]')}catch(e){return[]}}
 function storeReplays(v){localStorage.setItem(REPLAY,JSON.stringify(v))}
 function snapshotForTicker(ticker){let h=holdings(),s=snapshots();for(let i=0;i<h.length;i++)if(h[i].ticker===ticker&&s[h[i].id])return s[h[i].id];return null}
@@ -1413,7 +1516,7 @@ function replayDate(v){let d=new Date(v);return isNaN(d.getTime())?'—':d.toLoc
 function replayResult(label,value,price){let change=value!=null&&price>0?(value-price)/price*100:null;return`<div class="kpi"><small>${label}</small><b>${value==null?'尚未填寫':fmt(value)+(change==null?'':'（'+pct(change)+'）')}</b></div>`}
 function replayFullHtml(r){let a=r.advice||{},strengths=a.strengths||[],risks=a.risks||[],name=(snapshotForTicker(r.ticker)||{}).name||'',conclusion=buildReplayConclusion(r);return`<div class="stock"><div class="stockhead"><div><div class="stocktitle">${esc(r.ticker)} ${esc(name)}</div><div class="stocksub">日期：${replayDate(r.createdAt)}｜當時價格 ${fmt(r.price)}</div></div><div class="row"><button class="ghost" onclick="editReplay('${r.id}')">更新結果</button><button class="danger" onclick="removeReplay('${r.id}')">刪除紀錄</button></div></div><div class="replay-block"><strong>當時的市場狀態</strong><div class="advice-summary">${esc(a.summary||'—')}</div></div>${Number.isFinite(Number(r.trendScore))?'<div class="trend-score '+trendLabel(Number(r.trendScore)).cls+'"><div class="trend-score-head"><span>當時趨勢：'+esc(r.trendText||trendLabel(Number(r.trendScore)).text)+'</span><span class="trend-score-num">'+Number(r.trendScore)+' / 9</span></div>'+(Array.isArray(r.trendReasons)&&r.trendReasons.length?'<ul class="score-reasons">'+r.trendReasons.map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ul>':'')+'</div>':''}<div class="replay-block"><strong>系統建議</strong><div class="decision ${/賣出|減碼|停損/.test(r.decision)?'bad':'warn'}">${esc(r.decision||a.summary||'—')}</div></div><div class="advice-grid replay-block"><div class="advice-box"><strong class="good">正向因素</strong><ul class="replay-list">${strengths.length?listHtml(strengths):'<li>— 無 Snapshot 資料</li>'}</ul></div><div class="advice-box"><strong class="bad">風險因素</strong><ul class="replay-list">${risks.length?listHtml(risks):'<li>— 無 Snapshot 資料</li>'}</ul></div><div class="advice-box"><strong>使用者操作</strong><div>☑ ${esc(r.action||'—')}</div><div class="reason note" style="margin-top:7px">原因：${esc(r.note)||'—'}</div></div></div><div class="replay-result">${replayResult('3 天後',r.result3,r.price)}${replayResult('7 天後',r.result7,r.price)}${replayResult('30 天後',r.result30,r.price)}</div><div class="replay-conclusion ${conclusion.indexOf('🟢')>=0?'good':conclusion.indexOf('🔴')>=0?'bad':'warn'}">最終結論：${conclusion}</div></div>`}
 function renderReplay(){let all=replays();ANALYSIS_CACHE.replay={};$('replayList').innerHTML=all.length?all.map(function(r){let name=(snapshotForTicker(r.ticker)||{}).name||'',conclusion=buildReplayConclusion(r),trend=Number.isFinite(Number(r.trendScore))?(esc(r.trendText||trendLabel(Number(r.trendScore)).text)+' '+Number(r.trendScore)+' / 9'):'尚無趨勢評分';ANALYSIS_CACHE.replay[r.id]=replayFullHtml(r);return`<div class="stock compact-stock" onclick="openAnalysis('replay','${r.id}')"><div class="compact-main"><div><div class="compact-title">${esc(r.ticker)} ${esc(name)}</div><div class="compact-name">${replayDate(r.createdAt)}｜當時價格 ${fmt(r.price)}</div></div><div class="compact-price">☑ ${esc(r.action||'—')}</div></div><div class="compact-sub"><span class="compact-signal ${conclusion.indexOf('🟢')>=0?'good':conclusion.indexOf('🔴')>=0?'bad':'warn'}">${trend}</span><span>點擊查看完整回放 ↑</span></div><div class="decision ${/賣出|減碼|停損/.test(r.decision)?'bad':'warn'}" style="margin-top:9px">${esc(compactHoldingAdvice(r.decision||(r.advice||{}).summary||'等待更新結果'))}</div></div>`}).join(''):'<div class="empty">尚無決策紀錄</div>'}
-let scanApiEl=$('marketScanApiBase');if(scanApiEl)scanApiEl.value=marketScanApi();if($('marketScanApiStatus'))$('marketScanApiStatus').textContent=marketScanApi()?'✅ 已設定市場掃描 Worker':'尚未設定市場掃描 Worker';let initialCapital=capitalSettings();$('capitalInput').value=initialCapital.total||'';$('targetCashInput').value=initialCapital.targetCash||'';bindTickerInputs();bindStandaloneInputFocus();render();renderWatch();renderReplay();renderCapital();showPage(localStorage.getItem(LAST_PAGE)||'home');startAutoQuoteRefresh();if(api())setTimeout(function(){void refreshQuotesNow('開啟 App 更新')},400);
+let initialCapital=capitalSettings();$('capitalInput').value=initialCapital.total||'';$('targetCashInput').value=initialCapital.targetCash||'';bindTickerInputs();bindStandaloneInputFocus();render();renderWatch();renderReplay();renderCapital();renderCandidateCache();showPage('portfolio');startAutoQuoteRefresh();if(api())setTimeout(async function(){await refreshQuotesNow('開啟 App 更新');setTimeout(function(){void refreshCandidatePool(false)},1200)},400);
 
 setTimeout(function(){refreshMarketContext(false)},600);
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./service-worker.js').catch(function(e){console.warn('Service worker 註冊失敗',e)})})}
