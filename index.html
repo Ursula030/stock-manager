@@ -338,7 +338,7 @@ function runDecisionCheck(){
 }
 function sendGuardToReplay(){
  let id=$('guardHoldingId').value,x=holdings().find(function(v){return v.id===id}),a=getSnapshot(id)||{};if(!x)return;
- closeDecisionCheck();showPage('replay');setEntryForm('replayForm',true,'rTicker');$('rTicker').value=x.ticker;$('rPrice').value=Number.isFinite(Number(a.price))?Number(a.price):'';$('rDecision').value=(a.finalAdvice&&a.finalAdvice.text)||(a.decision||'');
+ closeDecisionCheck();showPage('replay');setEntryForm('replayForm',true,'rTicker');$('rTicker').value=x.ticker;$('rPrice').value=Number.isFinite(Number(a.price))?Number(a.price).toFixed(2):'';$('rDecision').value=(a.finalAdvice&&a.finalAdvice.text)||(a.decision||'');
  let map={hold:'持有',sell:'賣出',reduce:'賣出',add:'加碼'},val=map[$('guardAction').value]||'持有',radio=document.querySelector('input[name="rAction"][value="'+val+'"]');if(radio)radio.checked=true;
  let notes=[];if($('guardFear').checked)notes.push('恐慌／虧損壓力');if($('guardProfit').checked)notes.push('保護獲利');if($('guardMarket').checked)notes.push('擔心大盤風險');if($('guardTechnical').checked)notes.push('技術風險');if($('guardFomo').checked)notes.push('FOMO');if(!$('guardPlan').checked)notes.push('不符合原策略');if($('guardFundChanged').checked)notes.push('基本面／持有理由改變');$('rNote').value=notes.length?'操作檢查：'+notes.join('、'):'操作檢查後建立紀錄';
 }
