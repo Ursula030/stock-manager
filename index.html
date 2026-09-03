@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.22.3</title>
+<title>股倉雷達 v5.22.4</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -146,7 +146,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.3</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.4</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -210,6 +210,7 @@ body.analysis-open{overflow:hidden}
   <div class="card"><strong>📲 PWA App</strong><div class="install-box"><div><b>iPhone 安裝：</b>Safari → 分享 →「加入主畫面」。安裝後從桌面開啟，會以 App 模式顯示，不會有一般 Safari 網址列。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="requestRadarNotification()">開啟 Radar 通知權限</button><button class="ghost" onclick="testRadarNotification()">測試提醒</button></div><div id="pwaStatus" class="status"></div></div><div class="note" style="margin-top:8px">v5.0 的 Radar 通知會在你開啟／更新 App 時觸發；真正關閉 App 後仍可背景推播，需要另外串接 Web Push 伺服器。</div></div>
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
+<div class="card"><strong>🛡️ v5.22.4 個股急跌防殺低／正式 K 止損確認</strong><div class="note" style="margin-top:8px">持股若相對最後完整收盤單日急跌 ≥5%，或跌幅達約 1.5 ATR，當日先啟動防殺低，不因盤中現價跌破 MA20／MA60 就直接取得止損資格。止損的趨勢確認與反彈失敗改以最後完整日 K 判斷；盤中支撐破壞仍保留警戒，等待正式日 K 確認後再決定是否分批降低部位。基本面／原持有理由已轉差時不受此保護。</div></div>
 <div class="card"><strong>⚡ v5.22.3 大盤單日急跌判斷修正</strong><div class="note" style="margin-top:8px">0050／2330 單一代理跌幅 -1.5%～-2.49% 僅列為短線壓力，提高市場警戒但不再單獨封鎖觀察清單買進；任一代理跌幅 ≤ -2.5%，或 0050 與 2330 同時達 -1.5% 警戒，才啟動「大盤代理單日急跌」並暫緩追價／新買進。舊版快取也會依 dailyChanges 重新判斷，避免升級後沿用錯誤急跌旗標。</div></div>
 <div class="card"><strong>🟠 v5.22.2 位置型追高保護</strong><div class="note" style="margin-top:8px">新增組合風險：當股價距 MA20 ≥ 8%，同時距近 20 日高點 ≤ 5%，即使追高總分未達 4 分，也視為「追高風險偏高」並阻止直接顯示可分批布局。沒有下修全市場的追高分數門檻，因此像目前 8046 這種乖離約 +4.47%、距 20 日高點仍約 9.58% 的型態不會被此規則誤擋。</div></div>
 <div class="card"><strong>🟡 v5.22.1 歷史 K 回溯／C 偏多等待發動</strong><div class="note" style="margin-top:8px">不再從新版安裝日開始等待 2～3 天，而是直接回溯既有正式日 K，檢查近期價格推進、整理區間與量能。技術結構偏多但缺乏延續時，直接降級為 C「偏多等待發動」；尚未進場者繼續等待，已有試單者暫停加碼。異常資金雷達 Worker 維持 App 啟動後自動測試，手動測試按鈕保留。</div></div>
@@ -1024,27 +1025,35 @@ chaseRiskHtml=function(r,mode){return chaseRiskHtmlBase(r,mode)};
 
 function stopLossGuardAnalysis(a,holding){
  let price=Number(a.price),ma20=Number(a.ma20),ma60=Number(a.ma60),rsi=Number(a.rsi),vr=Number(a.vr),pnl=Number(a.pnl),
-     pb=a.pullbackStructure||{},cl=Array.isArray(a.closes)?a.closes:[],ret5=cl.length>=6?(price/Number(cl[cl.length-6])-1)*100:null,
+     pb=a.pullbackStructure||{},cl=Array.isArray(a.closes)?a.closes:[],formalClose=cl.length?Number(cl[cl.length-1]):null,
+     ret5=cl.length>=6?(price/Number(cl[cl.length-6])-1)*100:null,
+     dayDrop=Number.isFinite(formalClose)&&formalClose>0?(price/formalClose-1)*100:null,
+     atr=Number(a.atr14),dayDropAtr=Number.isFinite(atr)&&atr>0&&Number.isFinite(formalClose)?(formalClose-price)/atr:null,
      maxLoss=Number(holding.maxLoss)||0,fundBad=holding.fund==='no',supportBroken=pb.level==='broken',volumeBreak=Number.isFinite(vr)&&vr>=1.5,
-     oversold=Number.isFinite(rsi)&&rsi<30,sharpDrop=Number.isFinite(ret5)&&ret5<=-8,lossAlert=maxLoss>0&&Number.isFinite(pnl)&&pnl<=-maxLoss,
-     evidence=0,reasons=[];
- if(supportBroken){evidence+=2;reasons.push('支撐結構已判定破壞（+2 證據）')}else reasons.push('尚未確認完整支撐破壞');
- if(volumeBreak&&price<ma20){evidence+=1;reasons.push('跌破 MA20 且量比 '+fmt(vr)+'，有放量弱勢（+1）')}else reasons.push('未出現明確放量破位確認');
+     oversold=Number.isFinite(rsi)&&rsi<30,sharpDrop=Number.isFinite(ret5)&&ret5<=-8,
+     intradayShock=(Number.isFinite(dayDrop)&&dayDrop<=-5)||(Number.isFinite(dayDropAtr)&&dayDropAtr>=1.5),
+     lossAlert=maxLoss>0&&Number.isFinite(pnl)&&pnl<=-maxLoss,evidence=0,reasons=[];
+ if(supportBroken){evidence+=2;reasons.push('盤中價格已落入支撐破壞區（+2 警戒）；正式日 K 尚未確認前不單獨觸發止損')}else reasons.push('尚未確認完整支撐破壞');
+ // v5.22.4：止損確認只採最後完整日 K；盤中現價跌破 MA20／MA60 只能警戒，不能湊滿正式止損證據。
+ if(volumeBreak&&Number.isFinite(formalClose)&&formalClose<ma20){evidence+=1;reasons.push('最後完整日 K 已收破 MA20 且量比 '+fmt(vr)+'，有放量弱勢（+1）')}else reasons.push('尚無「完整日 K 收破 MA20＋放量」確認');
  if(fundBad){evidence+=2;reasons.push('基本面／原持有理由已轉差（+2）')}
  if(lossAlert)reasons.push('已觸及原風控 '+holding.maxLoss+'%，列為風險警報，但不單獨觸發賣出');
  if(oversold)reasons.push('RSI '+fmt(rsi)+' 已進入超賣區，避免在情緒最弱處砍在阿呆谷');
  if(sharpDrop)reasons.push('近 5 日已急跌 '+fmt(ret5)+'%，提高反彈／殺低風險');
- let belowBoth=price<ma20&&price<ma60,trendConfirmed=belowBoth&&Number(a.trendScore)<=1,reboundFailure=price<ma20&&Number(a.ma5)<ma20;
- if(trendConfirmed){evidence+=1;reasons.push('MA20／MA60 同時失守且趨勢評分偏弱（+1 趨勢確認）')}
- if(reboundFailure){evidence+=1;reasons.push('MA5 仍在 MA20 下方且價格未站回月線（+1 反彈失敗確認）')}
- let blocked=(oversold||sharpDrop)&&!fundBad,qualified=evidence>=3&&!blocked;
+ if(intradayShock)reasons.push('相對最後完整收盤單日急跌 '+fmt(dayDrop)+'%'+(Number.isFinite(dayDropAtr)?'（約 '+fmt(dayDropAtr)+' ATR）':'')+'，啟動盤中／當日防殺低；等待正式日 K 確認');
+ let belowBoth=Number.isFinite(formalClose)&&formalClose<ma20&&formalClose<ma60,
+     trendConfirmed=belowBoth&&Number(a.trendScore)<=1,
+     reboundFailure=Number.isFinite(formalClose)&&formalClose<ma20&&Number(a.ma5)<ma20;
+ if(trendConfirmed){evidence+=1;reasons.push('最後完整日 K 已同時失守 MA20／MA60 且趨勢評分偏弱（+1 趨勢確認）')}
+ if(reboundFailure){evidence+=1;reasons.push('最後完整日 K 未站回月線，且 MA5 仍在 MA20 下方（+1 反彈失敗確認）')}
+ let blocked=(oversold||sharpDrop||intradayShock)&&!fundBad,qualified=evidence>=3&&!blocked;
  let level='observe',title='🟡 尚未取得止損資格',cls='warn',action='hold';
  if(qualified){level='qualified';title='🔴 止損／減碼資格成立';cls='bad';action='reduce'}
- else if(blocked){level='anti-chase';title='🛑 防殺低：不宜砍在阿呆谷';cls='warn';action='wait'}
+ else if(blocked){level='anti-chase';title='🛑 防殺低：急跌日等待正式 K 確認';cls='warn';action='wait'}
  else if(lossAlert||supportBroken){level='confirm';title='🟠 風險升高，等待確認';cls='warn';action='confirm'}
- return{level:level,title:title,cls:cls,action:action,qualified:qualified,blocked:blocked,evidence:evidence,lossAlert:lossAlert,oversold:oversold,sharpDrop:sharpDrop,ret5:ret5,volumeBreak:volumeBreak,supportBroken:supportBroken,fundBad:fundBad,trendConfirmed:trendConfirmed,reboundFailure:reboundFailure,reasons:reasons};
+ return{level:level,title:title,cls:cls,action:action,qualified:qualified,blocked:blocked,evidence:evidence,lossAlert:lossAlert,oversold:oversold,sharpDrop:sharpDrop,intradayShock:intradayShock,dayDrop:dayDrop,dayDropAtr:dayDropAtr,ret5:ret5,volumeBreak:volumeBreak,supportBroken:supportBroken,fundBad:fundBad,trendConfirmed:trendConfirmed,reboundFailure:reboundFailure,reasons:reasons};
 }
-function stopLossGuardHtml(g){if(!g)return'';let note=g.qualified?'賣出證據已達門檻，可考慮分批降低風險；仍不建議一次全砍。':g.blocked?'目前雖弱，但已出現超賣／急跌，直接砍倉容易殺在短線低點；等待反彈失敗或再次破底確認。':'目前證據不足以把「偏空」升級成「止損」；需等待趨勢破壞／反彈失敗確認，急跌或超賣時仍啟動防殺低。';return `<div class="stoploss-guard"><div class="stoploss-head"><span class="${g.cls}">${esc(g.title)}</span><span>證據 ${g.evidence} / 3＋</span></div><div class="stoploss-grid"><div class="kpi"><small>RSI 超賣</small><b>${g.oversold?'是':'否'}</b></div><div class="kpi"><small>5 日急跌</small><b>${Number.isFinite(Number(g.ret5))?fmt(g.ret5)+'%':'—'}</b></div><div class="kpi"><small>支撐破壞</small><b>${g.supportBroken?'是':'否'}</b></div><div class="kpi"><small>放量破位</small><b>${g.volumeBreak?'是':'否'}</b></div></div><div class="stoploss-note">${esc(note)}</div><ul class="stoploss-reasons">${(g.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
+function stopLossGuardHtml(g){if(!g)return'';let note=g.qualified?'賣出證據已達門檻，可考慮分批降低風險；仍不建議一次全砍。':g.blocked?'目前雖弱，但已出現超賣／急跌，直接砍倉容易殺在短線低點；等待反彈失敗或再次破底確認。':'目前證據不足以把「偏空」升級成「止損」；需等待趨勢破壞／反彈失敗確認，急跌或超賣時仍啟動防殺低。';return `<div class="stoploss-guard"><div class="stoploss-head"><span class="${g.cls}">${esc(g.title)}</span><span>證據 ${g.evidence} / 3＋</span></div><div class="stoploss-grid"><div class="kpi"><small>RSI 超賣</small><b>${g.oversold?'是':'否'}</b></div><div class="kpi"><small>單日急跌</small><b>${Number.isFinite(Number(g.dayDrop))?fmt(g.dayDrop)+'%':'—'}</b></div><div class="kpi"><small>支撐破壞</small><b>${g.supportBroken?'是':'否'}</b></div><div class="kpi"><small>放量破位</small><b>${g.volumeBreak?'是':'否'}</b></div></div><div class="stoploss-note">${esc(note)}</div><ul class="stoploss-reasons">${(g.reasons||[]).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')}</ul></div>`}
 
 function analyze(x,m){
  let rows=m.rows,d=m.d,meta=d.meta||{},cl=rows.map(function(r){return r.c}),last=rows[rows.length-1],
