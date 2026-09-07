@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.22.6</title>
+<title>股倉雷達 v5.22.7</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -146,7 +146,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.6</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.7</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -211,6 +211,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
 
+<div class="card"><strong>📍 v5.22.7 有效高點確認機制</strong><div class="note" style="margin-top:8px">獲利保護不再把單次刷新碰到的新高立刻升格為最高持有價。新高先進入「待確認」，需下一次刷新仍維持在新高附近才成為有效高點；瞬間尖刺若立刻消失，不會墊高最高曾獲利與 ATR 回撤。真實／取樣最高價另行保留作資訊，不影響鎖利判斷。既有最高價紀錄不重置；手動最高持有價修正仍視為已確認基準。</div></div>
 <div class="card"><strong>🧠 v5.22.6 進場脈絡／轉強驗證／新證據閘門</strong><div class="note" style="margin-top:8px">從觀察清單新增持股時，若當下為 A 強勢結構或 B 早期轉強，會保存精簡進場脈絡。持股新增「轉強驗證期」與盤中強勢修復閘門：舊 MA10 弱勢不再單獨觸發減碼；MA10 連兩日收破只先警戒，必須搭配放量＋動能轉弱、主要支撐破壞或其他新退出證據才提高減碼層級。進場前已存在的弱勢不得單獨作為買進後的退出理由。</div></div>
 <div class="card"><strong>🛡️ v5.22.5 持股成本基準／獲利保護防呆</strong><div class="note" style="margin-top:8px">編輯既有持股時若成本價改變，會清除該筆舊 Snapshot 的最高價基準，避免用舊成本時期的高點重新計算「最高曾獲利」。另外，當目前報酬 ≤ 0% 時，獲利保護只能保留歷史資訊，不得輸出分批減碼／停利；風險改由止損與支撐結構判斷。單純版本升級不會重置未修改成本的既有最高價紀錄。</div></div>
 <div class="card"><strong>🛡️ v5.22.4 個股急跌防殺低／正式 K 止損確認</strong><div class="note" style="margin-top:8px">持股若相對最後完整收盤單日急跌 ≥5%，或跌幅達約 1.5 ATR，當日先啟動防殺低，不因盤中現價跌破 MA20／MA60 就直接取得止損資格。止損的趨勢確認與反彈失敗改以最後完整日 K 判斷；盤中支撐破壞仍保留警戒，等待正式日 K 確認後再決定是否分批降低部位。基本面／原持有理由已轉差時不受此保護。</div></div>
@@ -1170,20 +1171,36 @@ function holdingLevel(holding){let invested=(+holding.cost||0)*(+holding.qty||0)
 function isBuyAdvice(advice){return advice&&advice.actions&&advice.actions.some(function(x){return/加碼|布局|買進/.test(x)&&!/暫停|不急|避免/.test(x)})}
 function profitProtection(stockAnalysis,holding,previous){
  let price=Number(stockAnalysis.price),cost=Number(holding.cost),pnl=Number(stockAnalysis.pnl),
-     prevPeak=Number(previous&&previous.peakPrice),manualPeak=Number(holding&&holding.peakPriceOverride),basePeak=Number.isFinite(manualPeak)&&manualPeak>0?manualPeak:prevPeak,peak=Number.isFinite(basePeak)&&basePeak>0?Math.max(basePeak,price):price,
-     peakPnl=cost>0?(peak-cost)/cost*100:null,drawdown=peak>0?(peak-price)/peak*100:0,
+     prevPeak=Number(previous&&previous.peakPrice),manualPeak=Number(holding&&holding.peakPriceOverride),
+     atr=Number(stockAnalysis.atr14),atrBase=Number(stockAnalysis.atrBase),atrExpansion=Number(stockAnalysis.atrExpansion),
+     prevRawPeak=Number(previous&&previous.rawPeakPrice),rawPeak=Number.isFinite(prevRawPeak)&&prevRawPeak>0?Math.max(prevRawPeak,price):price,
+     prevCandidate=Number(previous&&previous.peakCandidatePrice),prevCandidateCount=Number(previous&&previous.peakCandidateCount)||0,
+     manualCorrected=Number.isFinite(manualPeak)&&manualPeak>0,
+     confirmedBase=manualCorrected?manualPeak:(Number.isFinite(prevPeak)&&prevPeak>0?prevPeak:price),
+     peak=confirmedBase,candidate=null,candidateCount=0,candidateConfirmed=false,
+     confirmTolerance=Math.min(price*0.012,Math.max(price*0.004,Number.isFinite(atr)&&atr>0?atr*0.35:0));
+ // v5.22.7：單次取樣新高先列候選；下一次刷新仍守在候選高點附近，才升格為「有效高點」。
+ // 這能排除一閃而過的極小量尖刺，同時避免用固定成交張數誤傷冷門股。
+ if(Number.isFinite(price)&&price>peak){
+   if(Number.isFinite(prevCandidate)&&prevCandidate>peak&&price>=prevCandidate-confirmTolerance){
+     candidate=Math.max(prevCandidate,price);candidateCount=prevCandidateCount+1;
+   }else{candidate=price;candidateCount=1}
+   if(candidateCount>=2){peak=candidate;candidateConfirmed=true;candidate=null;candidateCount=0}
+ }
+ let peakPnl=cost>0?(peak-cost)/cost*100:null,drawdown=peak>0?(peak-price)/peak*100:0,
      giveback=Number.isFinite(peakPnl)&&Number.isFinite(pnl)?Math.max(0,peakPnl-pnl):0,
      givebackRatio=Number.isFinite(peakPnl)&&peakPnl>0?giveback/peakPnl*100:0,
-     atr=Number(stockAnalysis.atr14),atrBase=Number(stockAnalysis.atrBase),atrExpansion=Number(stockAnalysis.atrExpansion),
      atrDrawdown=Number.isFinite(atr)&&atr>0?(peak-price)/atr:null,
      retained=Number.isFinite(peakPnl)&&peakPnl>0?Math.max(0,pnl)/peakPnl*100:null,
-     momentum=adaptiveMomentumState(stockAnalysis),t=trendInfoFromAnalysis(stockAnalysis),sharedState=sharedTrendMomentumState(stockAnalysis,momentum),reasons=[],
-     manualCorrected=Number.isFinite(manualPeak)&&manualPeak>0;
+     momentum=adaptiveMomentumState(stockAnalysis),t=trendInfoFromAnalysis(stockAnalysis),sharedState=sharedTrendMomentumState(stockAnalysis,momentum),reasons=[];
      stage='none',title='⚪ 尚未啟動',cls='warn',action='none',active=false;
- if(manualCorrected)reasons.push('已使用手動校正最高持有價 '+fmt(manualPeak)+'；之後若現價創新高會繼續自動上修');
+ if(manualCorrected)reasons.push('已使用手動校正最高持有價 '+fmt(manualPeak)+'，視為已確認基準；之後的新高仍需通過有效高點確認');
+ if(candidateConfirmed)reasons.push('新高連續兩次刷新獲得確認，已升格為有效高點 '+fmt(peak));
+ else if(Number.isFinite(candidate)&&candidate>peak)reasons.push('取樣新高 '+fmt(candidate)+' 尚待確認；下一次刷新若仍維持在高點附近才會納入獲利保護');
+ if(Number.isFinite(rawPeak)&&rawPeak>peak)reasons.push('取樣最高價 '+fmt(rawPeak)+' 僅保留資訊，不直接墊高最高曾獲利');
  if(holding.strategy==='long'){
   reasons.push('中長期策略保留最高價與自適應回撤資訊，但不因短線波動自動停利');
-  return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,retained:retained,atr:atr,atrBase:atrBase,atrExpansion:atrExpansion,atrDrawdown:atrDrawdown,momentum:momentum,stage:'long',title:'🔵 中長期：僅追蹤獲利',cls:'good',action:'none',active:false,reasons:reasons};
+  return{peakPrice:peak,rawPeakPrice:rawPeak,peakCandidatePrice:candidate,peakCandidateCount:candidateCount,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,retained:retained,atr:atr,atrBase:atrBase,atrExpansion:atrExpansion,atrDrawdown:atrDrawdown,momentum:momentum,stage:'long',title:'🔵 中長期：僅追蹤獲利',cls:'good',action:'none',active:false,reasons:reasons};
  }
  // v5.15 不再用固定 +3/+5/+10% 決定保護層級。只要曾有正浮盈，就開始建立動態基準；真正動作由 ATR 回撤＋浮盈保留率＋動能共同決定。
  if(Number.isFinite(peakPnl)&&peakPnl>0){active=true;stage='adaptive';title='🟢 自適應獲利追蹤';cls='good';reasons.push('最高曾獲利 '+pct(peakPnl)+'；目前保留 '+(Number.isFinite(retained)?fmt(retained)+'%':'—')+' 的最高浮盈')}
@@ -1241,9 +1258,9 @@ function profitProtection(stockAnalysis,holding,previous){
     if(action==='hold'&&momentum.level!=='high'){action='reduce';title='🟠 支撐跌破：收緊獲利保護';cls='warn'}
   }
  }
- return{peakPrice:peak,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,retained:retained,atr:atr,atrBase:atrBase,atrExpansion:atrExpansion,atrDrawdown:atrDrawdown,momentum:momentum,stage:stage,title:title,cls:cls,action:action,active:active,reasons:reasons};
+ return{peakPrice:peak,rawPeakPrice:rawPeak,peakCandidatePrice:candidate,peakCandidateCount:candidateCount,peakPnl:peakPnl,drawdown:drawdown,giveback:giveback,givebackRatio:givebackRatio,retained:retained,atr:atr,atrBase:atrBase,atrExpansion:atrExpansion,atrDrawdown:atrDrawdown,momentum:momentum,stage:stage,title:title,cls:cls,action:action,active:active,reasons:reasons};
 }
-function profitProtectionHtml(p,sg){if(!p)return'';let paused=!!(sg&&sg.blocked&&(p.action==='sell'||p.action==='reduce')),actionText=paused?'⏸ 暫緩減碼':p.action==='sell'?'建議停利':p.action==='reduce'?'收緊／減碼':p.action==='hold'?'續抱':'原策略判斷',title=paused?'🟠 自適應鎖利：警戒中':p.title,note=paused?'目前獲利保護條件已進入警戒，但防殺低閘門已啟動：處於超賣／急跌區且尚未確認完整支撐破壞，因此保留警戒、不在此處執行減碼。等待反彈失敗、再次破底或支撐破壞確認後再重新評估。':'v5.15 改為個股自適應：ATR 衡量這次回檔相對於個股自身波動是否異常；最高浮盈保留率衡量成果流失；再由動能健康／降溫／轉弱決定是否收緊或停利。最高價紀錄沿用，不重置。';return `<div class="profit-protect"><div class="profit-protect-head"><span class="${paused?'warn':p.cls}">${esc(title)}</span><span>${esc(actionText)}</span></div><div class="profit-grid"><div class="kpi"><small>最高曾獲利</small><b>${Number.isFinite(Number(p.peakPnl))?pct(Number(p.peakPnl)):'—'}</b></div><div class="kpi"><small>最高浮盈保留</small><b>${Number.isFinite(Number(p.retained))?fmt(Number(p.retained))+'%':'—'}</b></div><div class="kpi"><small>ATR 回撤</small><b>${Number.isFinite(Number(p.atrDrawdown))?fmt(Number(p.atrDrawdown))+' ATR':'—'}</b></div><div class="kpi"><small>近期 ATR%</small><b>${Number.isFinite(Number(p.atr))&&Number(p.peakPrice)>0?fmt(Number(p.atr)/Number(p.peakPrice)*100)+'%':'—'}</b></div></div><div class="profit-note">${esc(note)}</div><ul class="profit-reasons">${(p.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
+function profitProtectionHtml(p,sg){if(!p)return'';let paused=!!(sg&&sg.blocked&&(p.action==='sell'||p.action==='reduce')),actionText=paused?'⏸ 暫緩減碼':p.action==='sell'?'建議停利':p.action==='reduce'?'收緊／減碼':p.action==='hold'?'續抱':'原策略判斷',title=paused?'🟠 自適應鎖利：警戒中':p.title,note=paused?'目前獲利保護條件已進入警戒，但防殺低閘門已啟動：處於超賣／急跌區且尚未確認完整支撐破壞，因此保留警戒、不在此處執行減碼。等待反彈失敗、再次破底或支撐破壞確認後再重新評估。':'v5.22.7 有效高點確認：單次刷新碰到的新高先列待確認；下一次刷新仍維持在高點附近才納入最高曾獲利與 ATR 回撤。瞬間尖刺保留為取樣最高價資訊，但不直接觸發鎖利。';let candidate=Number(p.peakCandidatePrice);return `<div class="profit-protect"><div class="profit-protect-head"><span class="${paused?'warn':p.cls}">${esc(title)}</span><span>${esc(actionText)}</span></div><div class="profit-grid"><div class="kpi"><small>最高曾獲利</small><b>${Number.isFinite(Number(p.peakPnl))?pct(Number(p.peakPnl)):'—'}</b></div><div class="kpi"><small>有效高點</small><b>${Number.isFinite(Number(p.peakPrice))?fmt(Number(p.peakPrice)):'—'}</b></div><div class="kpi"><small>待確認新高</small><b>${Number.isFinite(candidate)&&candidate>Number(p.peakPrice)?fmt(candidate):'—'}</b></div><div class="kpi"><small>取樣最高價</small><b>${Number.isFinite(Number(p.rawPeakPrice))?fmt(Number(p.rawPeakPrice)):'—'}</b></div><div class="kpi"><small>最高浮盈保留</small><b>${Number.isFinite(Number(p.retained))?fmt(Number(p.retained))+'%':'—'}</b></div><div class="kpi"><small>ATR 回撤</small><b>${Number.isFinite(Number(p.atrDrawdown))?fmt(Number(p.atrDrawdown))+' ATR':'—'}</b></div><div class="kpi"><small>近期 ATR%</small><b>${Number.isFinite(Number(p.atr))&&Number(p.peakPrice)>0?fmt(Number(p.atr)/Number(p.peakPrice)*100)+'%':'—'}</b></div></div><div class="profit-note">${esc(note)}</div><ul class="profit-reasons">${(p.reasons||[]).map(function(r){return'<li>'+esc(r)+'</li>'}).join('')}</ul></div>`}
 function buildPositionAdvice(stockAnalysis,holding,capitalState){
  let mr=marketRisk(),technical=stockAnalysis.advice||buildAdvice(stockAnalysis),level=holdingLevel(holding),
      pp=stockAnalysis.profitProtection,cr=stockAnalysis.chaseRisk,rs=stockAnalysis.relativeStrength,
