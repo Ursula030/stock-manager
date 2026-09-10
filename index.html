@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.22.7</title>
+<title>股倉雷達 v5.22.8</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -146,7 +146,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.7</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.8</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -211,6 +211,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
 
+<div class="card"><strong>📌 v5.22.8 市場候選池固定日快照</strong><div class="note" style="margin-top:8px">同一個異常資金資料日只產生一次候選池；之後手動／自動重新掃描會直接沿用該資料日快照，不再因盤中行情或個別行情 API 暫時失敗而換股。新資料日才重新以該日完整日 K 篩選；若任一來源失敗或個股完整日 K 與異常資金資料日不一致，本次結果不發布並保留上一份候選。</div></div>
 <div class="card"><strong>📍 v5.22.7 有效高點確認機制</strong><div class="note" style="margin-top:8px">獲利保護不再把單次刷新碰到的新高立刻升格為最高持有價。新高先進入「待確認」，需下一次刷新仍維持在新高附近才成為有效高點；瞬間尖刺若立刻消失，不會墊高最高曾獲利與 ATR 回撤。真實／取樣最高價另行保留作資訊，不影響鎖利判斷。既有最高價紀錄不重置；手動最高持有價修正仍視為已確認基準。</div></div>
 <div class="card"><strong>🧠 v5.22.6 進場脈絡／轉強驗證／新證據閘門</strong><div class="note" style="margin-top:8px">從觀察清單新增持股時，若當下為 A 強勢結構或 B 早期轉強，會保存精簡進場脈絡。持股新增「轉強驗證期」與盤中強勢修復閘門：舊 MA10 弱勢不再單獨觸發減碼；MA10 連兩日收破只先警戒，必須搭配放量＋動能轉弱、主要支撐破壞或其他新退出證據才提高減碼層級。進場前已存在的弱勢不得單獨作為買進後的退出理由。</div></div>
 <div class="card"><strong>🛡️ v5.22.5 持股成本基準／獲利保護防呆</strong><div class="note" style="margin-top:8px">編輯既有持股時若成本價改變，會清除該筆舊 Snapshot 的最高價基準，避免用舊成本時期的高點重新計算「最高曾獲利」。另外，當目前報酬 ≤ 0% 時，獲利保護只能保留歷史資訊，不得輸出分批減碼／停利；風險改由止損與支撐結構判斷。單純版本升級不會重置未修改成本的既有最高價紀錄。</div></div>
@@ -1618,32 +1619,61 @@ let CANDIDATE_RUNNING=false;
 async function refreshCandidatePool(manual){
  if(CANDIDATE_RUNNING)return;
  let st=$('candidatePoolStatus'),box=$('candidatePool');CANDIDATE_RUNNING=true;
- if(st)st.textContent=(manual?'手動':'自動')+'掃描候選中…';
+ if(st)st.textContent=(manual?'手動':'自動')+'檢查候選資料日…';
  try{
   let r=await fetch(marketScanApi()+'/api/anomaly?limit=40&minFlowYi=0.5&minScore=3&minSamples=5&_='+Date.now(),{cache:'no-store'}),
       j=await r.json();
   if(!r.ok||!j||j.ok!==true)throw new Error((j&&j.error)||('HTTP '+r.status));
+
+  // v5.22.8：候選池以「異常資金資料日」為固定快照鍵。
+  // 同一資料日已成功產生過，就直接沿用，不再用盤中行情重算而造成同日換股。
+  let cached=candidateCache(),scanDate=String(j.date||'');
+  if(cached&&Array.isArray(cached.rows)&&cached.date===scanDate&&cached.complete===true){
+   renderCandidatePool(cached.rows,cached.date,true);
+   if(st)st.textContent='📌 固定日快照｜'+cached.rows.length+' 檔｜資料日 '+(cached.date||'—')+'｜同資料日不重算';
+   return;
+  }
+
   let source=(j.rows||[]).filter(function(x){return Number(x.flowTwd)>0}).slice(0,12),
-      bench=await relativeStrengthBenchmark(false,true),done=[];
+      bench=await relativeStrengthBenchmark(false,true),done=[],errors=[];
+
   for(let i=0;i<source.length;i++){
    let x=source[i];if(st)st.textContent='候選技術篩選 '+(i+1)+' / '+source.length+'：'+x.symbol;
    try{
     let m=await market(x.symbol),signal=watchSuggestion(m);
+
+    // 異常資金是 scanDate，就只接受同一正式收盤日的完整 K。
+    // 避免隔日盤中或上游歷史資料尚未同步時，把不同日期資料混在一起。
+    if(!scanDate||signal.formalDate!==scanDate){
+     throw new Error('完整日 K 資料日 '+(signal.formalDate||'—')+' 與異常資金資料日 '+(scanDate||'—')+' 不一致');
+    }
+
     signal.relativeStrength=relativeStrengthAnalysis(signal.formalPrice,m.rows.map(function(z){return z.c}),bench,x.symbol,signal.formalDate);
     let atr=atrFromRows(m.rows,14),sr=supportResistanceAnalysis(m.rows,signal.formalPrice,signal.ma20,signal.ma60,atr),
         verdict=candidateVerdict(signal,sr);
     done.push(Object.assign({},x,{signal:signal,sr:sr,verdict:verdict}));
-   }catch(e){console.warn('candidate '+x.symbol+' skipped',e)}
+   }catch(e){
+    errors.push(x.symbol+'：'+(e&&e.message?e.message:String(e)));
+    console.warn('candidate '+x.symbol+' failed',e);
+   }
    if(i<source.length-1)await new Promise(function(resolve){setTimeout(resolve,160)});
   }
+
+  // 任何一檔來源失敗都不發布殘缺候選池，避免「少抓一檔就換另一檔」。
+  if(errors.length){
+   throw new Error('本次技術資料不完整（'+errors.length+' 檔），不覆寫候選快照。'+errors[0]);
+  }
+
   let qualified=done.filter(function(x){return x.verdict&&x.verdict.show})
     .sort(function(a,b){return a.verdict.rank-b.verdict.rank||Number(b.anomalyPercentile||0)-Number(a.anomalyPercentile||0)})
     .slice(0,5);
-  let payload={date:j.date||'',rows:qualified,updatedAt:Date.now()};
+
+  let payload={date:scanDate,rows:qualified,updatedAt:Date.now(),complete:true,snapshotVersion:'5.22.8'};
   saveCandidateCache(payload);renderCandidatePool(qualified,payload.date,false);
+  if(st)st.textContent='✅ 固定日快照完成｜'+qualified.length+' 檔｜資料日 '+(payload.date||'—');
  }catch(e){
   let cached=candidateCache();
-  if(st)st.textContent='⚠️ 候選掃描失敗，'+(cached&&Array.isArray(cached.rows)?'保留上次候選':'目前無可用候選')+'：'+e.message;
+  if(st)st.textContent='⚠️ 候選掃描未發布，'+(cached&&Array.isArray(cached.rows)?'保留上次固定快照':'目前無可用候選')+'：'+e.message;
   if(cached&&Array.isArray(cached.rows))renderCandidatePool(cached.rows,cached.date,true);
   else if(box)box.innerHTML='<div class="candidate-empty">候選掃描暫時失敗，但不影響持股與自選觀察功能。</div>';
  }finally{CANDIDATE_RUNNING=false}
