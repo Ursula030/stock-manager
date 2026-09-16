@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.22.9</title>
+<title>股倉雷達 v5.24.0</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -142,11 +142,14 @@ body.analysis-open{overflow:hidden}
 .candidate-empty{padding:16px 8px;text-align:center;color:var(--muted);line-height:1.65}
 @media(max-width:620px){.candidate-grid{grid-template-columns:repeat(2,1fr)}}
 
+
+/* v5.23 特殊事件風險日曆 */
+.event-calendar{margin-top:10px}.event-item{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-top:8px;line-height:1.5}.event-item.today{border-width:2px}.event-date{font-size:12px;color:var(--muted)}.event-title{font-weight:850;margin-top:2px}.event-rule{font-size:12px;color:var(--muted);margin-top:5px}.event-safe{margin-top:10px;padding:10px 11px;border-radius:12px;background:#fff7e8;color:#7b5100;font-weight:700;line-height:1.55}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.22.9</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.24.0</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -158,6 +161,7 @@ body.analysis-open{overflow:hidden}
   </div></div>
   <div class="card"><strong>💰 資金水位</strong><div id="homeCapitalLevel"></div></div>
   <div class="card"><div class="space"><strong>🌐 大盤風險雷達</strong><button class="secondary" onclick="refreshMarketContext(true)">更新風險</button></div><div id="homeMarketRisk" style="margin-top:10px"></div></div>
+  <div class="card"><div class="space"><strong>🗓️ 特殊事件風險日曆</strong><div class="note">事件只提高警戒，不預測漲跌</div></div><div id="homeEventCalendar" class="event-calendar"></div></div>
   <div class="card"><strong>今日重點</strong><ul class="reminder-list" id="homeReminders"></ul></div>
   <div class="card"><strong>快速入口</strong><div class="quick-grid"><button class="secondary" onclick="showPage('portfolio')">查看持股</button><button class="secondary" onclick="showPage('watch')">查看觀察</button><button class="secondary" onclick="showPage('replay')">查看回放</button></div></div>
 </section>
@@ -211,7 +215,8 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
 
-<div class="card"><strong>🔄 v5.22.9 候選池跨日更新修正</strong><div class="note" style="margin-top:8px">同資料日仍沿用固定快照；Worker 出現新的資料日就重新建立該日候選。個別股票行情失敗只略過該檔，不再讓整批停留在前一交易日；成功納入的股票仍要求完整日 K 與異常資金資料日一致。</div></div>
+<div class="card"><strong>🗓️ v5.24.0 特殊事件風險日曆</strong><div class="note" style="margin-top:8px">升級為完整財經事件雷達：台指期結算、四巫日依曆法自動計算；FOMC、非農、CPI／PPI、PCE／GDP 使用官方公布日期，並換算成台股主要反應日。加入 T-1／當日／T+1 防誤殺提醒與高／中關注分級。事件不預測方向、不改變 M 分數，也不得單獨觸發減碼／停損。</div></div>
+<div class="card"><strong>🔄 v5.24.0 候選池跨日更新修正</strong><div class="note" style="margin-top:8px">同資料日仍沿用固定快照；Worker 出現新的資料日就重新建立該日候選。個別股票行情失敗只略過該檔，不再讓整批停留在前一交易日；成功納入的股票仍要求完整日 K 與異常資金資料日一致。</div></div>
 <div class="card"><strong>📌 v5.22.8 市場候選池固定日快照</strong><div class="note" style="margin-top:8px">同一個異常資金資料日只產生一次候選池；之後手動／自動重新掃描會直接沿用該資料日快照，不再因盤中行情或個別行情 API 暫時失敗而換股。新資料日才重新以該日完整日 K 篩選；若任一來源失敗或個股完整日 K 與異常資金資料日不一致，本次結果不發布並保留上一份候選。</div></div>
 <div class="card"><strong>📍 v5.22.7 有效高點確認機制</strong><div class="note" style="margin-top:8px">獲利保護不再把單次刷新碰到的新高立刻升格為最高持有價。新高先進入「待確認」，需下一次刷新仍維持在新高附近才成為有效高點；瞬間尖刺若立刻消失，不會墊高最高曾獲利與 ATR 回撤。真實／取樣最高價另行保留作資訊，不影響鎖利判斷。既有最高價紀錄不重置；手動最高持有價修正仍視為已確認基準。</div></div>
 <div class="card"><strong>🧠 v5.22.6 進場脈絡／轉強驗證／新證據閘門</strong><div class="note" style="margin-top:8px">從觀察清單新增持股時，若當下為 A 強勢結構或 B 早期轉強，會保存精簡進場脈絡。持股新增「轉強驗證期」與盤中強勢修復閘門：舊 MA10 弱勢不再單獨觸發減碼；MA10 連兩日收破只先警戒，必須搭配放量＋動能轉弱、主要支撐破壞或其他新退出證據才提高減碼層級。進場前已存在的弱勢不得單獨作為買進後的退出理由。</div></div>
@@ -338,6 +343,7 @@ function runDecisionCheck(){
    else if(technicalConcern&&!hasProfit){level='warn';title='🟡 技術風險需要確認';advice='目前不是獲利了結情境；請以支撐破壞、反彈失敗與止損防殺低規則判斷是否減碼。';}
  }else if(score<50){level='bad';title='🔴 疑似情緒性操作';advice='建議先不要立即下單，先確認是否符合原策略與客觀訊號。';}
  else if(score<75){level='warn';title='🟡 這筆操作需要再確認';advice='先確認買賣理由是否能用一句具體規則說明，再決定是否執行。';}
+ let specialEvents=activeSpecialEvents();if(specialEvents.length&&(action==='sell'||action==='reduce')){reasons.push('🗓️ 今日特殊事件：'+specialEvents.map(function(e){return e.title}).join('、')+'；事件本身不是賣出理由');if(!fundChanged&&!technicalConcern&&!profit){level='warn';title='🗓️ 特殊事件不能單獨觸發賣出';advice='今天有特殊事件，但系統不預測事件方向。若沒有支撐破壞、動能轉弱、獲利保護或基本面改變等既有退出證據，先不要只因事件名稱減碼／賣出。';}}
  if(!reasons.length)reasons.push('未偵測到明顯恐慌、FOMO 或違反策略的訊號');
  $('guardResult').className='guard-result show '+level;
  $('guardResult').innerHTML='<div style="font-size:18px">'+title+'｜冷靜度 '+score+'/100</div><div style="margin-top:6px">'+advice+'</div><ul style="margin:8px 0 0;padding-left:20px">'+reasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')+'</ul>';
@@ -505,13 +511,55 @@ function decisionEnvHtml(env,id){
 }
 function toggleScoreBreakdown(id){let el=$('score-'+id);if(el)el.classList.toggle('show')}
 
+// v5.24 完整財經事件雷達：事件 ≠ 多空訊號
+const FOMC_DECISIONS={2026:['2026-01-28','2026-03-18','2026-04-29','2026-06-17','2026-07-29','2026-09-16','2026-10-28','2026-12-09'],2027:['2027-01-27','2027-03-17','2027-04-28','2027-06-09','2027-07-28','2027-09-15','2027-10-27','2027-12-08']};
+// 美國官方發布日；日期以美國官方日曆為準，顯示時換算成「台股主要反應日」（多數 08:30 ET 資料為台灣當晚公布，下一交易日反映）
+const US_MACRO_2026={
+ '2026-09-04':[ ['非農就業','high','BLS Employment Situation'] ],
+ '2026-09-10':[ ['PPI 生產者物價','medium','BLS'] ],
+ '2026-09-11':[ ['CPI 消費者物價','high','BLS'] ],
+ '2026-09-30':[ ['PCE／個人所得與支出','high','BEA'] ],
+ '2026-10-02':[ ['非農就業','high','BLS Employment Situation'] ],
+ '2026-10-29':[ ['PCE／個人所得與支出','high','BEA'],['美國 GDP 初值','medium','BEA'] ],
+ '2026-11-06':[ ['非農就業','high','BLS Employment Situation'] ],
+ '2026-11-25':[ ['PCE／個人所得與支出','high','BEA'],['美國 GDP 修正值','medium','BEA'] ],
+ '2026-12-04':[ ['非農就業','high','BLS Employment Situation'] ],
+ '2026-12-23':[ ['PCE／個人所得與支出','high','BEA'],['美國 GDP 終值','medium','BEA'] ]
+};
+function localYmd(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function nthWeekday(year,month,weekday,n){let d=new Date(year,month-1,1),add=(weekday-d.getDay()+7)%7;return new Date(year,month-1,1+add+7*(n-1))}
+function nextWeekday(d){let x=new Date(d);do{x.setDate(x.getDate()+1)}while(x.getDay()===0||x.getDay()===6);return x}
+function ymdDate(ds){let p=ds.split('-').map(Number);return new Date(p[0],p[1]-1,p[2])}
+function eventCalendarAround(base){
+ base=base||new Date();let start=new Date(base.getFullYear(),base.getMonth(),base.getDate()-4),end=new Date(base.getFullYear(),base.getMonth(),base.getDate()+14),events=[];
+ function add(date,title,type,note,level,source,officialDate){if(date>=start&&date<=end)events.push({date:localYmd(date),title,type,note,level:level||'medium',source:source||'',officialDate:officialDate||localYmd(date)})}
+ // 台指期月契約：每月第 3 個星期三。只提示波動，不推論方向。
+ for(let off=-1;off<=1;off++){let d=new Date(base.getFullYear(),base.getMonth()+off,1),x=nthWeekday(d.getFullYear(),d.getMonth()+1,3,3);add(x,'台指期月結算日','tw-expiry','結算／移倉可能增加盤中波動；不預設拉高或下殺。','high','TAIFEX')}
+ // 美國季度股指衍生品到期：3/6/9/12 第 3 個星期五。
+ for(let y=base.getFullYear()-1;y<=base.getFullYear()+1;y++)for(const m of [3,6,9,12])add(nthWeekday(y,m,5,3),'美股季度衍生品到期（四巫日）','us-expiry','到期與換月可能放大成交／波動；事件本身沒有固定多空方向。','high','CME／交易所規則')
+ // FOMC 決策在美東下午公布，台股主要在下一個交易日消化，因此同時保留官方日與台股反應日。
+ Object.keys(FOMC_DECISIONS).forEach(function(y){FOMC_DECISIONS[y].forEach(function(ds){let official=ymdDate(ds),impact=nextWeekday(official);add(impact,'FOMC 利率決策－台股反應日','fomc','前一晚美國公布利率決策；不先猜利多／利空，觀察實際價格反應。','high','Federal Reserve',ds)})});
+ // BLS / BEA 官方發布日：換算為下一個台股交易日作風險提醒。
+ Object.keys(US_MACRO_2026).forEach(function(ds){US_MACRO_2026[ds].forEach(function(a){add(nextWeekday(ymdDate(ds)),a[0]+'－台股反應日','us-macro','美國官方資料於前一晚公布；等待市場實際解讀，不以事件名稱直接操作。',a[1],a[2],ds)})});
+ let seen={};return events.filter(function(e){let k=e.date+'|'+e.title;if(seen[k])return false;seen[k]=1;return true}).sort(function(a,b){return a.date.localeCompare(b.date)||({high:0,medium:1,info:2}[a.level]-{high:0,medium:1,info:2}[b.level])})
+}
+function eventDelta(ds,today){return Math.round((ymdDate(ds)-ymdDate(today))/86400000)}
+function activeSpecialEvents(){let t=localYmd(),events=eventCalendarAround(new Date());return events.filter(function(e){let d=eventDelta(e.date,t);return d>=-1&&d<=0})}
+function eventLevelText(e){return e.level==='high'?'🔴 高關注':e.level==='medium'?'🟡 一般關注':'⚪ 資訊'}
+function renderEventCalendar(){
+ let el=$('homeEventCalendar');if(!el)return;let today=localYmd(),events=eventCalendarAround(new Date()),near=events.filter(function(e){let d=eventDelta(e.date,today);return d>=-1&&d<=7});
+ if(!near.length){el.innerHTML='<div class="status">未偵測到未來 7 天的重要事件。事件資料只作風險提醒。</div>';return}
+ el.innerHTML=near.map(function(e){let d=eventDelta(e.date,today),phase=d===0?'今天':d===1?'明天':d===-1?'昨日':e.date;let phaseNote=d===1?'T-1：明日事件，不因預期提前賣出。':d===0?'當日：等待行情確認，不預測方向。':d===-1?'T+1：事件已發生，改看市場實際反應。':'';let src=e.source?' · '+e.source:'';let od=e.officialDate!==e.date?' · 官方公布 '+e.officialDate:'';return '<div class="event-item '+(d===0?'today':'')+'"><div class="event-date">'+esc(phase)+' · '+eventLevelText(e)+esc(src+od)+'</div><div class="event-title">'+(d===0?'⚠️ ':'')+esc(e.title)+'</div><div>'+esc(e.note)+'</div>'+(phaseNote?'<div class="event-rule">'+esc(phaseNote)+'</div>':'')+'</div>'}).join('')+'<div class="event-safe">🛡️ 事件防誤殺：事件只調高注意力，不直接改變 M 分數，也不得單獨觸發賣出／減碼。仍由趨勢、支撐、動能、急跌保護與既有停損／停利規則決定。</div>';
+}
+function specialEventReminderItems(){let t=localYmd();return eventCalendarAround(new Date()).filter(function(e){let d=eventDelta(e.date,t);return d>=0&&d<=1&&e.level==='high'}).map(function(e){let d=eventDelta(e.date,t);return{p:2,t:'🗓️ '+(d===0?'今日':'明日')+' '+esc(e.title)+'：高關注，但事件本身不構成買賣訊號'}})}
+
 function renderDashboard(){
  let c=getCapitalState(),h=holdings(),w=watchlist(),rp=replays(),sn=snapshots(),pnl=0,pnlKnown=false;
  Object.keys(sn).forEach(function(k){let n=Number(sn[k]&&sn[k].pnlMoney);if(Number.isFinite(n)){pnl+=n;pnlKnown=true}});
  $('homeTotal').textContent=c.configured?money(c.total):'未設定';$('homeInvested').textContent=money(c.invested);$('homeCash').textContent=c.configured?money(c.cash):'—';$('homeCashPct').textContent=c.configured?fmt(c.actualCash)+'%':'—';$('homeHoldCount').textContent=h.length;$('homeWatchCount').textContent=w.length;$('homeReplayCount').textContent=rp.length;$('homePnl').textContent=pnlKnown?(pnl>=0?'+':'')+money(pnl):'—';$('homePnl').className=pnl>=0?'good':'bad';
- $('homeMarketRisk').innerHTML=marketRiskHtml();
+ $('homeMarketRisk').innerHTML=marketRiskHtml();renderEventCalendar();
  $('homeCapitalLevel').innerHTML=c.configured?'<div class="level-box"><div>總資金：'+money(c.total)+'</div><div>已投入：'+money(c.invested)+'</div><div>剩餘現金：'+money(c.cash)+'</div><div class="level-bar">'+bar(c.actualCash)+' '+fmt(c.actualCash)+'%</div><div>最低目標：'+fmt(c.targetCash)+'%</div><div class="capital-alert '+c.cls+'">'+c.statusText+'</div></div>':'<div class="status">尚未設定投資總資金。</div>';
- let items=[];h.forEach(function(x){let l=holdingLevel(x);if(l.percent!=null&&l.percent>100)items.push({p:1,t:'⚠ '+esc(x.ticker)+' 個股水位 '+fmt(l.percent)+'%，已超過上限'});else if(l.percent!=null&&l.percent>=80)items.push({p:2,t:'⚠ '+esc(x.ticker)+' 個股水位 '+fmt(l.percent)+'%'});let a=sn[x.id],ad=a&&(a.finalAdvice&&a.finalAdvice.text||a.advice&&a.advice.summary||a.decision);if(ad&&/減碼|賣出|停損/.test(ad))items.push({p:4,t:'🔴 '+esc(x.ticker)+' '+esc(ad)});if(a&&a.profitProtection&&/reduce|sell/.test(a.profitProtection.action||''))items.push({p:4,t:(a.profitProtection.action==='sell'?'🔴 ':'🟠 ')+esc(x.ticker)+' '+esc(a.profitProtection.title)});});
+ let items=specialEventReminderItems();h.forEach(function(x){let l=holdingLevel(x);if(l.percent!=null&&l.percent>100)items.push({p:1,t:'⚠ '+esc(x.ticker)+' 個股水位 '+fmt(l.percent)+'%，已超過上限'});else if(l.percent!=null&&l.percent>=80)items.push({p:2,t:'⚠ '+esc(x.ticker)+' 個股水位 '+fmt(l.percent)+'%'});let a=sn[x.id],ad=a&&(a.finalAdvice&&a.finalAdvice.text||a.advice&&a.advice.summary||a.decision);if(ad&&/減碼|賣出|停損/.test(ad))items.push({p:4,t:'🔴 '+esc(x.ticker)+' '+esc(ad)});if(a&&a.profitProtection&&/reduce|sell/.test(a.profitProtection.action||''))items.push({p:4,t:(a.profitProtection.action==='sell'?'🔴 ':'🟠 ')+esc(x.ticker)+' '+esc(a.profitProtection.title)});});
  if(c.configured&&c.actualCash<c.targetCash)items.push({p:3,t:'🔴 現金水位低於最低目標'});let mr=marketRisk();if(mr&&mr.level==='high')items.push({p:0,t:'🔴 大盤風險 '+fmt(mr.pct)+'%，暫停新買進／加碼'});else if(mr&&mr.level==='medium')items.push({p:3,t:'🟡 大盤風險 '+fmt(mr.pct)+'%，降低追價與加碼力度'});else if(mr&&mr.shortTermShock)items.push({p:3,t:'⚡ 0050／2330 單日急跌，暫緩追價與加碼；不影響續抱與獲利保護'});
  document.querySelectorAll('#watchlist .stock').forEach(function(el){let f=el.querySelector('.final-advice');if(f&&/可考慮分批布局/.test(f.textContent)){let title=el.querySelector('.stocktitle');items.push({p:5,t:'🟢 '+esc(title?title.textContent:'觀察股票')+' 已出現可考慮布局訊號'})}});
  rp.forEach(function(r){let waits=[];if(r.result3==null)waits.push('3');if(r.result7==null)waits.push('7');if(r.result30==null)waits.push('30');if(waits.length)items.push({p:6,t:'🧠 '+esc(r.ticker)+' 回放紀錄等待 '+waits.join('／')+' 日結果'})});
@@ -1659,7 +1707,7 @@ async function refreshCandidatePool(manual){
    }
    if(i<source.length-1)await new Promise(function(resolve){setTimeout(resolve,160)});
   }
-  // v5.22.9：個別股票失敗只略過，不阻止新交易日候選快照更新。
+  // v5.24.0：個別股票失敗只略過，不阻止新交易日候選快照更新。
 
   let qualified=done.filter(function(x){return x.verdict&&x.verdict.show})
     .sort(function(a,b){return a.verdict.rank-b.verdict.rank||Number(b.anomalyPercentile||0)-Number(a.anomalyPercentile||0)})
