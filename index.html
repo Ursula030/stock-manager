@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.24.0</title>
+<title>股倉雷達 v5.25.1</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -145,11 +145,12 @@ body.analysis-open{overflow:hidden}
 
 /* v5.23 特殊事件風險日曆 */
 .event-calendar{margin-top:10px}.event-item{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--soft);margin-top:8px;line-height:1.5}.event-item.today{border-width:2px}.event-date{font-size:12px;color:var(--muted)}.event-title{font-weight:850;margin-top:2px}.event-rule{font-size:12px;color:var(--muted);margin-top:5px}.event-safe{margin-top:10px;padding:10px 11px;border-radius:12px;background:#fff7e8;color:#7b5100;font-weight:700;line-height:1.55}
+.entry-phase{margin-top:11px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--soft)}.entry-phase-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:850}.entry-phase-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.entry-phase-note{font-size:13px;line-height:1.55;margin-top:8px}.entry-phase-reasons{margin:7px 0 0;padding-left:18px;font-size:13px;line-height:1.55}@media(max-width:620px){.entry-phase-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.24.0</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.25.1</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -182,7 +183,7 @@ body.analysis-open{overflow:hidden}
     <div class="space">
       <div>
         <strong>🛰️ 市場候選池</strong>
-        <div class="note" style="margin-top:6px">異常資金雷達先找股票，再用完整日 K 篩選 A「結構已強」或 B「早期轉強」。背景最多檢查 12 檔異常流入，畫面最多顯示 5 檔。候選不會自動加入自選觀察。</div>
+        <div class="note" style="margin-top:6px">異常資金雷達先找股票，再用完整日 K 分層篩選。背景最多檢查 30 檔異常流入；「優先候選」維持嚴格進場門檻，「接近候選／已發動待回測」只提供追蹤，不等於買進訊號。畫面最多顯示 8 檔。</div>
       </div>
       <button class="secondary" onclick="refreshCandidatePool(true)">重新掃描</button>
     </div>
@@ -215,6 +216,8 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
 
+<div class="card"><strong>🎯 v5.25.0 進場階段／發動準備度</strong><div class="note" style="margin-top:8px">觀察與市場候選不再把「趨勢偏多」直接等同「現在適合布局」。新增潛伏、預發動、發動確認、延伸追高、健康回測、轉強失敗等階段；同時檢查近2／5日推進、量能、RSI、MA20乖離、20日高點距離與相對0050。候選池優先排序「預發動／健康回測」，已明顯延伸者不再因技術分數高就排前面。此層只改善進場時機，不預測一定上漲。</div></div>
+<div class="card"><strong>🛰️ v5.25.1 市場候選池分層掃描</strong><div class="note" style="margin-top:8px">背景技術檢查由異常資金前 12 檔擴大至前 30 檔，畫面最多顯示 8 檔。候選分為「🌱／🧊 優先候選」「👀 接近候選」「🚀 已發動待回測」；只有優先候選維持高品質進場資格，接近與待回測只提供追蹤，不等於買進。新版會使同資料日的舊候選快照失效並重新掃描，避免沿用 v5.25.0 的空白結果。</div></div>
 <div class="card"><strong>🗓️ v5.24.0 特殊事件風險日曆</strong><div class="note" style="margin-top:8px">升級為完整財經事件雷達：台指期結算、四巫日依曆法自動計算；FOMC、非農、CPI／PPI、PCE／GDP 使用官方公布日期，並換算成台股主要反應日。加入 T-1／當日／T+1 防誤殺提醒與高／中關注分級。事件不預測方向、不改變 M 分數，也不得單獨觸發減碼／停損。</div></div>
 <div class="card"><strong>🔄 v5.24.0 候選池跨日更新修正</strong><div class="note" style="margin-top:8px">同資料日仍沿用固定快照；Worker 出現新的資料日就重新建立該日候選。個別股票行情失敗只略過該檔，不再讓整批停留在前一交易日；成功納入的股票仍要求完整日 K 與異常資金資料日一致。</div></div>
 <div class="card"><strong>📌 v5.22.8 市場候選池固定日快照</strong><div class="note" style="margin-top:8px">同一個異常資金資料日只產生一次候選池；之後手動／自動重新掃描會直接沿用該資料日快照，不再因盤中行情或個別行情 API 暫時失敗而換股。新資料日才重新以該日完整日 K 篩選；若任一來源失敗或個股完整日 K 與異常資金資料日不一致，本次結果不發布並保留上一份候選。</div></div>
@@ -1438,7 +1441,7 @@ function resetWatchForm(){['wTicker','wTarget','wBudget','wReason','watchEditId'
 function saveWatch(){let ticker=normalizeTicker($('wTicker').value),targetText=$('wTarget').value.trim(),target=targetText===''?null:+targetText,budgetText=$('wBudget').value.trim(),budget=budgetText===''?0:+budgetText,reason=$('wReason').value.trim();$('wTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');if(target!==null&&!(target>0))return alert('目標價請留空或輸入大於 0 的數字');if(!(budget>=0))return alert('請輸入正確預算');let w=watchlist(),id=$('watchEditId').value||Date.now().toString(),old=w.find(function(x){return x.id===id}),item={id:id,ticker:ticker,target:target,budget:budget,reason:reason},i=w.findIndex(function(x){return x.id===id});if(i>=0)w[i]=item;else w.push(item);if(old&&old.ticker!==ticker)removeWatchCache(id);storeWatch(w);resetWatchForm();setEntryForm('watchForm',false);renderWatch();renderDashboard();void refreshWatchOne(id)}
 function editWatch(id){closeAnalysis();let x=watchlist().find(function(v){return v.id===id});if(!x)return;$('wTicker').value=x.ticker;$('wTarget').value=x.target;$('wBudget').value=x.budget;$('wReason').value=x.reason||'';$('watchEditId').value=x.id;setEntryForm('watchForm',true,'wTicker')}
 function removeWatch(id){if(confirm('確定從觀察名單刪除？')){storeWatch(watchlist().filter(function(x){return x.id!==id}));removeWatchCache(id);removeWatchEntryState(id);delete ANALYSIS_CACHE.watch[id];closeAnalysis();renderWatch();renderDashboard()}}
-function renderWatchCardFull(x,data){let el=$('w-'+x.id);if(!el)return;if(!data){el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">目標價 ${x.target>0?fmt(x.target):'未設定'}｜預算 ${money(x.budget)}</div></div><div class="row"><button class="ghost" onclick="editWatch('${x.id}')">編輯</button><button class="danger" onclick="removeWatch('${x.id}')">刪除</button></div></div><div class="reason note" style="margin-top:8px"><strong>你的觀察理由</strong><br>${esc(x.reason)||'未填寫'}</div><div class="status">等待第一次更新行情…</div>`;return}let price=Number(data.price),signal=data.signal||{},technicalReasons=Array.isArray(signal.reasons)?signal.reasons:[],hasTarget=x.target>0,gap=hasTarget?(price-x.target)/x.target*100:null,level=hasTarget?watchLevel(gap):{text:'🟡 尚未設定目標價',cls:'warn'},finalAdvice=buildWatchPositionAdvice(signal,getCapitalState()),time=data.time?new Date(data.time):null;el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)} ${esc(data.name||x.ticker)}</div><div class="stocksub">行情 ${time&&!Number.isNaN(time.getTime())?time.toLocaleString('zh-TW'):'—'}｜${data.quoteInfo?esc(data.quoteInfo.text):'—'}｜來源 ${data.quoteInfo?esc(data.quoteInfo.source):'—'}${data.cached?'<span class="pill">快取</span>':''}</div></div><div class="row"><button class="ghost" onclick="editWatch('${x.id}')">編輯</button><button class="danger" onclick="removeWatch('${x.id}')">刪除</button></div></div><div class="watch-status ${level.cls}">${level.text}</div><div class="stockgrid"><div class="kpi"><small>目前價格</small><b>${fmt(price)}</b></div><div class="kpi"><small>目標價</small><b>${hasTarget?fmt(x.target):'未設定'}</b></div><div class="kpi"><small>價差</small><b>${hasTarget?((price-x.target>=0?'+':'')+fmt(price-x.target)):'—'}</b></div><div class="kpi"><small>差距</small><b class="${level.cls}">${hasTarget?pct(gap):'—'}</b></div><div class="kpi"><small>預算</small><b>${money(x.budget)}</b></div><div class="kpi"><small>預估可買</small><b>${x.budget>0?Math.floor(x.budget/price).toLocaleString('zh-TW')+' 股':'—'}</b></div></div><div class="advice-summary ${signal.cls||'warn'}">技術判斷：${signal.text||'🟡 等待更新行情'}${Number.isFinite(Number(signal.score))?'（'+Number(signal.score)+' / 9）':''}</div>${chaseRiskHtml(signal.chaseRisk,'watch')}${relativeStrengthHtml(signal.relativeStrength,'watch')}<div class="final-advice ${finalAdvice.cls}">最終建議：${finalAdvice.text}</div><div class="reason" style="margin-top:12px"><strong>系統判斷理由</strong>${technicalReasons.length?'<ul class="suggest-reasons">'+technicalReasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')+'</ul>':'<div class="note" style="margin-top:6px">尚無技術理由</div>'}</div><div class="reason note" style="margin-top:10px"><strong>你的觀察理由</strong><br>${esc(x.reason)||'未填寫'}</div>`}
+function renderWatchCardFull(x,data){let el=$('w-'+x.id);if(!el)return;if(!data){el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)}</div><div class="stocksub">目標價 ${x.target>0?fmt(x.target):'未設定'}｜預算 ${money(x.budget)}</div></div><div class="row"><button class="ghost" onclick="editWatch('${x.id}')">編輯</button><button class="danger" onclick="removeWatch('${x.id}')">刪除</button></div></div><div class="reason note" style="margin-top:8px"><strong>你的觀察理由</strong><br>${esc(x.reason)||'未填寫'}</div><div class="status">等待第一次更新行情…</div>`;return}let price=Number(data.price),signal=data.signal||{},technicalReasons=Array.isArray(signal.reasons)?signal.reasons:[],hasTarget=x.target>0,gap=hasTarget?(price-x.target)/x.target*100:null,level=hasTarget?watchLevel(gap):{text:'🟡 尚未設定目標價',cls:'warn'},finalAdvice=buildWatchPositionAdvice(signal,getCapitalState()),time=data.time?new Date(data.time):null;el.innerHTML=`<div class="stockhead"><div><div class="stocktitle">${esc(x.ticker)} ${esc(data.name||x.ticker)}</div><div class="stocksub">行情 ${time&&!Number.isNaN(time.getTime())?time.toLocaleString('zh-TW'):'—'}｜${data.quoteInfo?esc(data.quoteInfo.text):'—'}｜來源 ${data.quoteInfo?esc(data.quoteInfo.source):'—'}${data.cached?'<span class="pill">快取</span>':''}</div></div><div class="row"><button class="ghost" onclick="editWatch('${x.id}')">編輯</button><button class="danger" onclick="removeWatch('${x.id}')">刪除</button></div></div><div class="watch-status ${level.cls}">${level.text}</div><div class="stockgrid"><div class="kpi"><small>目前價格</small><b>${fmt(price)}</b></div><div class="kpi"><small>目標價</small><b>${hasTarget?fmt(x.target):'未設定'}</b></div><div class="kpi"><small>價差</small><b>${hasTarget?((price-x.target>=0?'+':'')+fmt(price-x.target)):'—'}</b></div><div class="kpi"><small>差距</small><b class="${level.cls}">${hasTarget?pct(gap):'—'}</b></div><div class="kpi"><small>預算</small><b>${money(x.budget)}</b></div><div class="kpi"><small>預估可買</small><b>${x.budget>0?Math.floor(x.budget/price).toLocaleString('zh-TW')+' 股':'—'}</b></div></div><div class="advice-summary ${signal.cls||'warn'}">技術判斷：${signal.text||'🟡 等待更新行情'}${Number.isFinite(Number(signal.score))?'（'+Number(signal.score)+' / 9）':''}</div>${entryPhaseHtml(entryPhaseAnalysis(signal))}${chaseRiskHtml(signal.chaseRisk,'watch')}${relativeStrengthHtml(signal.relativeStrength,'watch')}<div class="final-advice ${finalAdvice.cls}">最終建議：${finalAdvice.text}</div><div class="reason" style="margin-top:12px"><strong>系統判斷理由</strong>${technicalReasons.length?'<ul class="suggest-reasons">'+technicalReasons.map(function(r){return'<li>'+esc(r)+'</li>'}).join('')+'</ul>':'<div class="note" style="margin-top:6px">尚無技術理由</div>'}</div><div class="reason note" style="margin-top:10px"><strong>你的觀察理由</strong><br>${esc(x.reason)||'未填寫'}</div>`}
 
 const renderWatchCardFullBeforeTimingLayer=renderWatchCardFull;
 renderWatchCardFull=function(x,data){
@@ -1464,10 +1467,10 @@ function renderWatchCard(x,data){
  let price=Number(data.price),signal=data.signal||{},tScore=Number(signal.score),
      hasTarget=x.target>0,gap=hasTarget?(price-x.target)/x.target*100:null,
      level=hasTarget?watchLevel(gap):{text:'🟡 尚未設定目標價',cls:'warn'},
-     fa=buildWatchPositionAdvice(signal,getCapitalState()),name=data.name||x.ticker;
+     fa=buildWatchPositionAdvice(signal,getCapitalState()),phase=entryPhaseAnalysis(signal),name=data.name||x.ticker;
  el.innerHTML=`<div class="compact-stock" onclick="openAnalysis('watch','${x.id}')">
    <div class="compact-main"><div><div class="compact-title">${esc(x.ticker)}</div><div class="compact-name">${esc(name)}</div></div><div class="compact-price">${fmt(price)}${hasTarget?`<div class="${level.cls}" style="font-size:13px;margin-top:3px">${pct(gap)}</div>`:''}</div></div>
-   <div class="compact-sub"><span class="compact-signal ${signal.cls||'warn'}">${esc(signal.text||'等待更新')}${Number.isFinite(tScore)?' '+tScore+'/9':''}</span><span class="${level.cls}">${esc(level.text)}</span></div>
+   <div class="compact-sub"><span class="compact-signal ${phase.cls||signal.cls||'warn'}">${esc(phase.title||signal.text||'等待更新')}${Number.isFinite(tScore)?'｜趨勢 '+tScore+'/9':''}</span><span class="${level.cls}">${esc(level.text)}</span></div>
    <div class="compact-action ${fa.cls||'warn'}">${esc(firstActionText(fa.text))}</div><div class="compact-hint">點擊查看完整分析 ↑</div>
  </div>`;
 }
@@ -1487,9 +1490,39 @@ function watchSuggestion(m){
   earlyMetrics:{
     ret2:cl.length>=3?(formalPrice/Number(cl[cl.length-3])-1)*100:null,
     ret5:cl.length>=6?(formalPrice/Number(cl[cl.length-6])-1)*100:null
-  }
+  },rows:rows
  }
 }
+
+function entryPhaseAnalysis(a){
+ let em=a&&a.earlyMetrics||{},cr=a&&a.chaseRisk||{},rs=a&&a.relativeStrength||{},rows=Array.isArray(a&&a.rows)?a.rows:[],
+     price=Number(a&&a.formalPrice),ma5=Number(a&&a.ma5),ma20=Number(a&&a.ma20),rsi=Number(a&&a.rsi),vr=Number(a&&a.vr),score=Number(a&&a.score),
+     ret2=Number(em.ret2),ret5=Number(em.ret5),dist20=Number(cr.distMA20),fromHigh=Number(cr.fromHigh20),rel5=Number(rs.relative5),points=0,reasons=[];
+ let closes=rows.map(function(r){return Number(r&&r.c)}).filter(Number.isFinite), recent=closes.slice(-5), rangePct=(recent.length>=3&&Math.min.apply(null,recent)>0)?(Math.max.apply(null,recent)-Math.min.apply(null,recent))/Math.min.apply(null,recent)*100:null;
+ // 準備度只衡量「是否接近可執行的早期位置」，不是上漲機率。
+ if(Number.isFinite(price)&&Number.isFinite(ma5)&&price>=ma5){points+=2;reasons.push('收盤站上 MA5')}
+ if(Number.isFinite(price)&&Number.isFinite(ma20)&&price>=ma20){points+=1;reasons.push('收盤站上 MA20')}
+ if(Number.isFinite(rsi)&&rsi>=50&&rsi<=68){points+=2;reasons.push('RSI 位於健康動能區')}
+ if(Number.isFinite(vr)&&vr>=0.9&&vr<=1.8){points+=1;reasons.push('量能有參與但未過熱')}
+ if(Number.isFinite(ret2)&&ret2>=0.5&&ret2<=4){points+=2;reasons.push('近 2 日開始推進但未急漲')}
+ if(Number.isFinite(rel5)&&rel5>0){points+=1;reasons.push('近 5 日相對 0050 轉強')}
+ if(Number.isFinite(fromHigh)&&fromHigh>=2&&fromHigh<=10){points+=1;reasons.push('距近期高點仍有合理空間')}
+ let extended=!!cr.blockAdd||(Number.isFinite(dist20)&&dist20>=7)||(Number.isFinite(ret5)&&ret5>=9)||(Number.isFinite(rsi)&&rsi>=74);
+ let failed=(Number.isFinite(score)&&score<0)||(Number.isFinite(price)&&Number.isFinite(ma20)&&price<ma20&&Number.isFinite(ret2)&&ret2<-2);
+ let pullback=Number.isFinite(score)&&score>=5&&!extended&&Number.isFinite(price)&&((Number.isFinite(ma5)&&Math.abs(price-ma5)/ma5<=0.025)||(Number.isFinite(ma20)&&Math.abs(price-ma20)/ma20<=0.035))&&(!Number.isFinite(ret2)||ret2<=2.5);
+ let ignition=!extended&&!failed&&points>=7&&Number.isFinite(ret2)&&ret2>=0.5;
+ let dormant=!failed&&!extended&&!ignition&&!pullback&&((Number.isFinite(rangePct)&&rangePct<=4.5)||(Number.isFinite(ret2)&&ret2<1))&&(!Number.isFinite(vr)||vr<1.15);
+ let phase,title,cls,action,rank;
+ if(failed){phase='failed';title='⚠️ 轉強失敗／尚未止穩';cls='bad';action='不進場，等待重新站回關鍵均線並恢復動能。';rank=6}
+ else if(extended){phase='extended';title='🔥 延伸期｜不是早期買點';cls='warn';action='趨勢可能仍強，但位置已偏晚；等待拉回或重新整理，不因分數高追價。';rank=5}
+ else if(pullback){phase='pullback';title='🧊 健康回測｜等待支撐確認';cls='good';action='已轉強後回到 MA5／MA20 附近，若支撐守住且動能未惡化，屬較佳重新評估區。';rank=1}
+ else if(ignition){phase='prelaunch';title='🌱 預發動｜接近早期切入區';cls='good';action='價格、動能、量能與位置開始配合；列為優先觀察，但仍需下一步價格確認。';rank=0}
+ else if(Number.isFinite(score)&&score>=5){phase='confirmed';title='🚀 已發動／結構確認';cls='good';action='趨勢已確認，但先檢查是否仍有空間；若接近高點或乖離擴大，不追價。';rank=2}
+ else if(dormant){phase='dormant';title='💤 潛伏期｜尚未發動';cls='warn';action='結構有改善但推進或量能不足；先觀察，不把「看起來不差」當成買點。';rank=4}
+ else{phase='forming';title='🟡 成形中｜等待更多證據';cls='warn';action='條件正在改善，但尚未形成可執行的早期訊號。';rank=3}
+ return{phase:phase,title:title,cls:cls,action:action,rank:rank,points:Math.min(10,points),maxPoints:10,ret2:Number.isFinite(ret2)?ret2:null,ret5:Number.isFinite(ret5)?ret5:null,vr:Number.isFinite(vr)?vr:null,distMA20:Number.isFinite(dist20)?dist20:null,fromHigh20:Number.isFinite(fromHigh)?fromHigh:null,rangePct:Number.isFinite(rangePct)?rangePct:null,reasons:reasons};
+}
+function entryPhaseHtml(p){if(!p)return'';return `<div class="entry-phase"><div class="entry-phase-head"><span class="${p.cls}">${esc(p.title)}</span><span>${p.points} / ${p.maxPoints}</span></div><div class="entry-phase-grid"><div class="kpi"><small>近2日</small><b>${Number.isFinite(Number(p.ret2))?(Number(p.ret2)>=0?'+':'')+fmt(p.ret2)+'%':'—'}</b></div><div class="kpi"><small>量比</small><b>${Number.isFinite(Number(p.vr))?fmt(p.vr)+'x':'—'}</b></div><div class="kpi"><small>距 MA20</small><b>${Number.isFinite(Number(p.distMA20))?(Number(p.distMA20)>=0?'+':'')+fmt(p.distMA20)+'%':'—'}</b></div><div class="kpi"><small>距20日高點</small><b>${Number.isFinite(Number(p.fromHigh20))?fmt(p.fromHigh20)+'%':'—'}</b></div></div><div class="entry-phase-note">${esc(p.action)}</div>${p.reasons&&p.reasons.length?'<ul class="entry-phase-reasons">'+p.reasons.slice(0,5).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}<div class="note" style="margin-top:7px">準備度不是上漲機率，只用來區分「太早、接近發動、已發動、太晚」。</div></div>`}
 
 function earlyTurnSignal(a){
  let em=a&&a.earlyMetrics||{},score=Number(a&&a.score),price=Number(a&&a.formalPrice),ma5=Number(a&&a.ma5),ma20=Number(a&&a.ma20),
@@ -1519,12 +1552,15 @@ function buildWatchPositionAdvice(a,capitalState){
  if(mr&&mr.level==='high'){
   return{text:'🔴 大盤目前高風險，暫停新增部位。'+(a&&a.cls!=='good'?' 個股本身也尚未轉強，先等待趨勢評分回升、重新站回 MA20，再評估進場。':' 個股雖偏強，也先等大盤風險降級後再評估。'),cls:'bad',reason:'market-risk'};
  }
- let et=earlyTurnSignal(a);
+ let phase=entryPhaseAnalysis(a),et=earlyTurnSignal(a);
+ if(phase.phase==='extended')return{text:'🔥 趨勢可能仍強，但已進入延伸期；這不是早期切入點。等待拉回 MA5／MA20 或重新整理後再評估，不因技術分數高就追價。',cls:'warn',reason:'entry-extended',entryPhase:phase};
+ if(phase.phase==='failed')return{text:'⚠️ 轉強失敗／尚未止穩，暫不進場。等待重新站回關鍵均線並恢復價格動能。',cls:'bad',reason:'entry-failed',entryPhase:phase};
  if(et.active){
   if(cr&&cr.blockAdd)return{text:'🔵 B 早期轉強已出現，但目前追高風險偏高；不再只因 MA60 尚未收復而忽略，改為等待拉回或突破後確認。',cls:'warn',reason:'early-turn-chase',earlyTurn:et};
   if(rs&&rs.blockAdd)return{text:'🔵 B 早期轉強｜價格、量能與短線動能已有改善，但相對 0050 仍偏弱；提高關注，等待相對強弱同步後再布局。',cls:'warn',reason:'early-turn-relative',earlyTurn:et};
   if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)return{text:'🔵 B 早期轉強訊號成立，但目前現金水位不足；先列入優先追蹤，不新增部位。',cls:'warn',reason:'early-turn-cash',earlyTurn:et};
-  return{text:(et.strong?'🔵 B 早期轉強訊號明顯｜價格、量能與短線動能同步改善；技術結構尚未完全翻多，不必等到 MA60 全面確認才開始注意，可觀察分批布局條件。':'🔵 B 早期轉強｜結構尚未完全翻多，但改善速度已值得提高關注；等待延續或更佳進場位置。'),cls:'good',reason:'early-turn',earlyTurn:et};
+  if(phase.phase!=='prelaunch'&&phase.phase!=='pullback')return{text:'🟡 已出現早期轉強線索，但目前屬「'+phase.title.replace(/^[^ ]+ /,'')+'」；先列入追蹤，不直接視為布局訊號。'+phase.action,cls:'warn',reason:'early-turn-wait',earlyTurn:et,entryPhase:phase};
+  return{text:(phase.phase==='pullback'?'🧊 早期轉強後進入健康回測區｜先確認 MA5／MA20 支撐守穩，再評估小部位切入。':'🌱 預發動｜價格、量能、動能與位置開始同步改善，屬較早期的優先觀察區；仍需價格延續確認，不預測一定上漲。'),cls:'good',reason:'early-turn',earlyTurn:et,entryPhase:phase};
  }
  if(Number.isFinite(score)&&score<-1){
   let txt='🔴 空頭趨勢尚未止穩，暫不進場。等待重新站回 MA20、趨勢評分至少回到盤整區，再重新評估。';
@@ -1553,7 +1589,9 @@ function buildWatchPositionAdvice(a,capitalState){
   let why=stalled.reasons.length?('（'+stalled.reasons.slice(0,3).join('、')+'）'):'';
   return{text:'🟡 C 偏多等待發動｜技術結構仍偏多，但由近期正式日 K 判斷尚缺乏有效推進'+why+'；尚未進場者可繼續等待，已有試單者暫停加碼，等待放量突破或拉回支撐後重新確認。',cls:'warn',reason:'bull-stalled',stalled:stalled};
  }
- return{text:(rs&&(rs.level==='strong'||rs.level==='positive')?'🟢 技術趨勢、相對強弱、進場位置與現金水位均允許，可考慮分批布局。':'🟢 市場訊號、進場位置與現金水位允許，可考慮分批布局。'),cls:'good'};
+ if(phase.phase==='confirmed')return{text:'🚀 趨勢已發動並確認，但不把「已經在漲」直接翻譯成買點。等待回測支撐，或確認距壓力仍有足夠空間後再評估。',cls:'warn',reason:'entry-confirmed-wait',entryPhase:phase};
+ if(phase.phase==='dormant'||phase.phase==='forming')return{text:phase.title+'｜'+phase.action,cls:'warn',reason:'entry-wait',entryPhase:phase};
+ return{text:(phase.phase==='pullback'?'🧊 健康回測區｜支撐若守穩，可列入分批布局評估。':'🌱 預發動區｜條件開始同步，列為優先觀察；確認延續後再分批。'),cls:'good',reason:'entry-ready',entryPhase:phase};
 }
 function applySuggestedPrice(value){$('wTarget').value=Number(value).toFixed(2).replace(/\.00$/,'');$('wTarget').focus()}
 async function getSuggestedPrices(){let ticker=normalizeTicker($('wTicker').value),box=$('suggestPriceBox'),btn=$('suggestPriceBtn');$('wTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');box.style.display='block';box.innerHTML='<div class="status">正在取得行情與計算指標…</div>';btn.disabled=true;try{let m=await market(ticker),a=watchSuggestion(m),bench=await relativeStrengthBenchmark(false,true);a.relativeStrength=relativeStrengthAnalysis(a.formalPrice,m.rows.map(function(r){return r.c}),bench,ticker,a.formalDate);let finalAdvice=buildWatchPositionAdvice(a,getCapitalState());box.innerHTML=`<div><strong>目前價格：${fmt(a.price)}</strong> <span class="note">｜正式日K：${esc(a.formalDate)} 收盤 ${fmt(a.formalPrice)}</span></div>
@@ -1621,17 +1659,25 @@ async function testMarketScanApi(){
  }catch(e){if(st)st.textContent='❌ 市場掃描連線失敗：'+e.message}
 }
 function candidateVerdict(signal,sr){
- let cr=signal&&signal.chaseRisk,rs=signal&&signal.relativeStrength,score=Number(signal&&signal.score),mr=marketRisk(),et=earlyTurnSignal(signal);
- if(mr&&mr.level==='high')return{show:false,rank:99,text:'⚪ 大盤高風險，暫不列入候選',cls:'bad'};
- if(score>=5&&!(cr&&cr.blockAdd)&&!(rs&&rs.blockAdd)&&!(sr&&sr.nearResistance))
-  return{show:true,rank:0,channel:'A',text:sr&&sr.nearSupport?'🟢 A 結構已強｜接近支撐，可留意分批布局':'🟢 A 結構已強｜資金＋技術條件配合',cls:'good'};
- if(et.active){
-  if(cr&&cr.level==='very_high')return{show:false,rank:99,channel:'B',text:'🔵 B 早期轉強，但追高風險過高',cls:'warn'};
-  if(sr&&sr.nearResistance)return{show:true,rank:2,channel:'B',text:'🔵 B 早期轉強｜接近壓力，等待突破或拉回',cls:'warn'};
-  if(rs&&rs.blockAdd)return{show:true,rank:3,channel:'B',text:'🔵 B 早期轉強｜相對 0050 待同步',cls:'warn'};
-  return{show:true,rank:1,channel:'B',text:'🔵 B 早期轉強｜結構未完成，但價格／量能／動能已改善',cls:'good'};
+ let cr=signal&&signal.chaseRisk,rs=signal&&signal.relativeStrength,mr=marketRisk(),phase=entryPhaseAnalysis(signal),pts=Number(phase&&phase.points)||0;
+ // v5.25.1：候選池改成分層顯示。只有 priority 是高品質進場候選；watch / wait 都不是買進訊號。
+ if(mr&&mr.level==='high')return{show:false,rank:99,tier:'blocked',text:'⚪ 大盤高風險，暫不列入候選',cls:'bad'};
+ if(phase.phase==='failed')return{show:false,rank:99,tier:'blocked',channel:'X',text:'⚠️ 轉強失敗／尚未止穩',cls:'bad'};
+ if(phase.phase==='prelaunch'&&!(cr&&cr.blockAdd)&&!(rs&&rs.blockAdd)&&!(sr&&sr.nearResistance))
+  return{show:true,rank:0,tier:'priority',channel:'P',text:'🌱 優先候選｜預發動，位置尚未過熱，量價與動能開始同步',cls:'good'};
+ if(phase.phase==='pullback'&&!(rs&&rs.blockAdd))
+  return{show:true,rank:1,tier:'priority',channel:'R',text:'🧊 優先候選｜健康回測，接近支撐，等待守穩確認',cls:'good'};
+ if(phase.phase==='confirmed'&&!(cr&&cr.blockAdd)&&!(rs&&rs.blockAdd)&&!(sr&&sr.nearResistance)&&pts>=7)
+  return{show:true,rank:2,tier:'priority',channel:'A',text:'🚀 優先候選｜已發動但位置仍可接受；不追價，優先等合理切入',cls:'good'};
+ // 接近候選：保留正在成形但還少一項確認的股票，不降低真正買進門檻。
+ if(phase.phase==='prelaunch'||pts>=5){
+  let why=sr&&sr.nearResistance?'接近壓力，等突破或拉回':rs&&rs.blockAdd?'相對 0050 尚未同步':cr&&cr.blockAdd?'位置偏高，等待乖離收斂':'條件正在成形，尚缺完整確認';
+  return{show:true,rank:10-Math.min(pts,8)/10,tier:'watch',channel:'W',text:'👀 接近候選｜'+why+'（準備度 '+pts+'/10）',cls:'warn'};
  }
- return{show:false,rank:99,text:'⚪ 尚未接近操作條件',cls:''};
+ // 已發動／延伸不消失，改列待回測；避免只看到 0 檔，也避免把強勢誤當現在可追。
+ if(phase.phase==='confirmed'||phase.phase==='extended')
+  return{show:true,rank:20,tier:'wait',channel:'D',text:'🚀 已發動待回測｜趨勢存在，但目前不是早期切入點',cls:'warn'};
+ return{show:false,rank:99,tier:'blocked',text:'⚪ 尚未接近操作條件',cls:''};
 }
 function candidateToWatch(symbol,name,flow){
  let ticker=normalizeTicker(symbol),w=watchlist();
@@ -1640,7 +1686,7 @@ function candidateToWatch(symbol,name,flow){
  w.push(item);storeWatch(w);renderWatch();renderDashboard();alert(ticker+' 已加入自選觀察清單');
 }
 function candidateHtml(x){
- let s=x.signal||{},sr=x.sr||{},v=x.verdict||{},et=earlyTurnSignal(s),
+ let s=x.signal||{},sr=x.sr||{},v=x.verdict||{},et=earlyTurnSignal(s),phase=entryPhaseAnalysis(s),
      pr=Number(x.anomalyPercentile),display=Number(x.anomalyDisplayScore),raw=Math.abs(Number(x.anomalyScore||x.anomalyStrength||0));
  return `<div class="candidate-card">
   <div class="candidate-head"><div><div class="candidate-title">${esc(x.symbol)} ${esc(x.name||'')}</div><div class="candidate-flow">法人異常流入 ${esc(formatFlowTwd(x.flowTwd))}</div></div><div class="candidate-pr">PR ${Number.isFinite(pr)?fmt(pr):'—'}</div></div>
@@ -1650,7 +1696,7 @@ function candidateHtml(x){
     <div class="kpi"><small>技術趨勢</small><b>${Number.isFinite(Number(s.score))?Number(s.score)+'/9':'—'}</b></div>
     <div class="kpi"><small>支撐區</small><b>${sr.support?fmt(sr.support.low)+'～'+fmt(sr.support.high):'—'}</b></div>
   </div>
-  <div class="candidate-verdict ${v.cls||'warn'}">${esc(v.text||'等待判斷')}</div>
+  <div class="candidate-verdict ${v.cls||'warn'}">${esc(v.text||'等待判斷')}</div><div class="note" style="margin-top:6px">${esc(phase.title)}｜發動準備 ${phase.points}/10</div>
   <div class="note" style="margin-top:7px">${esc(s.text||'')}｜${esc((s.chaseRisk&&s.chaseRisk.title)||'追高風險待判斷')}${sr.nearSupport?'｜接近支撐':''}${sr.nearResistance?'｜接近壓力':''}${et.active?'｜早期轉強 '+et.points+' 項':''}</div>
   <button class="primary" style="width:100%;margin-top:10px" onclick="candidateToWatch('${esc(x.symbol)}','${esc(x.name||'')}','${Number(x.flowTwd)||0}')">＋ 加入自選觀察</button>
  </div>`;
@@ -1658,8 +1704,9 @@ function candidateHtml(x){
 function renderCandidatePool(rows,date,fromCache){
  let box=$('candidatePool'),st=$('candidatePoolStatus');if(!box)return;
  rows=Array.isArray(rows)?rows:[];
- box.innerHTML=rows.length?rows.map(candidateHtml).join(''):'<div class="candidate-empty">今日暫無符合「資金異常＋技術轉強＋位置合理」的市場候選。沒有機會時就維持 0 檔，不必硬找股票。</div>';
- if(st)st.textContent=(fromCache?'📦 上次候選':'✅ 候選完成')+'｜'+rows.length+' 檔｜資料日 '+(date||'—');
+ let pc=rows.filter(function(x){return x.verdict&&x.verdict.tier==='priority'}).length,wc=rows.filter(function(x){return x.verdict&&x.verdict.tier==='watch'}).length,dc=rows.filter(function(x){return x.verdict&&x.verdict.tier==='wait'}).length;
+ box.innerHTML=rows.length?rows.map(candidateHtml).join(''):'<div class="candidate-empty">今日連「接近候選」都沒有。真正買進門檻沒有為了湊數而降低。</div>';
+ if(st)st.textContent=(fromCache?'📦 上次候選':'✅ 候選完成')+'｜優先 '+pc+'｜接近 '+wc+'｜待回測 '+dc+'｜資料日 '+(date||'—');
 }
 function renderCandidateCache(){
  let c=candidateCache();if(c&&Array.isArray(c.rows))renderCandidatePool(c.rows,c.date,true);
@@ -1677,13 +1724,13 @@ async function refreshCandidatePool(manual){
   // v5.22.8：候選池以「異常資金資料日」為固定快照鍵。
   // 同一資料日已成功產生過，就直接沿用，不再用盤中行情重算而造成同日換股。
   let cached=candidateCache(),scanDate=String(j.date||'');
-  if(cached&&Array.isArray(cached.rows)&&cached.date===scanDate&&cached.complete===true){
+  if(cached&&Array.isArray(cached.rows)&&cached.date===scanDate&&cached.complete===true&&cached.snapshotVersion==='5.25.1'){
    renderCandidatePool(cached.rows,cached.date,true);
    if(st)st.textContent='📌 固定日快照｜'+cached.rows.length+' 檔｜資料日 '+(cached.date||'—')+'｜同資料日不重算';
    return;
   }
 
-  let source=(j.rows||[]).filter(function(x){return Number(x.flowTwd)>0}).slice(0,12),
+  let source=(j.rows||[]).filter(function(x){return Number(x.flowTwd)>0}).slice(0,30),
       bench=await relativeStrengthBenchmark(false,true),done=[],errors=[];
 
   for(let i=0;i<source.length;i++){
@@ -1711,9 +1758,9 @@ async function refreshCandidatePool(manual){
 
   let qualified=done.filter(function(x){return x.verdict&&x.verdict.show})
     .sort(function(a,b){return a.verdict.rank-b.verdict.rank||Number(b.anomalyPercentile||0)-Number(a.anomalyPercentile||0)})
-    .slice(0,5);
+    .slice(0,8);
 
-  let payload={date:scanDate,rows:qualified,updatedAt:Date.now(),complete:true,snapshotVersion:'5.22.9',skipped:errors.length};
+  let payload={date:scanDate,rows:qualified,updatedAt:Date.now(),complete:true,snapshotVersion:'5.25.1',skipped:errors.length};
   saveCandidateCache(payload);renderCandidatePool(qualified,payload.date,false);
   if(st)st.textContent='✅ 固定日快照完成｜'+qualified.length+' 檔｜資料日 '+(payload.date||'—')+(errors.length?'｜略過 '+errors.length+' 檔資料異常':'');
  }catch(e){
