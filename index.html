@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="股倉雷達">
 <meta name="mobile-web-app-capable" content="yes">
 
-<title>股倉雷達 v5.25.1</title>
+<title>股倉雷達 v5.25.2</title>
 <style>
 :root{--bg:#edf5f4;--card:rgba(255,255,255,.9);--text:#17201f;--muted:#687976;--line:#d8e7e4;--good:#147a42;--warn:#ad6500;--bad:#c2332b;--blue:#2f6690;--accent:#287d70;--accent-soft:#e5f3ef;--soft:#f2f8f6}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Arial,sans-serif}body{background-image:radial-gradient(circle at 8% 0%,rgba(119,192,178,.2),transparent 29%),radial-gradient(circle at 94% 16%,rgba(113,157,207,.14),transparent 28%),linear-gradient(180deg,#edf6f4 0%,#f3f6f8 55%,#eef4f3 100%);background-attachment:fixed}
@@ -150,7 +150,7 @@ body.analysis-open{overflow:hidden}
 </head>
 <body>
 <div class="wrap">
-<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.25.1</div></div>
+<div class="hero"><h1>📡 股倉雷達</h1><div class="sub">v5.25.2</div></div>
 
 <section class="page" id="page-home">
   <h2 class="page-title">🏠 總覽</h2>
@@ -216,6 +216,7 @@ body.analysis-open{overflow:hidden}
 <div class="card"><strong>🧮 v5.3 決策環境分數</strong><div class="note" style="margin-top:8px">S=個股技術、C=資金/倉位、M=市場環境、E=操作紀律。TOTAL 是決策環境分數，不是未來報酬率預測。M 目前使用 0050＋2330 作為 MVP 市場代理；E 只在做過「操作檢查」後才計分。</div><div class="row" style="margin-top:10px"><button class="secondary" onclick="refreshMarketContext(true)">更新市場分數 M</button></div><div id="marketScoreStatus" class="status"></div></div>
 <div class="card"><strong>🛡️ v5.4 動態停利／獲利保護</strong><div class="note" style="margin-top:8px">短線／波段持股會追蹤更新後的最高價。0～3% 為解套區、3～5% 開始觀察、5～10% 進入獲利保護、10% 以上提高保護敏感度。不是到達固定報酬就賣，而是「已有獲利＋高點回落＋趨勢轉弱」才升級停利訊號。中長期持股僅顯示獲利保護資訊，不會因短線回落自動升級賣出。</div></div>
 
+<div class="card"><strong>🧭 v5.25.2 預發動文字層級修正</strong><div class="note" style="margin-top:8px">將「🌱 預發動」拆成兩層：①「預發動・觀察中」只代表出現早期改善，明確標示尚未取得進場資格；② 趨勢評分已達偏多且早期條件同步時，才顯示「預發動・切入準備」，進入小部位／分批評估。避免上方寫接近切入、下方卻寫暫不進場的語意衝突。此版只修正層級與操作語意，不放寬買進條件。</div></div>
 <div class="card"><strong>🎯 v5.25.0 進場階段／發動準備度</strong><div class="note" style="margin-top:8px">觀察與市場候選不再把「趨勢偏多」直接等同「現在適合布局」。新增潛伏、預發動、發動確認、延伸追高、健康回測、轉強失敗等階段；同時檢查近2／5日推進、量能、RSI、MA20乖離、20日高點距離與相對0050。候選池優先排序「預發動／健康回測」，已明顯延伸者不再因技術分數高就排前面。此層只改善進場時機，不預測一定上漲。</div></div>
 <div class="card"><strong>🛰️ v5.25.1 市場候選池分層掃描</strong><div class="note" style="margin-top:8px">背景技術檢查由異常資金前 12 檔擴大至前 30 檔，畫面最多顯示 8 檔。候選分為「🌱／🧊 優先候選」「👀 接近候選」「🚀 已發動待回測」；只有優先候選維持高品質進場資格，接近與待回測只提供追蹤，不等於買進。新版會使同資料日的舊候選快照失效並重新掃描，避免沿用 v5.25.0 的空白結果。</div></div>
 <div class="card"><strong>🗓️ v5.24.0 特殊事件風險日曆</strong><div class="note" style="margin-top:8px">升級為完整財經事件雷達：台指期結算、四巫日依曆法自動計算；FOMC、非農、CPI／PPI、PCE／GDP 使用官方公布日期，並換算成台股主要反應日。加入 T-1／當日／T+1 防誤殺提醒與高／中關注分級。事件不預測方向、不改變 M 分數，也不得單獨觸發減碼／停損。</div></div>
@@ -1516,13 +1517,13 @@ function entryPhaseAnalysis(a){
  if(failed){phase='failed';title='⚠️ 轉強失敗／尚未止穩';cls='bad';action='不進場，等待重新站回關鍵均線並恢復動能。';rank=6}
  else if(extended){phase='extended';title='🔥 延伸期｜不是早期買點';cls='warn';action='趨勢可能仍強，但位置已偏晚；等待拉回或重新整理，不因分數高追價。';rank=5}
  else if(pullback){phase='pullback';title='🧊 健康回測｜等待支撐確認';cls='good';action='已轉強後回到 MA5／MA20 附近，若支撐守住且動能未惡化，屬較佳重新評估區。';rank=1}
- else if(ignition){phase='prelaunch';title='🌱 預發動｜接近早期切入區';cls='good';action='價格、動能、量能與位置開始配合；列為優先觀察，但仍需下一步價格確認。';rank=0}
+ else if(ignition){phase='prelaunch';let entryReady=Number.isFinite(score)&&score>=5;title=entryReady?'🌱 預發動・切入準備｜可評估試單':'🌱 預發動・觀察中｜尚未取得進場資格';cls=entryReady?'good':'warn';action=entryReady?'價格、動能、量能與位置已開始同步，且趨勢評分已達偏多；可進入小部位／分批評估，但仍需遵守追高、大盤與資金水位閘門。':'已出現早期改善跡象，但趨勢尚未完成確認；先盯盤，不把「預發動」當成買進訊號。等待趨勢評分升到偏多、站穩 MA20，並確認相對強弱沒有明顯轉弱。';rank=entryReady?0:2}
  else if(Number.isFinite(score)&&score>=5){phase='confirmed';title='🚀 已發動／結構確認';cls='good';action='趨勢已確認，但先檢查是否仍有空間；若接近高點或乖離擴大，不追價。';rank=2}
  else if(dormant){phase='dormant';title='💤 潛伏期｜尚未發動';cls='warn';action='結構有改善但推進或量能不足；先觀察，不把「看起來不差」當成買點。';rank=4}
  else{phase='forming';title='🟡 成形中｜等待更多證據';cls='warn';action='條件正在改善，但尚未形成可執行的早期訊號。';rank=3}
  return{phase:phase,title:title,cls:cls,action:action,rank:rank,points:Math.min(10,points),maxPoints:10,ret2:Number.isFinite(ret2)?ret2:null,ret5:Number.isFinite(ret5)?ret5:null,vr:Number.isFinite(vr)?vr:null,distMA20:Number.isFinite(dist20)?dist20:null,fromHigh20:Number.isFinite(fromHigh)?fromHigh:null,rangePct:Number.isFinite(rangePct)?rangePct:null,reasons:reasons};
 }
-function entryPhaseHtml(p){if(!p)return'';return `<div class="entry-phase"><div class="entry-phase-head"><span class="${p.cls}">${esc(p.title)}</span><span>${p.points} / ${p.maxPoints}</span></div><div class="entry-phase-grid"><div class="kpi"><small>近2日</small><b>${Number.isFinite(Number(p.ret2))?(Number(p.ret2)>=0?'+':'')+fmt(p.ret2)+'%':'—'}</b></div><div class="kpi"><small>量比</small><b>${Number.isFinite(Number(p.vr))?fmt(p.vr)+'x':'—'}</b></div><div class="kpi"><small>距 MA20</small><b>${Number.isFinite(Number(p.distMA20))?(Number(p.distMA20)>=0?'+':'')+fmt(p.distMA20)+'%':'—'}</b></div><div class="kpi"><small>距20日高點</small><b>${Number.isFinite(Number(p.fromHigh20))?fmt(p.fromHigh20)+'%':'—'}</b></div></div><div class="entry-phase-note">${esc(p.action)}</div>${p.reasons&&p.reasons.length?'<ul class="entry-phase-reasons">'+p.reasons.slice(0,5).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}<div class="note" style="margin-top:7px">準備度不是上漲機率，只用來區分「太早、接近發動、已發動、太晚」。</div></div>`}
+function entryPhaseHtml(p){if(!p)return'';return `<div class="entry-phase"><div class="entry-phase-head"><span class="${p.cls}">${esc(p.title)}</span><span>${p.points} / ${p.maxPoints}</span></div><div class="entry-phase-grid"><div class="kpi"><small>近2日</small><b>${Number.isFinite(Number(p.ret2))?(Number(p.ret2)>=0?'+':'')+fmt(p.ret2)+'%':'—'}</b></div><div class="kpi"><small>量比</small><b>${Number.isFinite(Number(p.vr))?fmt(p.vr)+'x':'—'}</b></div><div class="kpi"><small>距 MA20</small><b>${Number.isFinite(Number(p.distMA20))?(Number(p.distMA20)>=0?'+':'')+fmt(p.distMA20)+'%':'—'}</b></div><div class="kpi"><small>距20日高點</small><b>${Number.isFinite(Number(p.fromHigh20))?fmt(p.fromHigh20)+'%':'—'}</b></div></div><div class="entry-phase-note">${esc(p.action)}</div>${p.reasons&&p.reasons.length?'<ul class="entry-phase-reasons">'+p.reasons.slice(0,5).map(function(x){return'<li>'+esc(x)+'</li>'}).join('')+'</ul>':''}<div class="note" style="margin-top:7px">準備度不是上漲機率；「預發動・觀察中」= 只追蹤、不進場，「預發動・切入準備」= 才進入小部位／分批評估。</div></div>`}
 
 function earlyTurnSignal(a){
  let em=a&&a.earlyMetrics||{},score=Number(a&&a.score),price=Number(a&&a.formalPrice),ma5=Number(a&&a.ma5),ma20=Number(a&&a.ma20),
@@ -1560,7 +1561,7 @@ function buildWatchPositionAdvice(a,capitalState){
   if(rs&&rs.blockAdd)return{text:'🔵 B 早期轉強｜價格、量能與短線動能已有改善，但相對 0050 仍偏弱；提高關注，等待相對強弱同步後再布局。',cls:'warn',reason:'early-turn-relative',earlyTurn:et};
   if(capitalState.configured&&capitalState.actualCash<capitalState.targetCash)return{text:'🔵 B 早期轉強訊號成立，但目前現金水位不足；先列入優先追蹤，不新增部位。',cls:'warn',reason:'early-turn-cash',earlyTurn:et};
   if(phase.phase!=='prelaunch'&&phase.phase!=='pullback')return{text:'🟡 已出現早期轉強線索，但目前屬「'+phase.title.replace(/^[^ ]+ /,'')+'」；先列入追蹤，不直接視為布局訊號。'+phase.action,cls:'warn',reason:'early-turn-wait',earlyTurn:et,entryPhase:phase};
-  return{text:(phase.phase==='pullback'?'🧊 早期轉強後進入健康回測區｜先確認 MA5／MA20 支撐守穩，再評估小部位切入。':'🌱 預發動｜價格、量能、動能與位置開始同步改善，屬較早期的優先觀察區；仍需價格延續確認，不預測一定上漲。'),cls:'good',reason:'early-turn',earlyTurn:et,entryPhase:phase};
+  return{text:(phase.phase==='pullback'?'🧊 健康回測・等待確認｜先確認 MA5／MA20 支撐守穩，再評估小部位切入。':'🌱 預發動・觀察中｜已看到價格／量能／動能改善，但目前尚未取得進場資格。等待趨勢評分升到偏多、站穩 MA20，且相對 0050 沒有明顯轉弱後，再升級為「切入準備」。'),cls:'warn',reason:'early-turn-observe',earlyTurn:et,entryPhase:phase};
  }
  if(Number.isFinite(score)&&score<-1){
   let txt='🔴 空頭趨勢尚未止穩，暫不進場。等待重新站回 MA20、趨勢評分至少回到盤整區，再重新評估。';
@@ -1591,7 +1592,7 @@ function buildWatchPositionAdvice(a,capitalState){
  }
  if(phase.phase==='confirmed')return{text:'🚀 趨勢已發動並確認，但不把「已經在漲」直接翻譯成買點。等待回測支撐，或確認距壓力仍有足夠空間後再評估。',cls:'warn',reason:'entry-confirmed-wait',entryPhase:phase};
  if(phase.phase==='dormant'||phase.phase==='forming')return{text:phase.title+'｜'+phase.action,cls:'warn',reason:'entry-wait',entryPhase:phase};
- return{text:(phase.phase==='pullback'?'🧊 健康回測區｜支撐若守穩，可列入分批布局評估。':'🌱 預發動區｜條件開始同步，列為優先觀察；確認延續後再分批。'),cls:'good',reason:'entry-ready',entryPhase:phase};
+ return{text:(phase.phase==='pullback'?'🧊 健康回測・切入準備｜支撐若守穩，可列入小部位／分批布局評估。':'🌱 預發動・切入準備｜趨勢已達偏多，且早期條件開始同步；可評估小部位／分批，不代表必須買進。'),cls:'good',reason:'entry-ready',entryPhase:phase};
 }
 function applySuggestedPrice(value){$('wTarget').value=Number(value).toFixed(2).replace(/\.00$/,'');$('wTarget').focus()}
 async function getSuggestedPrices(){let ticker=normalizeTicker($('wTicker').value),box=$('suggestPriceBox'),btn=$('suggestPriceBtn');$('wTicker').value=ticker;if(!validTicker(ticker))return alert('股票代號須為 4–7 碼英文或數字');box.style.display='block';box.innerHTML='<div class="status">正在取得行情與計算指標…</div>';btn.disabled=true;try{let m=await market(ticker),a=watchSuggestion(m),bench=await relativeStrengthBenchmark(false,true);a.relativeStrength=relativeStrengthAnalysis(a.formalPrice,m.rows.map(function(r){return r.c}),bench,ticker,a.formalDate);let finalAdvice=buildWatchPositionAdvice(a,getCapitalState());box.innerHTML=`<div><strong>目前價格：${fmt(a.price)}</strong> <span class="note">｜正式日K：${esc(a.formalDate)} 收盤 ${fmt(a.formalPrice)}</span></div>
